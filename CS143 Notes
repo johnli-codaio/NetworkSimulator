@@ -1,7 +1,40 @@
-CS143 Notes
+CS143 Project/Meeting Notes
 
+-------------------------------------------------------------------
+10/9/2015
 - Planning on using Python
 - Use library scimpy for this.
 - Check out Event Driven simulations (recreate cave story has an example)
 
 - We will have some input, and simulation stops when all flows have been emptied out.
+
+- Probably use Bellman-Ford shortest path algorithm.
+- We need to implement our own object classes.
+	- Hosts, Routers, Links, Packets, Flows are the classes.
+
+	- Packets
+		Source
+		Destination
+		Type
+
+	- Hosts/Routers (subclass)
+		Subclass of a Device
+		We need some functionality for sending
+
+		Routing Table computation might be a bit difficult.
+		(I think Cody used a special packet called Routing Packet?)
+
+	- Link
+		Needs to have a buffer zone for the packets.
+
+	- Flow
+		Most important.
+		Implement Congestion Control
+		People working on this should see the big picture
+		Probably most code.
+
+Git:
+We should maybe have separate branches for each of the classes, so we don't mess up master branch over and over.
+
+
+-------------------------------------------------------------------
