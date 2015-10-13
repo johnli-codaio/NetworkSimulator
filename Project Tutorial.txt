@@ -1,0 +1,119 @@
+What is a network simulator?
+	- Tales input
+		* Network topology, specifications
+		* Flows to occur
+	- Simulates realstically
+	- Produces performance metrics
+
+Why?
+	- Good practice for software engineering
+
+Components of a network
+	- Hosts (end points)
+	- Routers (route packets through network)
+	- Links (connect hosts and routers)
+	- Packets (units of info in network)
+	- Flows (generate packets to send on network).
+
+Hosts:
+	- End points in network
+	- Very simple, complexity will be in flows usually
+	- Hosts know nothing about other hosts in the network.
+
+Routers:
+	- Route packets through network
+	- Calculate routing tables with decentralized shortest-path algorithm (Bellman Ford?)
+		* Given destination, decides where to send next.
+		* No global knowledge of network topology.
+
+Links:
+	- All links are half duplex (directed).
+		* Data can go both ways, but only one way at a time.
+	- They all have a rate capacity and propagation time.
+	- Have buffer of packets to send on either end, to store packets
+	  not sent yet.
+
+Packets:
+	- Units of data sent through network
+	- Contain:
+		* metadata (src, dest)
+		* payload
+		* Ack
+
+Flows:
+	- Represents data being sent from one host to another
+	- All flows will send finite data at a specified time
+	- Don't know about flows in other networks.
+
+===============================================================================
+
+Design:
+	- Everything is up to us
+	- Any language (we're doing python)
+	- Any architecture
+
+Simulator Design:
+
+	- Continuous simulation
+		* Increment time in very small steps, and at each step 
+		  calculate what happened since last step.
+		* Continue until done.
+
+	- Discrete Event Simulation (I believe Cody recommended this)
+		* Global queue of events and when they occur.
+		* Once finished processing last event, pop off next, process
+		  and continue.
+		* Continue until queue is empty.
+		* One of the easier ones to implement w/o external frameworks
+
+	- Process Based Simulation
+		* Everything in simulation as its own process
+		* Processes interact with each other
+		* Complicated to fully implement, but SimPy and C++Sim
+		  exist already.
+
+Tools:
+	- Required to use source control:
+		* Github (we got this bro).
+	- Can use issue/track trackers
+	- Some form of code review.
+	- Get familiar with terminal/shell
+		* Stuff like grep and logging state
+		* We don't have gdb since no C++ :(.
+
+Schedule:
+	- WEEK 5: MILESTONE 1 (PRESENTATION)
+	- WEEK 8: MILESTONE 2
+	- WEEK 10: MILESTONE 3: FINAL PRESENTATION
+	- WEEK 11: SUBMIT
+
+	MILESTONE 1: Architecture Presentation (7-8 MINUTES)
+		- Meet with group to make all high level decisions
+		- 7-8 min presentation outlining architecture and major
+		  decisions
+		- Expect architecture to change throughout term
+
+	MILESTONE 2: Preliminary Implementation
+		- Show TA during weekly meeting
+		- Should handle Test Cases 0 and 1
+		- Fully implemented hosts, links, packets
+		- Basic router code (static routing)
+		- Basic flow code (no congestion control necessary).
+
+	MILESTONE 3: Final Presentation (15 MINUTES)
+		- Fully spec compliant product, only finishing touches 
+		  necessary
+		- 15 minute presentation
+		- Short demo, overview of simulation
+		- Analysis of resuts compared to theoretical expectations.
+
+	SUBMIT
+		- Submit Code and Final Report
+			* Turn in src code (Add TA's to Repo)
+			* Turn in Final Report
+				- Describe full project, including usage
+				- Present and describe results for Test Cases 1 and 2
+				- Present analysis of Test Case 2 results compared to theoretical
+				- Comment on project process.
+
+Putting Schedule on separate text just to see, since it's important.
