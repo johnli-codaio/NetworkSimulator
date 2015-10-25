@@ -36,5 +36,16 @@ CS143 Project/Meeting Notes
 Git:
 We should maybe have separate branches for each of the classes, so we don't mess up master branch over and over.
 
-Hi im gosu
--------------------------------------------------------------------
+Cody's Notes:
+SimPy if you want to use process based
+division of labor
+roadmap to completion: what do you want to accomplish by each week
+week 6: get test case 0 finished (e.g.)
+next week: static routing
+week after: dynamic routing
+flow control started week 7 or 8
+congestion control after flow control
+include functions in presentation
+
+maybe don't use simpy (?)
+no static members of links or tables (don't make them a part of host class)
