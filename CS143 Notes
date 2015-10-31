@@ -1,6 +1,16 @@
 CS143 Project/Meeting Notes
 
 -------------------------------------------------------------------
+10/30:
+Things we learned from other people's presentations
+Different types of packets (data packets, acknowledgment packets, routing packets (bellman-ford)
+
+Network class: to include everything 
+(inside 1 python file)
+has a run() method to run simulation
+
+sphinx for documentation
+-------------------------------------------------------------------
 10/9/2015
 - Planning on using Python
 - Use library scimpy for this.
@@ -49,3 +59,4 @@ include functions in presentation
 
 maybe don't use simpy (?)
 no static members of links or tables (don't make them a part of host class)
+
