@@ -6,9 +6,14 @@ class Device:
     # Instantiating the Device.
     # Arguments:
     #   address : Indicates the name/address of the device.
-
+    list links = []
     def __init__(self, address):
         self.address = address
+
+    def attachLink(links):
+        # should be a for loop
+        for link in links:
+            links.append(link)
 
 class Router(Device):
     # This is the routing table for the router, though there isn't
@@ -53,7 +58,14 @@ class Host(Device):
         Device.__init__(self, address)
 
     def attachLink(self, link):
-        self.link = link
+        list link = [link]
+        Device.attachLink(link)
+
+    # logs sending packet
+    def logSend
+
+    #logs receiving packet
+    def logReceive
 
 
 class Flow:
