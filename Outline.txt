@@ -39,10 +39,14 @@ Devices have name, connected links.
 Link have link ID/name, link rate, link delay, link buffer, device1, device2, currently sending?. 
     Records buffer occupancy, packet loss, flow rate
     (Function to manage buffer?)
+    A link may be a shared resource between flows?
+    half-duplex, has a capacity
 
 Flows have flow ID, src, dest, time to send, (current location of packet?)
     Records send/receive rate and packet RTT
     Have function that generate packets
+    These are the processes will be passed into SimPy
+    The run function will generate the packets, yield to other flows
 
 
 Congestion control. (Managed by routers?)
