@@ -4,6 +4,7 @@ import random
 import event
 import simulation
 
+
 # Just a few tests
 if __name__ == "__main__":
     random.seed()
@@ -49,11 +50,14 @@ if __name__ == "__main__":
         # print "Packet Destination: " + str(packet.dest)
         # print "Packet Data: " + str(packet.type)
         # print "Enqueing this Packet... \n"
-        isFull = testLink.putIntoBuffer(packet)
+        testLink.putIntoBuffer(packet)
+        print "current_buffer"
+        print testLink.current_buffer
+        print testLink.buffer_size
+        isFull = testLink.isFullWith(packet)
         if (isFull):
             break
     print testLink.linkBuffer.qsize()
-
 
     print "Now, to dequeue this link buffer...\n"
 
