@@ -33,7 +33,7 @@ if __name__ == "__main__":
     print "Link ID: " + str(testLink.linkId)
     print "Link Rate: " + str(testLink.rate) + " Mbps"
     print "Link Delay: " + str(testLink.delay) + " ms"
-    print "Link Buffer: " + str(testLink.buffer_size) + " KB"
+    print "Link Buffer: " + str(testLink.buffer_size) + " B"
     print "Link Device1: " + str(testLink.device1.address)
     print "Link Device2: " + str(testLink.device2.address) + "\n"
 
