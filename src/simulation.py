@@ -13,8 +13,7 @@ class Simulator:
     def insertEvent(self, event):
         self.q.put(event)
 
-    def processEvent(self):
-        event = self.q.get()
+    def processEvent(self, event):
         if event.type == "send":
             print event.packet.src
         elif event.type == "receive":
