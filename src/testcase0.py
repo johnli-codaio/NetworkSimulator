@@ -54,8 +54,8 @@ if __name__ == "__main__":
         print "current_buffer"
         print testLink.current_buffer
         print testLink.buffer_size
-        isFull = testLink.isFullWith(packet)
-        if (isFull):
+        willBeFull = testLink.isFullWith(packet)
+        if willBeFull:
             break
     print testLink.linkBuffer.qsize()
 

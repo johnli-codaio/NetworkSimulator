@@ -140,8 +140,11 @@ class Link:
     # we just check if the current data in the buffer and the to-be-added
     # packet will exceed the buffer capacity
     def isFullWith(self, added_packet):
-        return (self.buffer_size <=
+        return (self.buffer_size <
             self.current_buffer + added_packet.data_size)
+
+    def isFull(self):
+        return (self.current_buffer >= self.current_buffer)
 
     # Method to calculate round trip time
     # (TBH, links themselves manage delay? I thought that was something
