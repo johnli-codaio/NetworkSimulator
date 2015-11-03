@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
     src = host1.address
     dest = host2.address
-    flow = Flow("F1", src, dest, int(time.time()))
+    flow = Flow("F1", src, dest)
 
     while True:
         # print "Making New Packet!!!"

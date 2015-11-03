@@ -10,16 +10,16 @@ class Simulator:
     def __init__(self):
         self.q = Queue.PriorityQueue()
 
-    def insertEvent(event):
+    def insertEvent(self, event):
         self.q.put(event)
 
-    def processEvent():
+    def processEvent(self):
         event = self.q.get()
-        if event.type == send:
+        if event.type == "send":
             print event.packet.src
-        elif event.type == receive:
+        elif event.type == "receive":
             print event.packet.dest
-        elif event.type == generate:
+        elif event.type == "generate":
             print event.packet.src
 
     def run(self):
@@ -52,8 +52,8 @@ class Simulator:
         TIME += 1
 
         while not self.q.empty():
-            event = q.remove()
-            print event.time
+            event = self.q.get()
+            self.processEvent(event)
 
 
 if __name__ == "__main__":
