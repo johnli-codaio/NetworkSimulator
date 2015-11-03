@@ -86,7 +86,7 @@ class Flow:
         self.flowId = flowId
         self.src = src
         self.dest = dest
-        self.sendTime = sendTime
+        # self.sendTime = sendTime
 
     # This method will generate data packets for the flow.
     def generateDataPacket(self):
@@ -136,11 +136,12 @@ class Link:
         return buffer_size * KB_TO_B;
 
 
-    # is the buffer full?
+    # is the buffer full, if we add the new packet?
     # we just check if the current data in the buffer and the to-be-added
     # packet will exceed the buffer capacity
-    def isFull(self, added_packet):
-        return self.buffer_size <= current_buffer + added_packet.data_size
+    def isFullWith(self, added_packet):
+        return (self.buffer_size >
+            self.current_buffer + added_packet.data_size)
 
     # Method to calculate round trip time
     # (TBH, links themselves manage delay? I thought that was something
@@ -157,7 +158,11 @@ class Link:
 
     # This will put in a packet into the queue.
     def putIntoBuffer(self, packet):
-        self.linkBuffer.put(packet)
+        if not self.isFullWith(packet):
+            self.linkBuffer.put(packet)
+            self.buffer_size += packet.data_size
+            return True
+        return False
 
 class Packet:
 

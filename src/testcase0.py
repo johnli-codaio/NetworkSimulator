@@ -39,15 +39,19 @@ if __name__ == "__main__":
     src = host1.address
     dest = host2.address
     flow = Flow("F1", src, dest, int(time.time()))
-    print "Making New Packet!!!"
-    packet = flow.generateDataPacket()
 
-    print "Packet Source: " + str(packet.src)
-    print "Packet Destination: " + str(packet.dest)
-    print "Packet Data: " + str(packet.type)
+    while True:
+        # print "Making New Packet!!!"
+        packet = flow.generateDataPacket()
+        # print "Packet Source: " + str(packet.src)
+        # print "Packet Destination: " + str(packet.dest)
+        # print "Packet Data: " + str(packet.type)
+        # print "Enqueing this Packet... \n"
+        isFull = testLink.putIntoBuffer(packet)
+        if (isFull):
+            break
+    print testLink.linkBuffer.qsize()
 
-    print "Enqueing this Packet... \n"
-    testLink.putIntoBuffer(packet)
 
     print "Now, to dequeue this link buffer...\n"
 
