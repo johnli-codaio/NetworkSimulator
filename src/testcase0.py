@@ -1,6 +1,8 @@
 from classes import *
 import time
 import random
+import event.py
+import simulation.py
 
 # Just a few tests
 if __name__ == "__main__":

@@ -5,9 +5,9 @@
 # but the only events here are the packets being moved around
 class Event:
     def __init__(self, Packet, EventType, EventTime):
-        self.time = EventTime
         self.packet = Packet
         self.type = EventType
+        self.time = EventTime
 
 
     def __cmp__(self, other):
