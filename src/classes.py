@@ -22,9 +22,12 @@ class Device:
     # Instantiating the Device.
     # Arguments:
     #   address : Indicates the name/address of the device.
+    #   queue: A Queue data structure which keeps track of received packets for host,
+    #          and moving packets for routers.
     def __init__(self, address):
         self.address = address
         self.links = []
+        self.queue = Queue.Queue()
 
     def attachLink(linkz):
         # should be a for loop
