@@ -80,9 +80,8 @@ class Flow:
     #   flowId : Indicates what flow we are referencing.
     #   src : Address of the source of the flow.
     #   dest : Address of the destination of the flow
-    #   sendtime : Time that a packet is being sent.
 
-    def __init__(self, flowId, src, dest, sendTime):
+    def __init__(self, flowId, src, dest):
         self.flowId = flowId
         self.src = src
         self.dest = dest
