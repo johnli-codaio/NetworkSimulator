@@ -15,11 +15,24 @@ class Simulator:
 
     def processEvent(self, event):
         if event.type == "send":
-            print event.packet.src
+            # this packet is ready to be sent.
+            # so, we have to enqueue a receive event,
+            # which should occur exactly after 10 ms
+            # (specificed by link delay)
+            newEvent = Event(handler.device2, "receive", TIME + 10)
+            self.insertEvent(newEvent)
         elif event.type == "receive":
-            print event.packet.dest
+
         elif event.type == "generate":
-            print event.packet.src
+            # the flow will generate a packet
+            newPacket = event.handler.generateDataPacket()
+
+            # and then, put this data packet into the outgoing
+            # link buffer
+            event.handler.getLink().putIntoBuffer(newPacket)
+
+            # now, we have to enqueue a send packet, 
+            # becuase it might be ready for sending
 
     def run(self):
         # set up hosts, link, flow
@@ -47,7 +60,7 @@ class Simulator:
         event = Event(flow, "generate", TIME)
         self.insertEvent(event)
 
-        #increment time
+        # increment time
         TIME += 1
 
         while not self.q.empty():
