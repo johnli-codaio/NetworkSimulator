@@ -16,8 +16,8 @@ if __name__ == "__main__":
     print "Host Address: " + str(host2.address)
 
     # router with address R1
-    router = Router("R1")
-    print "Router Address: " + str(router.address) + "\n"
+    # router = Router("R1")
+    # print "Router Address: " + str(router.address) + "\n"
 
     # With this host and router, we create a link.v
     # The link will have an id of L1, with a rate of 10 mbps
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     print "Link Rate: " + str(testLink.rate) + " Mbps"
     print "Link Delay: " + str(testLink.delay) + " ms"
     print "Link Buffer: " + str(testLink.buffer_size) + " KB"
-    print "Link Device1: " + str(testLink.device1.address) + "\n"
+    print "Link Device1: " + str(testLink.device1.address)
     print "Link Device2: " + str(testLink.device2.address) + "\n"
 
     print "----------------PACKET DETAILS----------------"
@@ -56,7 +56,8 @@ if __name__ == "__main__":
         popped_packet = testLink.popFromBuffer()
         print "Popped Packet Source: " + str(popped_packet.src)
         print "Popped Packet Destination: " + str(popped_packet.dest)
-        print "Popped Packet Data: " + str(popped_packet.data) + "\n"
+        print "Popped Packet Data: " + str(popped_packet.type) + "\n"
+        print "Popped Packet Data Size: " + str(popped_packet.data_size)
 
     print "Queue is now empty, test is over :). \n"
 

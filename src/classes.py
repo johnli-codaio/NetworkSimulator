@@ -1,6 +1,22 @@
 #TODO: Add some stuff to the classes...
 import Queue
 
+# four conversion constants:
+#   KB_TO_B: converts kilobytes to bytes.
+#   B_to_b: converts bytes to bits
+#   MB_TO_KB: converts megabytes to kilobytes
+#   s_to_ms: converts seconds to milliseconds
+KB_TO_B = 1000
+B_to_b = 8
+MB_TO_KB = 1000
+s_to_ms = 100
+
+# some static constants:
+#   DATA_SIZE: the size of a data packet (1024B)
+#   ACK_SIZE: the size of an acknowledgment packet (64B)
+DATA_SIZE = 1024
+ACK_SIZE = 64
+
 class Device:
 
     # Instantiating the Device.
@@ -74,24 +90,15 @@ class Flow:
 
     # This method will generate data packets for the flow.
     def generateDataPacket(self):
-        packet = Packet(self.src, self.dest, Packet.DATA_SIZE, "data")
+        packet = Packet(self.src, self.dest, DATA_SIZE, "data")
         return packet
 
     # This method will generate acknowledgment packets for the flow.
     def generateAckPacket(self):
-        packet = Packet(self.src, self.dest, Packet.ACK_SIZE, "data")
+        packet = Packet(self.src, self.dest, ACK_SIZE, "data")
         return packet
 
 class Link:
-    # four conversion constants:
-    #   KB_TO_B: converts kilobytes to bytes.
-    #   B_to_b: converts bytes to bits
-    #   MB_TO_KB: converts megabytes to kilobytes
-    #   s_to_ms: converts seconds to milliseconds
-    KB_TO_B = 1000
-    B_to_b = 8
-    MB_TO_KB = 1000
-    s_to_ms = 1000
 
     # Instantiating a Link
     # Arguments:
@@ -107,9 +114,9 @@ class Link:
 
     def __init__(self, linkId, rate, delay, buffer_size, device1, device2):
         self.linkId = linkId
-        self.rate = self.rateInBytes(rate)
+        self.rate = rate
         self.delay = delay
-        self.buffer_size = bufferInBytes(buffer_size)
+        self.buffer_size = buffer_size
 
         # initially, the queue has no packets in it.
         self.current_buffer = 0
@@ -121,11 +128,11 @@ class Link:
     # the rate is given in Mbps. We have to convert that to bytes per sec
     # so we know many packets (given in bytes) can fit into that rate
     def rateInBytes(self, rate):
-        return rate / B_to_b * MB_TO_KB * KB_TO_B;
+        return self.rate / B_to_b * MB_TO_KB * KB_TO_B;
 
     # since the buffer_size is in KB, and packets are in bytes,
     # just convert buffer_size into bytes as well
-    def bufferInBytes(buffer_size):
+    def bufferInBytes(self, buffer_size):
         return buffer_size * KB_TO_B;
 
 
@@ -153,11 +160,6 @@ class Link:
         self.linkBuffer.put(packet)
 
 class Packet:
-    # some static constants:
-    #   DATA_SIZE: the size of a data packet (1024B)
-    #   ACK_SIZE: the size of an acknowledgment packet (64B)
-    DATA_SIZE = 1024
-    ACK_SIZE = 64
 
     # Instantiating a Packet
     # Arguments:
@@ -170,5 +172,5 @@ class Packet:
         self.src = src
         self.dest = dest
         self.data_size = data_size
-        selt.type = type
+        self.type = type
 
