@@ -116,7 +116,7 @@ class Link:
         self.linkId = linkId
         self.rate = rate
         self.delay = delay
-        self.buffer_size = buffer_size
+        self.buffer_size = buffer_size * KB_TO_B
 
         # initially, the queue has no packets in it.
         self.current_buffer = 0
@@ -140,7 +140,7 @@ class Link:
     # we just check if the current data in the buffer and the to-be-added
     # packet will exceed the buffer capacity
     def isFullWith(self, added_packet):
-        return (self.buffer_size >
+        return (self.buffer_size <=
             self.current_buffer + added_packet.data_size)
 
     # Method to calculate round trip time
@@ -160,7 +160,7 @@ class Link:
     def putIntoBuffer(self, packet):
         if not self.isFullWith(packet):
             self.linkBuffer.put(packet)
-            self.buffer_size += packet.data_size
+            self.current_buffer += packet.data_size
             return True
         return False
 
