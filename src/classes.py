@@ -6,24 +6,16 @@ class Device:
     # Instantiating the Device.
     # Arguments:
     #   address : Indicates the name/address of the device.
-    list links = []
     def __init__(self, address):
         self.address = address
+        self.links = []
 
-    def attachLink(links):
+    def attachLink(linkz):
         # should be a for loop
-        for link in links:
-            links.append(link)
+        for link in linkz:
+            self.links.append(link)
 
 class Router(Device):
-    # This is the routing table for the router, though there isn't
-    # much in it yet since we calculate that later.
-    table = None
-
-    # The list of links is also empty. We will update this with
-    # a list of created links.
-    links = None
-
     # Instantiating the Router, inherits from Device
     # Arguments:
     #   address : Indicates the name/address of the router.
@@ -37,7 +29,7 @@ class Router(Device):
     def createTable(self, table):
         self.table = table
 
-    # Since I made the links hold the actual devices, instead of just 
+    # Since I made the links hold the actual devices, instead of just
     # host numbers, the devices will be made separately first,
     # then the links, then the devices will attach the links.
     def attachLinks(self, links):
@@ -47,25 +39,22 @@ class Host(Device):
     # At first, since we make all the devices first, then
     # the links, and then we will then attach that link to the
     # proper host.
-    link = None
 
     # Instantiating the Host, inherits from Device
     # Arguments:
     #   address : Indicates the name/address of that host.
     #   link : The link that the host is connected to.
-
     def __init__(self, address):
         Device.__init__(self, address)
 
     def attachLink(self, link):
-        list link = [link]
         Device.attachLink(link)
 
     # logs sending packet
-    def logSend
+    # def logSend
 
     #logs receiving packet
-    def logReceive
+    # def logReceive
 
 
 class Flow:
@@ -83,18 +72,32 @@ class Flow:
         self.dest = dest
         self.sendTime = sendTime
 
-    # This method will generate packets for the flow.
-    def generatePacket(self, data):
-        packet = Packet(self.src, self.dest, data)
+    # This method will generate data packets for the flow.
+    def generateDataPacket(self):
+        packet = Packet(self.src, self.dest, Packet.DATA_SIZE, "data")
+        return packet
+
+    # This method will generate acknowledgment packets for the flow.
+    def generateAckPacket(self):
+        packet = Packet(self.src, self.dest, Packet.ACK_SIZE, "data")
         return packet
 
 class Link:
+    # four conversion constants:
+    #   KB_TO_B: converts kilobytes to bytes.
+    #   B_to_b: converts bytes to bits
+    #   MB_TO_KB: converts megabytes to kilobytes
+    #   s_to_ms: converts seconds to milliseconds
+    KB_TO_B = 1000
+    B_to_b = 8
+    MB_TO_KB = 1000
+    s_to_ms = 1000
 
     # Instantiating a Link
     # Arguments:
     #   linkId : Indicates what link we're referencing
     #   rate : Indicates how fast packets are being sent
-    #   delay : How much delay there is for packet to arrive to destination 
+    #   delay : How much delay there is for packet to arrive to destination
     #           (Do we need this?)
     #
     #   buffer_size : Size of buffer. We crate the buffer
@@ -104,11 +107,33 @@ class Link:
 
     def __init__(self, linkId, rate, delay, buffer_size, device1, device2):
         self.linkId = linkId
-        self.rate = rate
+        self.rate = self.rateInBytes(rate)
         self.delay = delay
-        self.linkBuffer = Queue.Queue(buffer_size)
+        self.buffer_size = bufferInBytes(buffer_size)
+
+        # initially, the queue has no packets in it.
+        self.current_buffer = 0
+
+        self.linkBuffer = Queue.Queue()
         self.device1 = device1
         self.device2 = device2
+
+    # the rate is given in Mbps. We have to convert that to bytes per sec
+    # so we know many packets (given in bytes) can fit into that rate
+    def rateInBytes(self, rate):
+        return rate / B_to_b * MB_TO_KB * KB_TO_B;
+
+    # since the buffer_size is in KB, and packets are in bytes,
+    # just convert buffer_size into bytes as well
+    def bufferInBytes(buffer_size):
+        return buffer_size * KB_TO_B;
+
+
+    # is the buffer full?
+    # we just check if the current data in the buffer and the to-be-added
+    # packet will exceed the buffer capacity
+    def isFull(self, added_packet):
+        return self.buffer_size <= current_buffer + added_packet.data_size
 
     # Method to calculate round trip time
     # (TBH, links themselves manage delay? I thought that was something
@@ -128,15 +153,22 @@ class Link:
         self.linkBuffer.put(packet)
 
 class Packet:
+    # some static constants:
+    #   DATA_SIZE: the size of a data packet (1024B)
+    #   ACK_SIZE: the size of an acknowledgment packet (64B)
+    DATA_SIZE = 1024
+    ACK_SIZE = 64
 
     # Instantiating a Packet
     # Arguments:
     #   src : Indicates the source of the sending
     #   dest : Indicates the destination of the sending
-    #   data : Either some of the data, or an acknowledgment
-
-    def __init__(self, src, dest, data):
+    #   type : Either an actual data packet, or an acknowledgment packet
+    #   We shouldn't really care about what is actually is in the data
+    #   data_size : pretty straightforward
+    def __init__(self, src, dest, data_size, type):
         self.src = src
         self.dest = dest
-        self.data = data
-		
+        self.data_size = data_size
+        selt.type = type
+

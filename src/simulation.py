@@ -2,8 +2,8 @@ import Queue
 
 class Simulator:
     def __init__(self):
-        q = Queue.PriorityQueue()
-        length = len(q)
+        self.q = Queue.PriorityQueue()
+        self.length = len(q)
 
     def insertEvent(event):
         q.put(event)
@@ -16,5 +16,6 @@ class Simulator:
             print event.packet.dest
         elif event.type == generate:
             print event.packet.src
+
 
 

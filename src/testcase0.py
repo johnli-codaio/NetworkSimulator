@@ -7,48 +7,47 @@ if __name__ == "__main__":
     random.seed()
 
     # host with address H1
-    host = Host("H1")
+    host1 = Host("H1")
     print "---------------DEVICE DETAILS-----------------"
-    print "Host Address: " + str(host.address)
+    print "Host Address: " + str(host1.address)
 
     # host with address H1
-    host = Host("H2")
-    print "---------------DEVICE DETAILS-----------------"
-    print "Host Address: " + str(host.address)
+    host2 = Host("H2")
+    print "Host Address: " + str(host2.address)
 
     # router with address R1
     router = Router("R1")
     print "Router Address: " + str(router.address) + "\n"
 
     # With this host and router, we create a link.v
-    # The link will have an id of 1, with a rate of 10 mbps
-    # and a delay of 1 second, with a buffer size of 10.
+    # The link will have an id of L1, with a rate of 10 mbps
+    # and a delay of 10 ms, with a buffer size of 64kb.
     # It will be attached to host and router
 
-    testLink = Link(1, 10, 1, 10, host, router)
+    testLink = Link("L1", 10, 10, 64, host1, host2)
 
     print "----------------LINK DETAILS------------------"
     print "Link ID: " + str(testLink.linkId)
     print "Link Rate: " + str(testLink.rate) + " Mbps"
-    print "Link Delay: " + str(testLink.delay)
-    print "Link Device1: " + str(testLink.device1.address)
+    print "Link Delay: " + str(testLink.delay) + " ms"
+    print "Link Buffer: " + str(testLink.buffer_size) + " KB"
+    print "Link Device1: " + str(testLink.device1.address) + "\n"
     print "Link Device2: " + str(testLink.device2.address) + "\n"
 
     print "----------------PACKET DETAILS----------------"
-    for i in range(5):
-        print "Making New Packet!!!"
-        src = random.randint(1, 20)
-        dest = random.randint(1, 20)
-        flow = Flow(1, src, dest, int(time.time()))
-        data = random.randint(10000, 20000)
-        packet = flow.generatePacket(data)
 
-        print "Packet Source: " + str(packet.src)
-        print "Packet Destination: " + str(packet.dest)
-        print "Packet Data: " + str(packet.data)
+    src = host1.address
+    dest = host2.address
+    flow = Flow("F1", src, dest, int(time.time()))
+    print "Making New Packet!!!"
+    packet = flow.generateDataPacket()
 
-        print "Enqueing this Packet... \n"
-        testLink.putIntoBuffer(packet)
+    print "Packet Source: " + str(packet.src)
+    print "Packet Destination: " + str(packet.dest)
+    print "Packet Data: " + str(packet.type)
+
+    print "Enqueing this Packet... \n"
+    testLink.putIntoBuffer(packet)
 
     print "Now, to dequeue this link buffer...\n"
 
