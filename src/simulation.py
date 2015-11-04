@@ -52,6 +52,7 @@ class Simulator:
             packet = event.handler.receiving()
             # update the amount of data sent
             self.current_state[0] += packet.data_size
+            print "Current Memory Sent: " + str(self.current_state[0])
 
         elif event.type == "generate":
             # here, event.handler is a flow
@@ -69,8 +70,8 @@ class Simulator:
             self.insertEvent(newEvent)
 
             # also, generate more packets to be sent!
-            generateEvent = (
-                    Event(event.handler, "generate", event.time + 1))
+            generateEvent = Event(event.handler, "generate", event.time + 1)
+            self.insertEvent(generateEvent)
 
 
     def run(self):
@@ -103,8 +104,7 @@ class Simulator:
         event = Event(flow, "generate", 1000)
         self.insertEvent(event)
 
-
-        for x in range(0, 100):
+        while not self.conditions_met():
             event = self.q.get()
             print event
             self.processEvent(event)
@@ -117,7 +117,7 @@ class Simulator:
     # for test case 0: have we sent in 20MB of data yet?
     # TODO
     def conditions_met(self):
-        self.conditions[0] = self.current_state[0]
+        return self.conditions[0] == self.current_state[0]
 
 
 if __name__ == "__main__":
