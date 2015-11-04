@@ -2,7 +2,6 @@ from classes import *
 import time
 import random
 import event
-import simulation
 
 
 # Just a few tests
@@ -41,7 +40,7 @@ if __name__ == "__main__":
 
     src = host1.address
     dest = host2.address
-    flow = Flow("F1", src, dest)
+    flow = Flow("F1", src, dest, 20, 1.0)
 
     while True:
         # print "Making New Packet!!!"
@@ -51,7 +50,6 @@ if __name__ == "__main__":
         # print "Packet Data: " + str(packet.type)
         # print "Enqueing this Packet... \n"
         testLink.putIntoBuffer(packet)
-        print "current_buffer"
         print testLink.current_buffer
         print testLink.buffer_size
         willBeFull = testLink.isFullWith(packet)
@@ -59,10 +57,8 @@ if __name__ == "__main__":
             break
     print testLink.linkBuffer.qsize()
 
-    print "Now, to dequeue this link buffer...\n"
-
     while testLink.linkBuffer.empty() == False:
-        print "Popped Off Packet!!!"
+
         popped_packet = testLink.popFromBuffer()
         print "Popped Packet Source: " + str(popped_packet.src)
         print "Popped Packet Destination: " + str(popped_packet.dest)

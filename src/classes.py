@@ -22,16 +22,33 @@ class Device:
     # Instantiating the Device.
     # Arguments:
     #   address : Indicates the name/address of the device.
-    #   queue: A Queue data structure which keeps track of received packets for host,
-    #          and moving packets for routers.
+    #   queue: A Queue data structure which keeps track of received 
+    #       packets for host,
+    #       and moving packets for routers.
     def __init__(self, address):
         self.address = address
         self.links = []
         self.queue = Queue.Queue()
 
+    # attach a link
     def attachLink(self, link):
         # should be a for loop
         self.links.append(link)
+
+    # we can think of this as a "queue" of packets currently being sent
+    # enqueue a packet, send from
+    # a particular link, into the device's 'receive queue', so that it
+    # can process packets as they arrive
+    def sending(self, link, packet):
+        self.queue.append(packet)
+        link.incrRate(packet)
+
+    # the actual processing of the sent packets
+    def receiving(self, link):
+        packet = self.queue.get()
+        print "Received data of type: " + packet.type
+        link.decrRate(packet)
+
 
 class Router(Device):
     # Instantiating the Router, inherits from Device
@@ -63,30 +80,37 @@ class Host(Device):
     def __init__(self, address):
         Device.__init__(self, address)
 
-
     def getLink(self):
         return self.links[0]
-
 
     # logs sending packet
     # def logSend
 
-    #logs receiving packet
-    # def logReceive
-
+    #processes the receiving packet
+    def receiving(self):
+        Device.receiving(self, self.getLink)
+        if packet.type == "acknowledgment":
+            # do nothing
+            # decrease the current link rate
+            pass
+        elif packet.type == "data":
+            # send an acknowledgment packet
+            # TODO
+            pass
 
 class Flow:
-
     # Instantiating a Flow
     # Arguments:
     #   flowId : Indicates what flow we are referencing.
     #   src : Address of the source of the flow.
     #   dest : Address of the destination of the flow
 
-    def __init__(self, flowId, src, dest):
+    def __init__(self, flowId, src, dest, data_amt, flow_start):
         self.flowId = flowId
         self.src = src
         self.dest = dest
+        self.data_amt = data_amt
+        self.flow_start = flow_start
         # self.sendTime = sendTime
 
     # This method will generate data packets for the flow.
@@ -96,7 +120,7 @@ class Flow:
 
     # This method will generate acknowledgment packets for the flow.
     def generateAckPacket(self):
-        packet = Packet(self.src, self.dest, ACK_SIZE, "data")
+        packet = Packet(self.src, self.dest, ACK_SIZE, "acknowlegment")
         return packet
 
 
@@ -118,10 +142,13 @@ class Link:
         self.linkId = linkId
         self.rate = rate
         self.delay = delay
-        self.buffer_size = buffer_size * KB_TO_B
+        self.buffer_size = buffer_size
 
         # initially, the queue has no packets in it.
         self.current_buffer = 0
+
+        #initially, the link isn't sending any packets
+        self.current_rate = 0
 
         self.linkBuffer = Queue.Queue()
         self.device1 = device1
@@ -137,16 +164,52 @@ class Link:
     def bufferInBytes(self, buffer_size):
         return buffer_size * KB_TO_B;
 
-
     # is the buffer full, if we add the new packet?
     # we just check if the current data in the buffer and the to-be-added
     # packet will exceed the buffer capacity
     def isFullWith(self, added_packet):
-        return (self.buffer_size <
+        return (self.bufferInBytes(self.buffer_size) <
             self.current_buffer + added_packet.data_size)
 
-    def isFull(self):
-        return (self.current_buffer >= self.current_buffer)
+    # is the link rate at capacity?
+    def rateFull(self, added_packet):
+        return (self.rateInBytes(self.rate) <
+                self.current_rate + added_packet.data_size)
+
+    # sends the packet off to the destination
+    def sendPacket(self):
+        if not self.rateFull():
+            print "sending..."
+            packet = self.queue.get()
+            packet.dest.sending(packet)
+            return True
+        return False
+
+    # this packet has been successfully sent, so the link
+    # should have more capacity
+    def decrRate(self, packet):
+        self.current_rate -= packet.data_size
+
+    # this packet is currently sending, taking up capacity
+    # in the link rate
+    def incrRate(self, packet):
+        self.current_rate += packet.data_size
+
+    # This will pop off a packet from the linked buffer. I will then return
+    # it so that it could be sent.
+    def popFromBuffer(self):
+        print "popped off buffer!"
+        popped_elem = self.linkBuffer.get()
+        return popped_elem
+
+    # This will put in a packet into the queue.
+    def putIntoBuffer(self, packet):
+        if not self.isFullWith(packet):
+            print "putting into buffer..."
+            self.linkBuffer.put(packet)
+            self.current_buffer += packet.data_size
+            return True
+        return False
 
     # Method to calculate round trip time
     # (TBH, links themselves manage delay? I thought that was something
@@ -154,20 +217,6 @@ class Link:
     def roundTripTime(self,rate, delay):
         #TODO
         pass
-
-    # This will pop off a packet from the linked buffer. I will then return
-    # it so that it could be sent.
-    def popFromBuffer(self):
-        popped_elem = self.linkBuffer.get()
-        return popped_elem
-
-    # This will put in a packet into the queue.
-    def putIntoBuffer(self, packet):
-        if not self.isFullWith(packet):
-            self.linkBuffer.put(packet)
-            self.current_buffer += packet.data_size
-            return True
-        return False
 
 class Packet:
 
