@@ -15,6 +15,7 @@ class Simulator:
         self.q.put(event)
 
     def processEvent(self, event):
+        print event.type
         if event.type == "send":
             # here, event.handler is a link
             # this packet is ready to be sent, handled by the link
@@ -47,6 +48,9 @@ class Simulator:
             newEvent = Event(link, "send", event.time + 1)
             self.insertEvent(newEvent)
 
+        else:
+            print "pigu"
+
     def run(self):
         # set up hosts, link, flow
         # host with address H1
@@ -77,8 +81,10 @@ class Simulator:
         event = Event(flow, "generate", 1000)
         self.insertEvent(event)
 
-        for x in range(0, 3):
+        
+        for x in range(0, 4):
             event = self.q.get()
+            print event
             self.processEvent(event)
 
 
