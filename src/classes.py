@@ -119,7 +119,7 @@ class Host(Device):
 
     #processes the receiving packet
     def receiving(self):
-        Device.receiving(self, self.getLink)
+        packet = Device.receiving(self, self.getLink())
         if packet.type == "acknowledgment":
             # do nothing
             # decrease the current link rate
@@ -128,6 +128,7 @@ class Host(Device):
             # send an acknowledgment packet
             # TODO
             pass
+        return packet
 
 class Flow:
     # Instantiating a Flow
@@ -182,7 +183,9 @@ class Link:
 
         self.linkBuffer = bufferQueue()
         self.device1 = device1
+        self.device1.attachLink(self)
         self.device2 = device2
+        self.device2.attachLink(self)
 
     # the rate is given in Mbps. We have to convert that to bytes per sec
     # so we know many packets (given in bytes) can fit into that rate
