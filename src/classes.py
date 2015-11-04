@@ -49,12 +49,16 @@ class bufferQueue:
 
 class Device:
 
-    # Instantiating the Device.
-    # Arguments:
-    #   deviceID : Unique name by which the device is identified.
-    #   queue: A Queue data structure which keeps track of received 
-    #       packets for host,
-    #       and moving packets for routers.
+    """ Instantiating the Device.
+     
+    :param deviceID: Unique name by which the device is identified.
+    :type deviceID: str
+    :param queue: a Queue data structure which keeps track of received packets for host, and moving packets for routers.
+    :type queue: Queue.Queue()
+    :param links: Stores all attached links to the device
+    :type links: Array of links
+    :returns: void
+    """
     def __init__(self, deviceID):
         self.deviceID = deviceID
         self.links = []
@@ -116,12 +120,14 @@ class Host(Device):
         return packet
 
 class Flow:
-    # Instantiating a Flow
-    # Arguments:
-    #   flowId : Indicates what flow we are referencing.
-    #   src : Address of the source of the flow.
-    #   dest : Address of the destination of the flow
-
+    """ Instantiating a Flow
+    :param flowID: ID to identify flow
+    :type flowID: string
+    :param src: Address to source of the flow.
+    :type src: Host
+    :param dest: Address to destination of flow.
+    :type dest: Host
+    """
     def __init__(self, flowID, src, dest, data_amt, flow_start):
         self.flowID = flowID
         self.src = src
@@ -142,17 +148,21 @@ class Flow:
 
 class Link:
 
-    # Instantiating a Link
-    # Arguments:
-    #   linkId : Indicates what link we're referencing
-    #   rate : Indicates how fast packets are being sent
-    #   delay : How much delay there is for packet to arrive to destination
-    #           (Do we need this?)
-    #
-    #   buffer_size : Size of buffer. We crate the buffer
-    #                 from the Python queue library.
-    #   device1: One device connected to the link
-    #   device2: The other device connected to the link
+    """ Instantiating a Link
+    
+    :param linkID: Indicates what link we're referencing
+    :type linkID: string
+    :param rate: Indicates how fast packets are being sent
+    :type rate: Integer
+    :param delay: How much delay there is for packet to arrive to destination
+    :type delay: Integer
+    :param buffer_size: Size of buffer. We crate the buffer from the Python queue library.
+    :type buffer_size: Integer
+    :param device1: One device connected to the link
+    :type device1: Device
+    :param device2: The other device connected to the link
+    :type device2: Device
+    """
 
     def __init__(self, linkID, rate, delay, buffer_size, device1, device2):
         self.linkID = linkID
@@ -248,13 +258,16 @@ class Link:
 
 class Packet:
 
-    # Instantiating a Packet
-    # Arguments:
-    #   src : Indicates the source of the sending
-    #   dest : Indicates the destination of the sending
-    #   type : Either an actual data packet, or an acknowledgment packet
-    #   We shouldn't really care about what is actually is in the data
-    #   data_size : data in BYTES.
+    """ Instantiating a Packet
+    :param src: Indicates the source of the sending
+    :type src: string(?)
+    :param dest: Indicates the destination of the sending
+    :type dest: string(?)
+    :param type: Either an actual data packet, or an acknowledgment packet. We shouldn't really care about what is actually is in the data
+    :type type: Packet(?)
+    :param data_size: data in BYTES.
+    :type data_size: Integer
+    """
     def __init__(self, src, dest, data_size, type):
         self.src = src
         self.dest = dest
