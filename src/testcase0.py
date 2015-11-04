@@ -52,6 +52,7 @@ if __name__ == "__main__":
         testLink.putIntoBuffer(packet)
         print testLink.current_buffer
         print testLink.buffer_size
+        print testLink.linkBuffer.peek()
         willBeFull = testLink.isFullWith(packet)
         if willBeFull:
             break
