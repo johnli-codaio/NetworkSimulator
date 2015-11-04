@@ -268,7 +268,7 @@ class Packet:
     #   dest : Indicates the destination of the sending
     #   type : Either an actual data packet, or an acknowledgment packet
     #   We shouldn't really care about what is actually is in the data
-    #   data_size : pretty straightforward
+    #   data_size : data in BYTES.
     def __init__(self, src, dest, data_size, type):
         self.src = src
         self.dest = dest
