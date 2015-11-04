@@ -18,14 +18,34 @@ class Simulator:
         print event.type
         if event.type == "send":
             # here, event.handler is a link
-            # this packet is ready to be sent, handled by the link
-            packet = event.handler.popFromBuffer()
-            event.handler.sendPacket(packet)
-            # so, we have to enqueue a receive event,
-            # which should occur exactly after 10 ms
-            # (specificed by link delay)
-            newEvent = Event(packet.dest, "receive", event.time + 10)
-            self.insertEvent(newEvent)
+            packet = event.handler.peekFromBuffer()
+            # no packets in the buffer
+            if packet == -1:
+                return
+
+            # it's not ready to be sent, because the current link
+            # rate is too full
+            # so, requeue it as an event later in time
+            if not event.handler.sendPacket(packet):
+                sameEvent = Event(event.handler, "send", event.time + 1)
+                self.insertEvent(newEvent)
+            else:
+                # this packet is ready to be sent, handled by the link
+                # so, we have to enqueue a receive event,
+                # which should occur exactly after 10 ms
+                # (specificed by link delay)
+                newEvent = Event(packet.dest, "receive", event.time + 10)
+                self.insertEvent(newEvent)
+
+                # TODO read this
+                # also, check to see if there's more packets to be sent
+                # from the buffer!
+                # if the link rate is not full, then we should be
+                # able to send multiple packets simultaneously?
+                if not event.handler.linkBuffer.empty():
+                    newEvent = Event(event.handler, "send", event.time)
+                    self.insertEvent(newEvent)
+
         elif event.type == "receive":
             # here, event.handler is a host
             # this packet can be dequeued by the receiving host
@@ -48,8 +68,10 @@ class Simulator:
             newEvent = Event(link, "send", event.time + 1)
             self.insertEvent(newEvent)
 
-        else:
-            print "pigu"
+            # also, generate more packets to be sent!
+            generateEvent = (
+                    Event(event.handler, "generate", event.time + 1))
+
 
     def run(self):
         # set up hosts, link, flow
@@ -81,8 +103,8 @@ class Simulator:
         event = Event(flow, "generate", 1000)
         self.insertEvent(event)
 
-        
-        for x in range(0, 4):
+
+        for x in range(0, 100):
             event = self.q.get()
             print event
             self.processEvent(event)
