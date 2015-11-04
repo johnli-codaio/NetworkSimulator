@@ -40,8 +40,9 @@ if __name__ == "__main__":
 
     src = host1.address
     dest = host2.address
-    flow = Flow("F1", src, dest, 20, 1.0)
+    flow = Flow("F1", host1, host2, 20, 1.0)
 
+    # Fills buffer until it's full
     while True:
         # print "Making New Packet!!!"
         packet = flow.generateDataPacket()
@@ -57,6 +58,21 @@ if __name__ == "__main__":
         if willBeFull:
             break
     print testLink.linkBuffer.qsize()
+
+
+    # Send packet test
+    i = 0
+    while True:
+        packet = testLink.linkBuffer.get()
+        if (packet == -1):
+            print "pigu"
+            print i
+            break
+        i = i + 1
+        testLink.sendPacket(packet)
+
+
+
 
     while testLink.linkBuffer.empty() == False:
 
