@@ -34,7 +34,7 @@ class bufferQueue:
         return len(self.items)
 
     def peek(self):
-        return self.items[0]
+        return self.items[len(self.items) - 1]
 
     def qsize(self):
         return len(self.items)
