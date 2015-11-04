@@ -18,9 +18,10 @@ class Simulator:
         print event.type
         if event.type == "send":
             # here, event.handler is a link
-            packet = event.handler.peekFromBuffer()
+            try:
+                packet = event.handler.peekFromBuffer()
             # no packets in the buffer
-            if packet == -1:
+            except BufferError:
                 return
 
             # it's not ready to be sent, because the current link
@@ -79,11 +80,11 @@ class Simulator:
         # host with address H1
         host1 = Host("H1")
         print "---------------DEVICE DETAILS-----------------"
-        print "Host Address: " + str(host1.address)
+        print "Host Address: " + str(host1.deviceID)
 
         # host with address H1
         host2 = Host("H2")
-        print "Host Address: " + str(host2.address)
+        print "Host Address: " + str(host2.deviceID)
 
         # With this host and router, we create a link.v
         # The link will have an id of L1, with a rate of 10 mbps
@@ -105,7 +106,10 @@ class Simulator:
         self.insertEvent(event)
 
         while not self.conditions_met():
-            event = self.q.get()
+            try:
+                event = self.q.get()
+            except BufferError:
+                pass
             self.processEvent(event)
 
 
