@@ -36,6 +36,8 @@ class bufferQueue:
         return len(self.items)
 
     def peek(self):
+        if self.empty():
+            return -1
         return self.items[len(self.items) - 1]
 
     def get_most_recent(self):
@@ -214,6 +216,9 @@ class Link:
         if not self.rateFullWith(packet):
             print "sending..."
             packet.dest.sending(self, packet)
+
+            # have to dequeue this packet now
+            self.popFromBuffer()
             return True
         return False
 
@@ -227,11 +232,15 @@ class Link:
     def incrRate(self, packet):
         self.current_rate += packet.data_size
 
+    def peekFromBuffer(self):
+        return self.linkBuffer.peek()
+
     # This will pop off a packet from the linked buffer. I will then return
     # it so that it could be sent.
     def popFromBuffer(self):
         print "popped off buffer!"
         popped_elem = self.linkBuffer.get()
+        self.current_buffer -= popped_elem.data_size
         return popped_elem
 
     # This will put in a packet into the queue.
