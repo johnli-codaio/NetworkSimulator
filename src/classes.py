@@ -29,7 +29,7 @@ class bufferQueue:
 
     def get(self):
         if self.empty():
-            return -1
+            raise Exception("Tried to get element from empty bufferQueue")
         return self.items.pop()
 
     def size(self):
@@ -37,7 +37,7 @@ class bufferQueue:
 
     def peek(self):
         if self.empty():
-            return -1
+            raise Exception("Tried to peek element from empty bufferQueue")
         return self.items[len(self.items) - 1]
 
     def get_most_recent(self):

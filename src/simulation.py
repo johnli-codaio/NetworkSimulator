@@ -106,7 +106,6 @@ class Simulator:
 
         while not self.conditions_met():
             event = self.q.get()
-            print event
             self.processEvent(event)
 
 
