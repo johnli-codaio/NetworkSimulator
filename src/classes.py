@@ -215,6 +215,9 @@ class Link:
     def incrRate(self, packet):
         self.current_rate += packet.data_size
 
+    def bufferEmpty(self):
+        return self.linkBuffer.empty()
+
     def peekFromBuffer(self):
         return self.linkBuffer.peek()
 
