@@ -123,6 +123,12 @@ class Flow:
         packet = Packet(self.src, self.dest, ACK_SIZE, "acknowlegment")
         return packet
 
+class LinkBuffer:
+    # the buffer for the link
+    def __init__(self, buffer_size):
+        self.buffer_size = buffer_size
+        self.queue = Queue.Queue()
+        self.head
 
 class Link:
 
@@ -171,16 +177,15 @@ class Link:
         return (self.bufferInBytes(self.buffer_size) <
             self.current_buffer + added_packet.data_size)
 
-    # is the link rate at capacity?
-    def rateFull(self, added_packet):
+    # is the link rate at capacity, if we add the new packet?
+    def rateFullWith(self, added_packet):
         return (self.rateInBytes(self.rate) <
                 self.current_rate + added_packet.data_size)
 
     # sends the packet off to the destination
     def sendPacket(self):
-        if not self.rateFull():
+        if not self.rateFull(packet):
             print "sending..."
-            packet = self.queue.get()
             packet.dest.sending(packet)
             return True
         return False
