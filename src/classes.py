@@ -63,10 +63,8 @@ class Host(Device):
     def __init__(self, address):
         Device.__init__(self, address)
 
-
     def getLink(self):
         return self.links[0]
-
 
     # logs sending packet
     # def logSend
