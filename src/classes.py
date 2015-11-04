@@ -28,6 +28,8 @@ class bufferQueue:
         self.items.insert(0,item)
 
     def get(self):
+        if self.empty():
+            return -1
         return self.items.pop()
 
     def size(self):
@@ -209,10 +211,10 @@ class Link:
                 self.current_rate + added_packet.data_size)
 
     # sends the packet off to the destination
-    def sendPacket(self):
-        if not self.rateFull(packet):
+    def sendPacket(self, packet):
+        if not self.rateFullWith(packet):
             print "sending..."
-            packet.dest.sending(packet)
+            packet.dest.sending(self, packet)
             return True
         return False
 
