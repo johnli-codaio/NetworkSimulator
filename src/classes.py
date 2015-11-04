@@ -64,6 +64,10 @@ class Host(Device):
         Device.__init__(self, address)
 
 
+    def getLink(self):
+        return self.links[0]
+
+
     # logs sending packet
     # def logSend
 
