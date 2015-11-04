@@ -7,6 +7,11 @@ import classes
 import simulation
 
 def main():
+    # parser = argparse.ArgumentParser(description = 'Run simulation on JSON file.')
+    # parser.add_argument('--json', '-j', action = 'store', dest = 'json_file_name', 
+    #                     help = 'Store JSON file name')
+    # # TODO: options for method of congestion control?
+    # # 
     parser = argparse.ArgumentParser(description = 'Run simulation on JSON file.')
     parser.add_argument('--json', '-j', action = 'store', dest = 'json_file_name', 
                         help = 'Store JSON file name')
@@ -16,6 +21,9 @@ def main():
     args = parser.parse_args()
 
     f = open(args.json_file_name) 
+
+    # TODO: uncomment above, this  line below is for testing
+    f = open("test0.json")
 
     # TODO: uncomment above, this  line below is for testing
     # f = open("test0.json")
