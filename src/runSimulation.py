@@ -49,7 +49,7 @@ def main():
         print "Router ", router_name, "has data: ", parsed_data['routers'][router_name]
         router = classes.Router(router_name)
         devices[router_name] = router
-    print "Hosts and routers instantiated: ", devices, "\n\n"
+    print "Hosts and routers instantiated: ", "\n\n"
 
     print "Iterating over links and adding to hosts/routers:"
     for link_name in parsed_data['links']:
@@ -58,13 +58,12 @@ def main():
 
         link = classes.Link(link_name, link_data['link_rate'], link_data['link_delay'], 
                             link_data['link_buffer'], 
-                            link_data['devices'][0], link_data['devices'][1])
+                            devices[link_data['devices'][0]], devices[link_data['devices'][1]])
         links[link_name] = link
 
-        devices[link_data['devices'][0]].attachLink(link)
-        devices[link_data['devices'][1]].attachLink(link)
 
-    print "Links instantiated: ", links, "\n\n"
+
+    print "Links instantiated.", "\n\n"
 
     print "Iterating over flows:"
     for flow_name in parsed_data['flows']:
@@ -74,7 +73,22 @@ def main():
         flow = classes.Flow(flow_name, flow_data['flow_src'], flow_data['flow_dest'],
                             flow_data['data_amt'], flow_data['flow_start'])
         flows[flow_name] = flow
-    print "Flows instantiated: ", flows, "\n\n"
+    print "Flows instantiated: ", "\n\n"
+
+    print "----------DEVICE DETAILS----------"
+    for device_name in devices:
+        print "Device is: ", "HOST" if isinstance(devices[device_name], classes.Host) else "ROUTER"
+        print "Name is: ", device_name
+        print "Links: ", [l.linkID for l in devices[device_name].links] 
+        print "\n"
+
+    print "----------LINK DETAILS----------"
+    for link_name in links:
+        print "Link name is: ", link_name
+        print "Connects devices: ", links[link_name].device1.deviceID, links[link_name].device2.deviceID
+        print "Link rate: ", links[link_name].rate
+        print "Link delay", links[link_name].delay
+        print "Link buffer size: ", links[link_name].buffer_size
 
     # Have flows create sending events...
 

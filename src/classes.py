@@ -51,12 +51,12 @@ class Device:
 
     # Instantiating the Device.
     # Arguments:
-    #   address : Indicates the name/address of the device.
+    #   deviceID : Unique name by which the device is identified.
     #   queue: A Queue data structure which keeps track of received 
     #       packets for host,
     #       and moving packets for routers.
-    def __init__(self, address):
-        self.address = address
+    def __init__(self, deviceID):
+        self.deviceID = deviceID
         self.links = []
         self.queue = Queue.Queue()
 
@@ -84,13 +84,6 @@ class Device:
 
 
 class Router(Device):
-    # Instantiating the Router, inherits from Device
-    # Arguments:
-    #   address : Indicates the name/address of the router.
-    #   links : A list of all the links that the router is attached to.
-
-    def __init__(self, address):
-        Device.__init__(self, address)
 
     # This will set a created routing table into the router's table.
     # The table will be decided using Bellman Ford.
@@ -102,16 +95,6 @@ class Router(Device):
     # then the links, then the devices will attach the links.
 
 class Host(Device):
-    # At first, since we make all the devices first, then
-    # the links, and then we will then attach that link to the
-    # proper host.
-
-    # Instantiating the Host, inherits from Device
-    # Arguments:
-    #   address : Indicates the name/address of that host.
-    #   link : The link that the host is connected to.
-    def __init__(self, address):
-        Device.__init__(self, address)
 
     def getLink(self):
         return self.links[0]
@@ -139,8 +122,8 @@ class Flow:
     #   src : Address of the source of the flow.
     #   dest : Address of the destination of the flow
 
-    def __init__(self, flowId, src, dest, data_amt, flow_start):
-        self.flowId = flowId
+    def __init__(self, flowID, src, dest, data_amt, flow_start):
+        self.flowID = flowID
         self.src = src
         self.dest = dest
         self.data_amt = data_amt
@@ -171,8 +154,8 @@ class Link:
     #   device1: One device connected to the link
     #   device2: The other device connected to the link
 
-    def __init__(self, linkId, rate, delay, buffer_size, device1, device2):
-        self.linkId = linkId
+    def __init__(self, linkID, rate, delay, buffer_size, device1, device2):
+        self.linkID = linkID
         self.rate = rate
         self.delay = delay
         self.buffer_size = buffer_size
@@ -192,7 +175,7 @@ class Link:
     # the rate is given in Mbps. We have to convert that to bytes per sec
     # so we know many packets (given in bytes) can fit into that rate
     def rateInBytes(self, rate):
-        return self.rate / B_to_b * MB_TO_KB * KB_TO_B;
+        return self.rate * MB_TO_KB * KB_TO_B / B_to_b;
 
     # since the buffer_size is in KB, and packets are in bytes,
     # just convert buffer_size into bytes as well
