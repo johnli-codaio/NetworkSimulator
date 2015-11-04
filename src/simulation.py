@@ -15,6 +15,7 @@ class Simulator:
         self.q.put(event)
 
     def processEvent(self, event):
+        print event.type
         if event.type == "send":
             # here, event.handler is a link
             packet = event.handler.peekFromBuffer()
@@ -72,6 +73,7 @@ class Simulator:
             generateEvent = Event(event.handler, "generate", event.time + 1)
             self.insertEvent(generateEvent)
 
+
     def run(self):
         # set up hosts, link, flow
         # host with address H1
@@ -104,6 +106,7 @@ class Simulator:
 
         while not self.conditions_met():
             event = self.q.get()
+            print event
             self.processEvent(event)
 
 
