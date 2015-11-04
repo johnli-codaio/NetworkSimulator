@@ -41,14 +41,14 @@ def main():
     print "Iterating over hosts:"
     for host_name in parsed_data['hosts']:
         print "Host ", host_name, "has data: ", parsed_data['hosts'][host_name]
-        host = classes.Host(host_name)
-        devices[host_name] = host
+        host = classes.Host(str(host_name))
+        devices[str(host_name)] = host
 
     print "Iterating over routers:"
     for router_name in parsed_data['routers']:
         print "Router ", router_name, "has data: ", parsed_data['routers'][router_name]
-        router = classes.Router(router_name)
-        devices[router_name] = router
+        router = classes.Router(str(router_name))
+        devices[str(router_name)] = router
     print "Hosts and routers instantiated: ", "\n\n"
 
     print "Iterating over links and adding to hosts/routers:"
@@ -56,10 +56,10 @@ def main():
         link_data = parsed_data['links'][link_name]
         print "Link ", link_name, "has data: ", link_data
 
-        link = classes.Link(link_name, link_data['link_rate'], link_data['link_delay'], 
+        link = classes.Link(str(link_name), link_data['link_rate'], link_data['link_delay'], 
                             link_data['link_buffer'], 
                             devices[link_data['devices'][0]], devices[link_data['devices'][1]])
-        links[link_name] = link
+        links[str(link_name)] = link
 
 
 
@@ -70,9 +70,9 @@ def main():
         flow_data = parsed_data['flows'][flow_name]
         print "Flow ", flow_name, "has data: ", flow_data
 
-        flow = classes.Flow(flow_name, flow_data['flow_src'], flow_data['flow_dest'],
+        flow = classes.Flow(str(flow_name), flow_data['flow_src'], flow_data['flow_dest'],
                             flow_data['data_amt'], flow_data['flow_start'])
-        flows[flow_name] = flow
+        flows[str(flow_name)] = flow
     print "Flows instantiated: ", "\n\n"
 
     print "----------DEVICE DETAILS----------"
@@ -89,8 +89,23 @@ def main():
         print "Link rate: ", links[link_name].rate
         print "Link delay", links[link_name].delay
         print "Link buffer size: ", links[link_name].buffer_size
+        print "\n"
+
+    print "----------FLOW DETAILS----------"
+    for flow_name in flows:
+        print "Flow name is: ", flow_name
+        print "Source is: ", flows[flow_name].src
+        print "Destination is: ", flows[flow_name].dest
+        print "Data amount in MB is: ", flows[flow_name].data_amt
+        print "Flow start time is: ", flows[flow_name].flow_start
 
     # Have flows create sending events...
+
+
+
+
+
+
 
 
 

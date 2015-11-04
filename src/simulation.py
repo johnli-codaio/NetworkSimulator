@@ -1,8 +1,29 @@
 import Queue
-from event import *
+#from event import *
 import datetime
 import time
 from classes import *
+
+# Types of events:
+# when a flow generates a packet (type = generate)
+# when a device sends a packet (type = send)
+# when a device receives a packet (type = receive)
+# but the only events here are the packets being moved around
+class Event:
+
+    #   EventHandler: the device(?) that is interacting with the packet
+    #   (generating, sending, or receiving it)
+    #   Packet: the packet 
+    #   EventType: generating, sending, or receiving
+    #   EventTime: the time at which the particular event is occurring
+    def __init__(self, EventHandler, EventType, EventTime):
+        self.handler = EventHandler
+        self.type = EventType
+        self.time = EventTime
+
+    def __cmp__(self, other):
+        return cmp(self.time, other.time)
+
 
 class Simulator:
     # TODO
@@ -17,6 +38,9 @@ class Simulator:
     def processEvent(self, event):
         print event.type
         if event.type == "send":
+            assert(isinstance(event.handler, classes.Link))
+            packet = event.handler.peekFromBuffer()
+
             # here, event.handler is a link
             try:
                 packet = event.handler.peekFromBuffer()
@@ -113,9 +137,7 @@ class Simulator:
             self.processEvent(event)
 
 
-        # while not self.conditions_met():
-        #     event = self.q.get()
-        #     self.processEvent(event)
+
 
     # for test case 0: have we sent in 20MB of data yet?
     # TODO
