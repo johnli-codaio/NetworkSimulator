@@ -17,6 +17,29 @@ s_to_ms = 100
 DATA_SIZE = 1024
 ACK_SIZE = 64
 
+class bufferQueue:
+    def __init__(self):
+        self.items = []
+
+    def empty(self):
+        return self.items == []
+
+    def put(self, item):
+        self.items.insert(0,item)
+
+    def get(self):
+        return self.items.pop()
+
+    def size(self):
+        return len(self.items)
+
+    def peek(self):
+        return self.items[len(self.items)]
+
+    def qsize(self):
+        return len(self.items)
+
+
 class Device:
 
     # Instantiating the Device.
@@ -40,7 +63,7 @@ class Device:
     # a particular link, into the device's 'receive queue', so that it
     # can process packets as they arrive
     def sending(self, link, packet):
-        self.queue.append(packet)
+        self.queue.put(packet)
         link.incrRate(packet)
 
     # the actual processing of the sent packets
@@ -150,7 +173,7 @@ class Link:
         #initially, the link isn't sending any packets
         self.current_rate = 0
 
-        self.linkBuffer = Queue.Queue()
+        self.linkBuffer = bufferQueue()
         self.device1 = device1
         self.device2 = device2
 
