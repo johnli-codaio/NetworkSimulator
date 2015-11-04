@@ -70,10 +70,13 @@ class Device:
         link.incrRate(packet)
 
     # the actual processing of the sent packets
+    # we have to return the packet, so that we can update the total
+    # amount of data sent
     def receiving(self, link):
         packet = self.queue.get()
         print "Received data of type: " + packet.type
         link.decrRate(packet)
+        return packet
 
 
 class Router(Device):
@@ -148,13 +151,6 @@ class Flow:
     def generateAckPacket(self):
         packet = Packet(self.src, self.dest, ACK_SIZE, "acknowlegment")
         return packet
-
-class LinkBuffer:
-    # the buffer for the link
-    def __init__(self, buffer_size):
-        self.buffer_size = buffer_size
-        self.queue = Queue.Queue()
-        self.head
 
 class Link:
 
@@ -240,6 +236,7 @@ class Link:
             self.linkBuffer.put(packet)
             self.current_buffer += packet.data_size
             return True
+        print "unable to put in buffer"
         return False
 
     # Method to calculate round trip time
