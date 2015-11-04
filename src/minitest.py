@@ -6,13 +6,18 @@ import random
 if __name__ == "__main__":
     random.seed()
 
-    # host with address 100
-    host = Host(100) 
+    # host with address H1
+    host = Host("H1")
     print "---------------DEVICE DETAILS-----------------"
     print "Host Address: " + str(host.address)
 
-    # router with address 200
-    router = Router(200)
+    # host with address H1
+    host = Host("H2")
+    print "---------------DEVICE DETAILS-----------------"
+    print "Host Address: " + str(host.address)
+
+    # router with address R1
+    router = Router("R1")
     print "Router Address: " + str(router.address) + "\n"
 
     # With this host and router, we create a link.v
@@ -24,7 +29,7 @@ if __name__ == "__main__":
 
     print "----------------LINK DETAILS------------------"
     print "Link ID: " + str(testLink.linkId)
-    print "Link Rate: " + str(testLink.rate)
+    print "Link Rate: " + str(testLink.rate) + " Mbps"
     print "Link Delay: " + str(testLink.delay)
     print "Link Device1: " + str(testLink.device1.address)
     print "Link Device2: " + str(testLink.device2.address) + "\n"

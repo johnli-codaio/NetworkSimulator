@@ -1,0 +1,22 @@
+{
+    "hosts": {"H1": {"links": "L1"},
+              "H2": {"links": "L1"}
+             },
+
+    "routers": {
+               },
+
+    "links": {"L1": {"devices": ["H1", "H2"], 
+                     "link_rate": 10,
+                     "link_delay": 10,
+                     "link_buffer": 64
+                    }
+             },
+    "flows": {"F1": {"flow_src": "H1",
+                     "flow_dest": "H2",
+                     "data_amt": 20,
+                     "flow_start": 1.0
+                    }
+             }
+
+}
