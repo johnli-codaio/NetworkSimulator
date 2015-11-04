@@ -29,10 +29,9 @@ class Device:
         self.links = []
         self.queue = Queue.Queue()
 
-    def attachLink(linkz):
+    def attachLink(self, link):
         # should be a for loop
-        for link in linkz:
-            self.links.append(link)
+        self.links.append(link)
 
 class Router(Device):
     # Instantiating the Router, inherits from Device
@@ -51,8 +50,6 @@ class Router(Device):
     # Since I made the links hold the actual devices, instead of just
     # host numbers, the devices will be made separately first,
     # then the links, then the devices will attach the links.
-    def attachLinks(self, links):
-        self.links = links
 
 class Host(Device):
     # At first, since we make all the devices first, then
@@ -66,8 +63,6 @@ class Host(Device):
     def __init__(self, address):
         Device.__init__(self, address)
 
-    def attachLink(self, link):
-        Device.attachLink(link)
 
     # logs sending packet
     # def logSend
