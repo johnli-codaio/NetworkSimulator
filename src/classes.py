@@ -69,6 +69,10 @@ class Host(Device):
     def attachLink(self, link):
         Device.attachLink(link)
 
+    def getLink(self):
+        return self.links[0]
+
+
     # logs sending packet
     # def logSend
 
