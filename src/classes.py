@@ -36,6 +36,9 @@ class bufferQueue:
     def peek(self):
         return self.items[len(self.items) - 1]
 
+    def get_most_recent(self):
+        return 0
+
     def qsize(self):
         return len(self.items)
 
