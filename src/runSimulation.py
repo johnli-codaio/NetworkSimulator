@@ -4,7 +4,7 @@ import pprint
 import classes
 
 def main():
-    # parser = argparse.ArgumentParser(description = 'Run simulation on JSON file.')
+    """# parser = argparse.ArgumentParser(description = 'Run simulation on JSON file.')
     # parser.add_argument('--json', '-j', action = 'store', dest = 'json_file_name', 
     #                     help = 'Store JSON file name')
     # # TODO: options for method of congestion control?
@@ -14,7 +14,7 @@ def main():
 
     # f = open(args.json_file_name) 
 
-    # TODO: uncomment above, this  line below is for testing
+    # TODO: uncomment above, this  line below is for testing"""
     f = open("test0.json")
 
     parsed_data = json.loads(f.read())
