@@ -22,8 +22,9 @@ class Device:
     # Instantiating the Device.
     # Arguments:
     #   address : Indicates the name/address of the device.
-    #   queue: A Queue data structure which keeps track of received packets for host,
-    #          and moving packets for routers.
+    #   queue: A Queue data structure which keeps track of received 
+    #       packets for host,
+    #       and moving packets for routers.
     def __init__(self, address):
         self.address = address
         self.links = []
@@ -34,10 +35,20 @@ class Device:
         # should be a for loop
         self.links.append(link)
 
-    # enqueue a packet into the device's 'receive queue', so that it
+    # we can think of this as a "queue" of packets currently being sent
+    # enqueue a packet, send from
+    # a particular link, into the device's 'receive queue', so that it
     # can process packets as they arrive
-    def receive(self, packet):
+    def sending(self, link, packet):
         self.queue.append(packet)
+        link.incrRate(packet)
+
+    # the actual processing of the sent packets
+    def receiving(self, link):
+        packet = self.queue.get()
+        print "Received data of type: " + packet.type
+        link.decrRate(packet)
+
 
 class Router(Device):
     # Instantiating the Router, inherits from Device
@@ -75,12 +86,12 @@ class Host(Device):
     # logs sending packet
     # def logSend
 
-    #logs receiving packet
-    def logReceive(self):
-        packet = self.queue.get()
-        print "Received data of type: " + packet.type
+    #processes the receiving packet
+    def receiving(self):
+        Device.receiving(self, self.getLink)
         if packet.type == "acknowledgment":
             # do nothing
+            # decrease the current link rate
             pass
         elif packet.type == "data":
             # send an acknowledgment packet
@@ -160,19 +171,29 @@ class Link:
         return (self.bufferInBytes(self.buffer_size) <
             self.current_buffer + added_packet.data_size)
 
-    # is the link rate at capacity, if we add the new packet?
-    def rateFullWith(self, added_packet):
+    # is the link rate at capacity?
+    def rateFull(self, added_packet):
         return (self.rateInBytes(self.rate) <
                 self.current_rate + added_packet.data_size)
 
     # sends the packet off to the destination
-    def sendPacket(self, packet):
-        if not self.rateFullWith(packet):
+    def sendPacket(self):
+        if not self.rateFull():
             print "sending..."
-            packet.dest.receive(packet)
-            self.current_rate += packet.data_size
+            packet = self.queue.get()
+            packet.dest.sending(packet)
             return True
         return False
+
+    # this packet has been successfully sent, so the link
+    # should have more capacity
+    def decrRate(self, packet):
+        self.current_rate -= packet.data_size
+
+    # this packet is currently sending, taking up capacity
+    # in the link rate
+    def incrRate(self, packet):
+        self.current_rate += packet.data_size
 
     # This will pop off a packet from the linked buffer. I will then return
     # it so that it could be sent.

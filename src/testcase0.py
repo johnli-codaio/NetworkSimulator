@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
     src = host1.address
     dest = host2.address
-    flow = Flow("F1", src, dest)
+    flow = Flow("F1", src, dest, 20, 1.0)
 
     while True:
         # print "Making New Packet!!!"
@@ -57,9 +57,8 @@ if __name__ == "__main__":
             break
     print testLink.linkBuffer.qsize()
 
-    print "Now, to dequeue this link buffer...\n"
-
     while testLink.linkBuffer.empty() == False:
+
         popped_packet = testLink.popFromBuffer()
         print "Popped Packet Source: " + str(popped_packet.src)
         print "Popped Packet Destination: " + str(popped_packet.dest)
