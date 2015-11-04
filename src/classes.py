@@ -81,10 +81,12 @@ class Flow:
     #   src : Address of the source of the flow.
     #   dest : Address of the destination of the flow
 
-    def __init__(self, flowId, src, dest):
+    def __init__(self, flowId, src, dest, data_amt, flow_start):
         self.flowId = flowId
         self.src = src
         self.dest = dest
+        self.data_amt = data_amt
+        self.flow_start = flow_start
         # self.sendTime = sendTime
 
     # This method will generate data packets for the flow.
