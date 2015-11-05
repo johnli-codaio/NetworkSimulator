@@ -138,7 +138,7 @@ class Router(Device):
         return table
 
     def transfer(self, packet):
-        """ Instantaneous transfer from receiving a packet to sending a packet.
+        """ Returns the link that the packet will be forwarded to.
 
         :param packet: packet that will be transferred
         :type packet: Packet
@@ -147,8 +147,7 @@ class Router(Device):
         prevLink.decrRate(packet)
 
         nextLink = table[packet.dest]
-        packet.curr = self
-        Device.sendToLink(self, nextLink, packet)
+        return nextLink
 
 class Host(Device):
 

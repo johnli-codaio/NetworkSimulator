@@ -6,7 +6,7 @@ from classes import *
 
 class Event:
     """Events are enqueued into the Simulator priority queue by their time. Events
-]    have a type (SENDTOLINK, SENDTODEVICE, RECEIVE, GENERATE) describing what is 
+    have a type (PUT, SEND, RECEIVE, GENERATE) describing what is 
     done to the packet. Each type of event has an associated network handler 
     (Link, Device, Flow, respectively).
 
@@ -22,10 +22,10 @@ class Event:
         :type EventHandler: Device, Packet, Flow, Link.
 
         :param EventType: The type of event that will be sent.
-        :type EventType: String
+        :type EventType: Str
 
         :param EventTime: The time of the particular event, in milliseconds.
-        :type EventTime: Integer
+        :type EventTime: Int
         """
 
         self.packet = packet
@@ -63,7 +63,7 @@ class Simulator:
         event = self.q.get()
 
         print event.type
-        if(event.type == "SENDTOLINK"):
+        if(event.type == "PUT"):
             # Tries to put packet into link buffer
 ]            # This only happens initially, when a host is moving a packet
             # into the link buffer. Routers will instantenously receive 
@@ -73,9 +73,10 @@ class Simulator:
             host = event.handler
             if not link.rateFullWith(event.packet):
                 host.sendToLink(link, event.packet)
+                newEvent = Event(None, link, "SEND", event.time)
             else:
                 # If link buffer is full, we wait until it's not full.
-                newEvent = Event(event.packet, host, "SENDTOLINK", event.time + 1)
+                newEvent = Event(event.packet, (host, link), "PUT", event.time + 1)
                 self.q.insert(newEvent)
 
         elif(event.type == "RECEIVE"):
@@ -85,16 +86,15 @@ class Simulator:
             # First, the issue with the router.
             if isinstance(event.handler, Router):
                 router = event.handler
-                router.transfer(event.packet)
+                newLink = router.transfer(event.packet)
 
-                # Transfer will update the current location of the packet to the new
-                # link.
-                newLink = packet.curr
-                newEvent = Event(event.packet, newLink, "SENDTODEVICE", event.time)
+                newEvent = Event(event.packet, (router, newLink), "PUT", event.time)
 
+            # The packet reaches it's host destination...
             elif isinstance(event.handler, Host):
-                host = event.handler
-                if(event.packet.dest == host)
+                newDest 
+
+                newEvent
 
 
 
@@ -217,7 +217,7 @@ class Simulator:
         while not self.conditions_met():
             try:
                 event = self.q.get()
-            except BufferError:
+            efxcept BufferError:
                 pass
             self.processEvent(event)
 
