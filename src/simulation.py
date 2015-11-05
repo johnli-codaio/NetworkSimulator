@@ -16,6 +16,10 @@ class Event:
     #   EventType: generating, sending, or receiving
     #   EventTime: the time at which the particular event is occurring
     def __init__(self, EventHandler, EventType, EventTime):
+        
+
+
+
         self.handler = EventHandler
         self.type = EventType
         self.time = EventTime
@@ -36,7 +40,7 @@ class Simulator:
 
     def processEvent(self, event):
         print event.type
-        if event.type == "send":
+        if event.type == "SEND":
             assert(isinstance(event.handler, Link))
             packet = event.handler.peekFromBuffer()
 
@@ -69,7 +73,7 @@ class Simulator:
                     newEvent = Event(event.handler, "send", event.time)
                     self.insertEvent(newEvent)
 
-        elif event.type == "receive":
+        elif event.type == "RECEIVE":
             # here, event.handler is a host
             # this packet can be dequeued by the receiving host
             packet = event.handler.receiving()
@@ -77,7 +81,7 @@ class Simulator:
             self.current_state[0] += packet.data_size
             print "Current Memory Sent: " + str(self.current_state[0])
 
-        elif event.type == "generate":
+        elif event.type == "GENERATE":
             # here, event.handler is a flow
             # the flow will generate a packet
             newPacket = event.handler.generateDataPacket()
@@ -89,11 +93,11 @@ class Simulator:
 
             # now, we have to enqueue a send event,
             # becuase it might be ready for sending
-            newEvent = Event(link, "send", event.time + 1)
+            newEvent = Event(link, "SEND", event.time + 1)
             self.insertEvent(newEvent)
 
             # also, generate more packets to be sent!
-            generateEvent = Event(event.handler, "generate", event.time + 1)
+            generateEvent = Event(event.handler, "GENERATE", event.time + 1)
             self.insertEvent(generateEvent)
 
 
