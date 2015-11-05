@@ -173,13 +173,9 @@ class Host(Device):
 
         elif packet.type == "DATA":
             # send an acknowledgment packet
-            pass
-
-        # What we can do:
-        # We will send an acknowledgement from event handler:
-        # IF packet.curr = packet.dest and packet.type = "DATA"
-        packet.curr = self
-        return packet
+            link = packet.curr
+            link.decrRate(packet)
+            print "Packet data received by recipient... sending ack from " + str(self.deviceID)
 
 
 class Flow:
@@ -213,14 +209,14 @@ class Flow:
         """ This will produce aa data packet, heading the forward
         direction
         """
-        packet = Packet(self.src, self.dest, DATA_SIZE, "DATA", self.src)
+        packet = Packet(self.src, self.dest, DATA_SIZE, "DATA", None)
         return packet
 
     def generateAckPacket(self):
         """ This will produce an acknowledgment packet, heading the reverse
         direction
         """
-        packet = Packet(self.dest, self.src, ACK_SIZE, "ACK", self.dest)
+        packet = Packet(self.dest, self.src, ACK_SIZE, "ACK", None)
         return packet
 
 
