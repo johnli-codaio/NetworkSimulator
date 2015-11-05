@@ -122,34 +122,33 @@ class Device:
 
 class Router(Device):
 
-    # This will set a created routing table into the router's table.
-    # The table will be decided using Bellman Ford.
-    def createTable(self, table):
-        self.table = table
+    # def createTable(self, table):
+    #     """Compute routing table via Bellman Ford.
+    #     :param table: Routing table for the router
+    #     :type Table: Dictionary
+    #    return table
 
     def receiving(self, link, packet):
-
-
+        pass
+        
 class Host(Device):
 
     def getLink(self):
         return self.links[0]
 
-    # logs sending packet
-    # def logSend
-
-    #processes the receiving packet
-    def receiving(self):
-        packet = Device.receiving(self, self.getLink())
-        if packet.type == "acknowledgment":
-            # do nothing
-            # decrease the current link rate
-            pass
-        elif packet.type == "data":
-            # send an acknowledgment packet
-            # TODO
-            pass
-        return packet
+    # TO FIX:
+    # #processes the receiving packet
+    # def receiving(self):
+    #     packet = Device.receiving(self, self.getLink())
+    #     if packet.type == "ACK":
+    #         # do nothing
+    #         # decrease the current link rate
+    #         pass
+    #     elif packet.type == "DATA":
+    #         # send an acknowledgment packet
+    #         # TODO
+    #         pass
+    #     return packet
 
 class Flow:
 
