@@ -339,8 +339,8 @@ class Packet:
         :param data_type: metadata, either ACK or DATA
         :type data_type: str
 
-        :param curr_loc: Device or Link where the packet is.
-        :type curr_loc: Device or Link
+        :param curr_loc: Link where the packet is.
+        :type curr_loc: Link
         """
         self.src = src
         self.dest = dest

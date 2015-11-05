@@ -10,29 +10,55 @@ from classes import *
 # but the only events here are the packets being moved around
 class Event:
     """Events are enqueued into the Simulator priority queue by their time. Events
-    have a type (SEND, RECEIVE, GENERATE) describing what is done to the packet. 
-    Each type of event has an associated network handler (Link, Device, Flow, 
-    respectively).
+    have a type (SENDTOLINK, SENDTODEVICE, RECEIVE, GENERATE) describing what is 
+    done to the packet. Each type of event has an associated network handler 
+    (Link, Device, Flow, respectively).
 
     """
 
     def __init__(self, packet, EventHandler, EventType, EventTime):
+        """ This will initialize an event.
+
+        :param packet: The packet associated with the event.
+        :type packet: Packet/None (None is usually reserved for flows)
+
+        :param EventHandler: The object that sent the event request.
+        :type EventHandler: Device, Packet, Flow, Link.
+
+        :param EventType: The type of event that will be sent.
+        :type EventType: String
+
+        :param EventTime: The time of the particular event, in milliseconds.
+        :type EventTime: Integer
+        """
         self.packet = packet
         self.handler = EventHandler
         self.type = EventType
         self.time = EventTime
 
     def __cmp__(self, other):
-        """Ordering by time."""
+        """Ordering by time.
+
+        :param other: The other event we're comparing with.
+        :type other: Event
+        """
         return cmp(self.time, other.time)
 
 
 class Simulator:
     # TODO
     def __init__(self):
+        """ This will initialize the simulation with a Priority Queue
+        that sorts based on time.
+        """
         self.q = Queue.PriorityQueue()
 
     def insertEvent(self, event):
+        """ This will insert an event into the Priority Queue.
+
+        :param event: This is the event we're adding into the queue.
+        :type event: Event
+        """
         self.q.put(event)
 
     def processEvent(self):
@@ -40,13 +66,42 @@ class Simulator:
         event = self.q.get()
 
         print event.type
-        if(event.type == "SEND"):
+        if(event.type == "SENDTOLINK"):
             # Tries to put packet into link buffer
-            assert(isinstance(event.handler, Link))
-            event.handler.sendPacket(event.packet)
+            # This only happens initially, when a host is moving a packet
+            # into the link buffer. Routers will instantenously receive 
+            # and transmit.
+            assert(isinstance(event.handler, Host))
+            link = event.handler.getLink()
+            host = event.handler
+            if not link.rateFullWith(event.packet):
+                host.sendToLink(link, event.packet)
+            else:
+                # If link buffer is full, we wait until it's not full.
+                newEvent = Event(event.packet, host, "SENDTOLINK", event.time + 1)
+                self.q.insert(newEvent)
 
-        elif(even.type == "RECEIVE"):
-            # 
+        elif(event.type == "RECEIVE"):
+            # Processes a host/router action that would receive things.
+            assert(isinstance(event.handler, Device))
+
+            # First, the issue with the router.
+            if isinstance(event.handler, Router):
+                router = event.handler
+                router.transfer(event.packet)
+
+                # Transfer will update the current location of the packet to the new
+                # link.
+                newLink = packet.curr
+                newEvent = Event(event.packet, newLink, "SENDTODEVICE", event.time)
+
+            elif isinstance(event.handler, Host):
+                host = event.handler
+                if(event.packet.dest == host)
+
+
+
+
 
 
 
