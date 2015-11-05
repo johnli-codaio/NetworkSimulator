@@ -16,8 +16,6 @@ class Event:
     #   EventType: generating, sending, or receiving
     #   EventTime: the time at which the particular event is occurring
     def __init__(self, EventHandler, EventType, EventTime):
-        
-
 
 
         self.handler = EventHandler
@@ -30,10 +28,8 @@ class Event:
 
 class Simulator:
     # TODO
-    def __init__(self, conditions):
+    def __init__(self):
         self.q = Queue.PriorityQueue()
-        self.conditions = conditions
-        self.current_state = [0]
 
     def insertEvent(self, event):
         self.q.put(event)
@@ -41,7 +37,9 @@ class Simulator:
     def processEvent(self, event):
         print event.type
         if event.type == "SEND":
+            
             assert(isinstance(event.handler, Link))
+
             packet = event.handler.peekFromBuffer()
 
             # here, event.handler is a link
@@ -139,17 +137,6 @@ class Simulator:
             self.processEvent(event)
 
 
-
-
-    # for test case 0: have we sent in 20MB of data yet?
-    # TODO
-    def conditions_met(self):
-        return self.conditions[0] == self.current_state[0]
-
-
-if __name__ == "__main__":
-    s = Simulator([20 * MB_TO_KB])
-    s.run()
 
 
 
