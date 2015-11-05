@@ -3,14 +3,10 @@ import datetime
 import time
 from classes import *
 
-# Types of events:
-# when a flow generates a packet (type = generate)
-# when a device sends a packet (type = send)
-# when a device receives a packet (type = receive)
-# but the only events here are the packets being moved around
+
 class Event:
     """Events are enqueued into the Simulator priority queue by their time. Events
-    have a type (SENDTOLINK, SENDTODEVICE, RECEIVE, GENERATE) describing what is 
+]    have a type (SENDTOLINK, SENDTODEVICE, RECEIVE, GENERATE) describing what is 
     done to the packet. Each type of event has an associated network handler 
     (Link, Device, Flow, respectively).
 
@@ -31,6 +27,7 @@ class Event:
         :param EventTime: The time of the particular event, in milliseconds.
         :type EventTime: Integer
         """
+
         self.packet = packet
         self.handler = EventHandler
         self.type = EventType
@@ -68,7 +65,7 @@ class Simulator:
         print event.type
         if(event.type == "SENDTOLINK"):
             # Tries to put packet into link buffer
-            # This only happens initially, when a host is moving a packet
+]            # This only happens initially, when a host is moving a packet
             # into the link buffer. Routers will instantenously receive 
             # and transmit.
             assert(isinstance(event.handler, Host))
@@ -101,74 +98,90 @@ class Simulator:
 
 
 
+        elif(event.type == "RECEIVE"):
+            # Device receives packet
+            assert(isinstance(event.handler, Device))
+            device = event.handler
+            device.receive(packet)
+
+            # Tries to pop packet from link buffer
 
 
-
-
-
-    def processEvent(self, event):
-        print event.type
-        if event.type == "SEND":
+        elif(event.type == "GENERATE"):
+            # Flow generates packet
+            assert(isinstance(event.handler, Flow))
+            flow = event.handler
+            packet = flow.generateDataPacket()
             
-            assert(isinstance(event.handler, Link))
+            sendPacketEvent = Event(flow.src.getLink(), "SEND", event.time, packet)
+            self.insertEvent(sendPacketEvent)
 
-            packet = event.handler.peekFromBuffer()
 
-            # here, event.handler is a link
-            try:
-                packet = event.handler.peekFromBuffer()
-            # no packets in the buffer
-            except BufferError:
-                return
 
-            # it's not ready to be sent, because the current link
-            # rate is too full
-            # so, requeue it as an event later in time
-            if not event.handler.sendPacket(packet):
-                sameEvent = Event(event.handler, "send", event.time + 1)
-                self.insertEvent(newEvent)
-            else:
-                # this packet is ready to be sent, handled by the link
-                # so, we have to enqueue a receive event,
-                # which should occur exactly after (specificed by link delay)
-                newEvent = Event(packet.dest, "receive", event.time + event.handler.delay)
-                self.insertEvent(newEvent)
 
-                # TODO read this
-                # also, check to see if there's more packets to be sent
-                # from the buffer!
-                # if the link rate is not full, then we should be
-                # able to send multiple packets simultaneously?
-                if not event.handler.linkBuffer.empty():
-                    newEvent = Event(event.handler, "send", event.time)
-                    self.insertEvent(newEvent)
+    # def processEvent(self, event):
+    #     print event.type
+    #     if event.type == "SEND":
+            
+    #         assert(isinstance(event.handler, Link))
 
-        elif event.type == "RECEIVE":
-            # here, event.handler is a host
-            # this packet can be dequeued by the receiving host
-            packet = event.handler.receiving()
-            # update the amount of data sent
-            self.current_state[0] += packet.data_size
-            print "Current Memory Sent: " + str(self.current_state[0])
+    #         packet = event.handler.peekFromBuffer()
 
-        elif event.type == "GENERATE":
-            # here, event.handler is a flow
-            # the flow will generate a packet
-            newPacket = event.handler.generateDataPacket()
+    #         # here, event.handler is a link
+    #         try:
+    #             packet = event.handler.peekFromBuffer()
+    #         # no packets in the buffer
+    #         except BufferError:
+    #             return
 
-            # and then, put this data packet into the outgoing
-            # link buffer
-            link = event.handler.src.getLink()
-            link.putIntoBuffer(newPacket)
+    #         # it's not ready to be sent, because the current link
+    #         # rate is too full
+    #         # so, requeue it as an event later in time
+    #         if not event.handler.sendPacket(packet):
+    #             sameEvent = Event(event.handler, "send", event.time + 1)
+    #             self.insertEvent(newEvent)
+    #         else:
+    #             # this packet is ready to be sent, handled by the link
+    #             # so, we have to enqueue a receive event,
+    #             # which should occur exactly after (specificed by link delay)
+    #             newEvent = Event(packet.dest, "receive", event.time + event.handler.delay)
+    #             self.insertEvent(newEvent)
 
-            # now, we have to enqueue a send event,
-            # becuase it might be ready for sending
-            newEvent = Event(link, "SEND", event.time + 1)
-            self.insertEvent(newEvent)
+    #             # TODO read this
+    #             # also, check to see if there's more packets to be sent
+    #             # from the buffer!
+    #             # if the link rate is not full, then we should be
+    #             # able to send multiple packets simultaneously?
+    #             if not event.handler.linkBuffer.empty():
+    #                 newEvent = Event(event.handler, "send", event.time)
+    #                 self.insertEvent(newEvent)
 
-            # also, generate more packets to be sent!
-            generateEvent = Event(event.handler, "GENERATE", event.time + 1)
-            self.insertEvent(generateEvent)
+    #     elif event.type == "RECEIVE":
+    #         # here, event.handler is a host
+    #         # this packet can be dequeued by the receiving host
+    #         packet = event.handler.receiving()
+    #         # update the amount of data sent
+    #         self.current_state[0] += packet.data_size
+    #         print "Current Memory Sent: " + str(self.current_state[0])
+
+    #     elif event.type == "GENERATE":
+    #         # here, event.handler is a flow
+    #         # the flow will generate a packet
+    #         newPacket = event.handler.generateDataPacket()
+
+    #         # and then, put this data packet into the outgoing
+    #         # link buffer
+    #         link = event.handler.src.getLink()
+    #         link.putIntoBuffer(newPacket)
+
+    #         # now, we have to enqueue a send event,
+    #         # becuase it might be ready for sending
+    #         newEvent = Event(link, "SEND", event.time + 1)
+    #         self.insertEvent(newEvent)
+
+    #         # also, generate more packets to be sent!
+    #         generateEvent = Event(event.handler, "GENERATE", event.time + 1)
+    #         self.insertEvent(generateEvent)
 
 
     def run(self):
