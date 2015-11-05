@@ -71,6 +71,19 @@ class bufferQueue:
         """Returns True if packet cannot be added to the buffer queue, False otherwise."""
         return (self.maxSize < self.occupancy + packet.data_size)
 
+
+
+class Network:
+    #####################################################################
+    #### TODO: Look at runSimulation.py, make this Network basically ####
+    ####       contain all the links, flows, etc. in the same way    ####
+    #####################################################################
+
+    def __init__(self):
+        return
+
+
+
 class Device:
 
     ###################################################################
@@ -107,25 +120,7 @@ class Device:
         :type packet: Packet
         """
 
-        # We have two buffers on the link, one for each side.
-        # The current packet location is the temporary "Source"; 
-        # if it is equal to the device 2 of the link, then the direction
-        # is going from dev2->dev1 (so it's in buffer 2). Else, it will
-        # be moving from dev1->dev2 (so it's in buffer 1).
-        try:
-            if packet.curr == link.device2:
-                link.dev1todev2 = False
-                link.linkBuffer2.put(packet)
-
-            elif packet.curr == link.device1:
-                link.dev1todev2 = True
-                link.linkBuffer1.put(packet)
-
-            # Update the location of the packet to the corresponding link.
-            packet.updateLoc(link)
-
-        except BufferError as e:
-            print e
+        link.putIntoBuffer(packet, device)
 
 class Router(Device):
 
@@ -158,7 +153,9 @@ class Host(Device):
 
 
     def receive(self, packet):
-        """ Will receive a packet and do two things:
+        """ Host receives packet.
+
+        Will receive a packet and do two things:
             1) If the packet is an ACK, the host will just print that it got it.
             2) If it's data, then the packet has arrived at destination.
             3) Return the packet.
@@ -210,7 +207,6 @@ class Flow:
         self.dest = dest
         self.data_amt = data_amt
         self.flow_start = flow_start
-        # self.sendTime = sendTime
 
 
     def generateDataPacket(self):
@@ -279,38 +275,57 @@ class Link:
         """Returns True if packet cannot be sent, False otherwise."""
         return (self.rate < self.current_rate + packet.data_size)
 
-    def sendPacket(self):
-        """Sends next packet in queue along link.
+    def sendPacket(self, device):
+        """Sends next packet in buffer queue corresponding to device along link. 
 
-        Pops packet from queue, increase current link rate, modifies ...
+        Returns True if success, else False.
         """
 
         try:
-            if link.dev1todev2:
-                packet = self.linkBuffer1.peek()
-                if not self.rateFullWith(packet):
-                    print "Sending a packet: dev1 -> dev2"
+            if(device == device1):
+                if(link.dev1todev2 == False):
+                    # Currently sending the other way
+                    return False
+                elif(link.dev1todev2 == None):
+                    # Nothing being sent
                     packet = self.linkBuffer1.get()
                     link.incrRate(packet)
+                    return True
+                elif(link.dev1todev2 == True):
+                    packet = self.linkBuffer1.peek()
+                    if(not self.rateFullWith(packet)):
+                        print "Sending a packet from device 1 to device 2"
+                        self.linkBuffer1.get()
+                        link.incrRate(packet)
+                        return True
 
-            elif link.dev1todev2 == False:
-                packet = self.linkBuffer2.peek()
-                if not self.rateFullWith(packet):
-                    print "Sending a packet: dev2 -> dev1"
+            else:
+                if(link.dev1todev2 == True):
+                    # Currently sending the other way
+                    return False
+                elif(link.dev1todev2 == None):
+                    # Nothing being sent
                     packet = self.linkBuffer2.get()
                     link.incrRate(packet)
-
-            # The destination for this packet will be found in the link
-            # information; the boolean will give hints to the destination.
-            # This destination will be the device that calls the receive event.
-            return packet
+                    return True
+                elif(link.dev1todev2 == False):
+                    packet = self.linkBuffer2.peek()
+                    if(not self.rateFullWith(packet)):
+                        print "Sending a packet from device 2 to device 1"
+                        self.linkBuffer2.get()
+                        link.incrRate(packet)
+                        return True
 
         except BufferError as e:
             print e
 
-        # If you cannot send, then don't return anything and wait.
-        # We'll just send another SEND event.
-        return None
+
+    def putIntoBuffer(self, packet, device):
+        """Puts packet into buffer corresponding to device."""
+        if(device == device1):
+            self.linkBuffer1.put(packet)
+        else:
+            self.linkBuffer2.put(packet)
 
     def decrRate(self, packet):
         """Decrease current rate by packet size."""
