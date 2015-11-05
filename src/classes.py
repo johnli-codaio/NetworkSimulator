@@ -18,33 +18,56 @@ DATA_SIZE = 1024
 ACK_SIZE = 64
 
 class bufferQueue:
-    def __init__(self):
-        self.items = []
+    def __init__(self, size):
+        """ Initializes a buffer queue for the link
+
+        :param size: size of queue (in packets)
+        :type size: Integer
+        """
+
+        self.packets = []
+        self.maxSize = size
+        self.occupancy = 0
 
     def empty(self):
-        return self.items == []
+        """ Checks to see if the size of the buffer is 0.
+        """
 
-    def put(self, item):
-        self.items.insert(0,item)
+        return self.packets == []
+
+    def put(self, packet):
+        """ Puts a packet into the buffer, first in first out.
+
+        :param packet: The packet to put into the buffer
+        :type packet: Packet
+        """
+
+        self.packets.insert(0, packet)
+        self.occupancy += packet.data_size
 
     def get(self):
+        """ Pops a packet from the buffer, first in first out.
+        """
+
         if self.empty():
             raise BufferError("Tried to get element from empty bufferQueue")
-        return self.items.pop()
+        packet = self.packets.pop()
+        self.occupancy -= packet.data_size
+        return packet
 
-    def size(self):
-        return len(self.items)
+    def currentSize(self):
+        """ Returns the current size of the buffer in terms of memory
+        """
+
+        return self.occupancy
 
     def peek(self):
+        """ Returns the next "poppable" element, without actually popping it.
+        """
+        
         if self.empty():
             raise BufferError("Tried to peek element from empty bufferQueue")
-        return self.items[len(self.items) - 1]
-
-    def get_most_recent(self):
-        return 0
-
-    def qsize(self):
-        return len(self.items)
+        return self.packets[len(self.packets) - 1]
 
 
 class Device:
@@ -67,6 +90,7 @@ class Device:
         self.links = []
         self.queue = Queue.Queue()
 
+
     def attachLink(self, link):
         """Attach single link to Device.
 
@@ -75,23 +99,26 @@ class Device:
         """
         self.links.append(link)
 
-    # we can think of this as a "queue" of packets currently being sent
-    # enqueue a packet, send from
-    # a particular link, into the device's 'receive queue', so that it
-    # can process packets as they arrive
-    def sending(self, link, packet):
+    def sendToLink(self, link, packet):
+        """Attach packet to the appropriate link buffer.
+
+        :param link: link that packet will be going to.
+        :type link: Link
+
+        :param packet: packet that the device received.
+        :type packet: Packet
+        """
+
+        link.putIntoBuffer(packet)
+        packet.updateLoc(link)
+
+    def sendToHostBuffer(self, packet):
+        """Attach the packet to the device queue.
+
+        :param packet: packet that will be sent to the buffer.
+        :type packet: Packet
+        """
         self.queue.put(packet)
-        link.incrRate(packet)
-
-    # the actual processing of the sent packets
-    # we have to return the packet, so that we can update the total
-    # amount of data sent
-    def receiving(self, link):
-        packet = self.queue.get()
-        print "Received data of type: " + packet.type
-        link.decrRate(packet)
-        return packet
-
 
 class Router(Device):
 
@@ -100,9 +127,8 @@ class Router(Device):
     def createTable(self, table):
         self.table = table
 
-    # Since I made the links hold the actual devices, instead of just
-    # host numbers, the devices will be made separately first,
-    # then the links, then the devices will attach the links.
+    def receiving(self, link, packet):
+
 
 class Host(Device):
 
@@ -154,22 +180,22 @@ class Flow:
 
     # This method will generate data packets for the flow.
     def generateDataPacket(self):
-        packet = Packet(self.src, self.dest, DATA_SIZE, "data")
+        packet = Packet(self.src, self.dest, DATA_SIZE, "data", self.src)
         return packet
 
     # This method will generate acknowledgment packets for the flow.
     def generateAckPacket(self):
-        packet = Packet(self.src, self.dest, ACK_SIZE, "acknowlegment")
+        packet = Packet(self.src, self.dest, ACK_SIZE, "acknowlegment", self.src)
         return packet
 
-class Link:
 
+class Link:
 
     ###############################################################
     ## TODO: Write what members each Link has, and its functions ##
     ###############################################################
 
-    def __init__(self, linkID, rate, delay, buffer_size, device1, device2):
+    def __init__(self, linkID, rate, delay, buffer_size, device1, device2, direction):
         """ Instantiates a Link
         
         :param linkID: unique ID of link
@@ -189,12 +215,15 @@ class Link:
         
         :param device2: Device 2 joined by link
         :type device2: Device
+
+        :param direction: Link direction of packets. NoneType
+                          indicates inactive link.
+        :param type: Boolean or NoneType
         """
 
         self.linkID = linkID
         self.rate = rate * MB_TO_KB * KB_TO_B / B_to_b
         self.delay = delay
-        self.buffer_size = buffer_size * KB_TO_B
         self.device1 = device1
         self.device1.attachLink(self)
         self.device2 = device2
@@ -203,7 +232,11 @@ class Link:
         self.current_buffer_occupancy = 0
         self.current_rate = 0
 
-        self.linkBuffer = bufferQueue()
+        self.linkBuffer1 = bufferQueue(buffer_size * KB_TO_B)
+        self.linkBuffer2 = bufferQueue(buffer_size * KB_TO_B)
+
+        # Links are initially inactive.
+        self.dev1todev2 = None
 
         
     def bufferFullWith(self, packet):
@@ -221,11 +254,24 @@ class Link:
         Pops packet from queue, increase current link rate, modifies ...
         """
 
-        if not self.rateFullWith(packet):
-            print "sending..."
-            packet.dest.sending(self, packet)
+        try:
+            packet = self.peekFromBuffer()
+        except BufferError as e:
+            print e
 
-            self.popFromBuffer()
+        if not self.rateFullWith(packet):
+            if link.dev1todev2:
+                print "Sending a packet: dev1 -> dev2"
+                packet = self.popFromBuffer()
+                nextLocation = link.device2
+                packet.updateLoc(nextLocation)
+                nextLocation.sendToHostBuffer(packet)
+
+            elif link.dev1todev2 == False:
+                print "Sending a packet: dev2 -> dev1"
+                packet = self.popFromBuffer()
+                nextLocation = link.device1
+                packet.updateLoc(nextLocation)
             return True
         return False
 
@@ -249,8 +295,9 @@ class Link:
         """Pops top element of linkBuffer and returns it.
 
         Modifies current buffer occupany"""
-        print "popped off buffer!"
+        if()
         popped_elem = self.linkBuffer.get()
+        print "popped off buffer!"
         self.current_buffer_occupancy -= popped_elem.data_size
         return popped_elem
 
@@ -274,20 +321,35 @@ class Link:
 class Packet:
 
 
-    def __init__(self, src, dest, data_size, data_type):
+    def __init__(self, src, dest, data_size, data_type, curr_loc):
     """ Instatiates a Packet.
 
     :param src: Source (device) of packet
     :type src: Device
+
     :param dest: Destination (device) of packet
     :type dest: Device
+
     :param data_size: data size (in bytes)
     :type data_size: int
+
     :param data_type: metadata, either ACK or DATA
     :type data_type: str
+
+    :param curr_loc: Device or Link where the packet is.
+    :type curr_loc: Device or Link
     """
         self.src = src
         self.dest = dest
         self.data_size = data_size
         self.type = data_type
+        self.curr = curr_loc
+
+    def updateLoc(self, newLoc):
+    """ Updates the location of the packet.
+
+    :param newLoc: New location of the packet.
+    :type newLoc: Device or Link
+    """
+        self.curr = newLoc
 
