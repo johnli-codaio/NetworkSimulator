@@ -1,5 +1,4 @@
 import Queue
-#from event import *
 import datetime
 import time
 from classes import *

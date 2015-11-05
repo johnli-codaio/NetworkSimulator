@@ -101,6 +101,14 @@ def main():
 
     # Have flows create sending events...
 
+    for flow_name in flows:
+        flow = flows[flow_name] 
+
+        counter = 0
+        while(counter < flow.data_amt):
+        
+
+            counter += 
 
 
 

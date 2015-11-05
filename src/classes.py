@@ -120,15 +120,25 @@ class Host(Device):
         return packet
 
 class Flow:
-    """ Instantiating a Flow
-    :param flowID: ID to identify flow
-    :type flowID: string
-    :param src: Address to source of the flow.
-    :type src: Host
-    :param dest: Address to destination of flow.
-    :type dest: Host
-    """
+
     def __init__(self, flowID, src, dest, data_amt, flow_start):
+        """ Instantiates a Flow
+
+        :param flowID: unique ID of flow
+        :type flowID: string
+
+        :param src: Host source of flow
+        :type src: Host
+
+        :param dest: Host destination of flow
+        :type dest: Host
+
+        :param data_amt: Data amount (in MB)
+        :type data_amt: float
+
+        :param flow_start: Time flow begins
+        :type flow_start: float
+        """
         self.flowID = flowID
         self.src = src
         self.dest = dest
@@ -148,113 +158,112 @@ class Flow:
 
 class Link:
 
-    """ Instantiating a Link
-    
-    :param linkID: Indicates what link we're referencing
-    :type linkID: string
-    :param rate: Indicates how fast packets are being sent
-    :type rate: Integer
-    :param delay: How much delay there is for packet to arrive to destination
-    :type delay: Integer
-    :param buffer_size: Size of buffer. We crate the buffer from the Python queue library.
-    :type buffer_size: Integer
-    :param device1: One device connected to the link
-    :type device1: Device
-    :param device2: The other device connected to the link
-    :type device2: Device
-    """
+
+    ###############################################################
+    ## TODO: Write what members each Link has, and its functions ##
+    ###############################################################
 
     def __init__(self, linkID, rate, delay, buffer_size, device1, device2):
+        """ Instantiates a Link
+        
+        :param linkID: unique ID of link
+        :type linkID: string
+
+        :param rate: max link rate (in Mbps)
+        :type rate: int
+        
+        :param delay: link delay (in ms)
+        :type delay: int
+        
+        :param buffer_size: buffer size (in KB)
+        :type buffer_size: int
+        
+        :param device1: Device 1 joined by link
+        :type device1: Device
+        
+        :param device2: Device 2 joined by link
+        :type device2: Device
+        """
+
         self.linkID = linkID
-        self.rate = rate
+        self.rate = rate * MB_TO_KB * KB_TO_B / B_to_b
         self.delay = delay
-        self.buffer_size = buffer_size
-
-        # initially, the queue has no packets in it.
-        self.current_buffer = 0
-
-        #initially, the link isn't sending any packets
-        self.current_rate = 0
-
-        self.linkBuffer = bufferQueue()
+        self.buffer_size = buffer_size * KB_TO_B
         self.device1 = device1
         self.device1.attachLink(self)
         self.device2 = device2
         self.device2.attachLink(self)
 
-    # the rate is given in Mbps. We have to convert that to bytes per sec
-    # so we know many packets (given in bytes) can fit into that rate
-    def rateInBytes(self, rate):
-        return self.rate * MB_TO_KB * KB_TO_B / B_to_b;
+        self.current_buffer_occupancy = 0
+        self.current_rate = 0
 
-    # since the buffer_size is in KB, and packets are in bytes,
-    # just convert buffer_size into bytes as well
-    def bufferInBytes(self, buffer_size):
-        return buffer_size * KB_TO_B;
+        self.linkBuffer = bufferQueue()
 
-    # is the buffer full, if we add the new packet?
-    # we just check if the current data in the buffer and the to-be-added
-    # packet will exceed the buffer capacity
-    def isFullWith(self, added_packet):
-        return (self.bufferInBytes(self.buffer_size) <
-            self.current_buffer + added_packet.data_size)
+        
+    def bufferFullWith(self, packet):
+        """Returns True if packet cannot be added to the buffer queue, False otherwise."""
+        return (self.buffer_size < self.current_buffer_occupancy + 
+                packet.data_size)
 
-    # is the link rate at capacity, if we add the new packet?
-    def rateFullWith(self, added_packet):
-        return (self.rateInBytes(self.rate) <
-                self.current_rate + added_packet.data_size)
+    def rateFullWith(self, packet):
+        """Returns True if packet cannot be sent, False otherwise."""
+        return (self.rate < self.current_rate + packet.data_size)
 
-    # sends the packet off to the destination
-    def sendPacket(self, packet):
+    def sendPacket(self):
+        """Sends next packet in queue along link.
+
+        Pops packet from queue, increase current link rate, modifies ...
+        """
+
         if not self.rateFullWith(packet):
             print "sending..."
             packet.dest.sending(self, packet)
 
-            # have to dequeue this packet now
             self.popFromBuffer()
             return True
         return False
 
-    # this packet has been successfully sent, so the link
-    # should have more capacity
     def decrRate(self, packet):
+        """Decrease current rate by packet size."""
         self.current_rate -= packet.data_size
 
-    # this packet is currently sending, taking up capacity
-    # in the link rate
     def incrRate(self, packet):
+        """Increase current rate by packet size."""
         self.current_rate += packet.data_size
 
     def bufferEmpty(self):
+        """Returns True if linkBuffer is empty, False otherwise"""
         return self.linkBuffer.empty()
 
     def peekFromBuffer(self):
+        """Returns top element of linkBuffer without popping."""
         return self.linkBuffer.peek()
 
-    # This will pop off a packet from the linked buffer. I will then return
-    # it so that it could be sent.
     def popFromBuffer(self):
+        """Pops top element of linkBuffer and returns it.
+
+        Modifies current buffer occupany"""
         print "popped off buffer!"
         popped_elem = self.linkBuffer.get()
-        self.current_buffer -= popped_elem.data_size
+        self.current_buffer_occupancy -= popped_elem.data_size
         return popped_elem
 
-    # This will put in a packet into the queue.
+
     def putIntoBuffer(self, packet):
-        if not self.isFullWith(packet):
+        """Adds packet to linkBuffer. Returns True if added, else False.
+
+        Modifies current buffer occupancy as well."""
+
+        if not self.bufferFullWith(packet):
             print "putting into buffer..."
             self.linkBuffer.put(packet)
-            self.current_buffer += packet.data_size
+            self.current_buffer_occupancy += packet.data_size
             return True
-        print "unable to put in buffer"
-        return False
+        else:
+            print "unable to put in buffer"
+            return False
 
-    # Method to calculate round trip time
-    # (TBH, links themselves manage delay? I thought that was something
-    #  we calculate...)
-    def roundTripTime(self,rate, delay):
-        #TODO
-        pass
+
 
 class Packet:
 
