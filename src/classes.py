@@ -9,7 +9,7 @@ import Queue
 KB_TO_B = 1024
 B_to_b = 8
 MB_TO_KB = 1024
-s_to_ms = 100
+s_to_ms = 1000
 
 # some static constants:
 #   DATA_SIZE: the size of a data packet (1024B)

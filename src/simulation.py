@@ -38,7 +38,7 @@ class Simulator:
     def processEvent(self, event):
         print event.type
         if event.type == "send":
-            assert(isinstance(event.handler, classes.Link))
+            assert(isinstance(event.handler, Link))
             packet = event.handler.peekFromBuffer()
 
             # here, event.handler is a link
@@ -57,9 +57,8 @@ class Simulator:
             else:
                 # this packet is ready to be sent, handled by the link
                 # so, we have to enqueue a receive event,
-                # which should occur exactly after 10 ms
-                # (specificed by link delay)
-                newEvent = Event(packet.dest, "receive", event.time + 10)
+                # which should occur exactly after (specificed by link delay)
+                newEvent = Event(packet.dest, "receive", event.time + event.handler.delay)
                 self.insertEvent(newEvent)
 
                 # TODO read this
@@ -89,7 +88,7 @@ class Simulator:
             link = event.handler.src.getLink()
             link.putIntoBuffer(newPacket)
 
-            # now, we have to enqueue a send packet,
+            # now, we have to enqueue a send event,
             # becuase it might be ready for sending
             newEvent = Event(link, "send", event.time + 1)
             self.insertEvent(newEvent)
@@ -126,7 +125,7 @@ class Simulator:
 
         # now, insert into the queue a "generate packet" event
         # the flow starts at 1.0s = 1000 ms
-        event = Event(flow, "generate", 1000)
+        event = Event(flow, "generate", flow.flow_start * s_to_ms)
         self.insertEvent(event)
 
         while not self.conditions_met():
