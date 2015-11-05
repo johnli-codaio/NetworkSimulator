@@ -9,20 +9,21 @@ from classes import *
 # when a device receives a packet (type = receive)
 # but the only events here are the packets being moved around
 class Event:
+    """Events are enqueued into the Simulator priority queue by their time. Events
+    have a type (SEND, RECEIVE, GENERATE) describing what is done to the packet. 
+    Each type of event has an associated network handler (Link, Device, Flow, 
+    respectively).
 
-    #   EventHandler: the device(?) that is interacting with the packet
-    #   (generating, sending, or receiving it)
-    #   Packet: the packet 
-    #   EventType: generating, sending, or receiving
-    #   EventTime: the time at which the particular event is occurring
-    def __init__(self, EventHandler, EventType, EventTime):
+    """
 
-
+    def __init__(self, packet, EventHandler, EventType, EventTime):
+        self.packet = packet
         self.handler = EventHandler
         self.type = EventType
         self.time = EventTime
 
     def __cmp__(self, other):
+        """Ordering by time."""
         return cmp(self.time, other.time)
 
 
@@ -33,6 +34,22 @@ class Simulator:
 
     def insertEvent(self, event):
         self.q.put(event)
+
+    def processEvent(self):
+        """Pops and processes event from queue."""
+        event = self.q.get()
+
+        print event.type
+        if(event.type == "SEND"):
+            # Tries to put packet into link buffer
+            assert(isinstance(event.handler, Link))
+            event.handler.sendPacket(event.packet)
+
+        elif(even.type == "RECEIVE"):
+            # 
+
+
+
 
     def processEvent(self, event):
         print event.type
@@ -135,10 +152,5 @@ class Simulator:
             except BufferError:
                 pass
             self.processEvent(event)
-
-
-
-
-
 
 

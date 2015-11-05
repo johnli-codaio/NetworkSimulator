@@ -296,7 +296,7 @@ class Link:
         Modifies current buffer occupany"""
         if()
         popped_elem = self.linkBuffer.get()
-        print "popped off buffer!"
+        print "Popped off buffer!"
         self.current_buffer_occupancy -= popped_elem.data_size
         return popped_elem
 
@@ -307,12 +307,12 @@ class Link:
         Modifies current buffer occupancy as well."""
 
         if not self.bufferFullWith(packet):
-            print "putting into buffer..."
+            print "Putting into buffer..."
             self.linkBuffer.put(packet)
             self.current_buffer_occupancy += packet.data_size
             return True
         else:
-            print "unable to put in buffer"
+            print "Unable to put in buffer"
             return False
 
 
