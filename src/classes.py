@@ -49,24 +49,30 @@ class bufferQueue:
 
 class Device:
 
-    """ Instantiating the Device.
-     
-    :param deviceID: Unique name by which the device is identified.
-    :type deviceID: str
-    :param queue: a Queue data structure which keeps track of received packets for host, and moving packets for routers.
-    :type queue: Queue.Queue()
-    :param links: Stores all attached links to the device
-    :type links: Array of links
-    :returns: void
-    """
+    ###################################################################
+    ### TODO: Write what members each Device has, and its functions ###
+    ###################################################################
+    
     def __init__(self, deviceID):
+        """Instantiates the Device.
+         
+        :param deviceID: Unique ID of device
+        :type deviceID: str
+        :param queue: a Queue data structure which keeps track of received packets for host, and moving packets for routers.
+        :type queue: Queue.Queue()
+        :param links: Stores all attached links to the device
+        :type links: Array of links
+        """
         self.deviceID = deviceID
         self.links = []
         self.queue = Queue.Queue()
 
-    # attach a link
     def attachLink(self, link):
-        # should be a for loop
+        """Attach single link to Device.
+
+        :param link: link to attach
+        :type link: Link
+        """
         self.links.append(link)
 
     # we can think of this as a "queue" of packets currently being sent
@@ -125,7 +131,7 @@ class Flow:
         """ Instantiates a Flow
 
         :param flowID: unique ID of flow
-        :type flowID: string
+        :type flowID: str
 
         :param src: Host source of flow
         :type src: Host
@@ -167,7 +173,7 @@ class Link:
         """ Instantiates a Link
         
         :param linkID: unique ID of link
-        :type linkID: string
+        :type linkID: str
 
         :param rate: max link rate (in Mbps)
         :type rate: int
@@ -267,19 +273,21 @@ class Link:
 
 class Packet:
 
-    """ Instantiating a Packet
-    :param src: Indicates the source of the sending
-    :type src: string(?)
-    :param dest: Indicates the destination of the sending
-    :type dest: string(?)
-    :param type: Either an actual data packet, or an acknowledgment packet. We shouldn't really care about what is actually is in the data
-    :type type: Packet(?)
-    :param data_size: data in BYTES.
-    :type data_size: Integer
+
+    def __init__(self, src, dest, data_size, data_type):
+    """ Instatiates a Packet.
+
+    :param src: Source (device) of packet
+    :type src: Device
+    :param dest: Destination (device) of packet
+    :type dest: Device
+    :param data_size: data size (in bytes)
+    :type data_size: int
+    :param data_type: metadata, either ACK or DATA
+    :type data_type: str
     """
-    def __init__(self, src, dest, data_size, type):
         self.src = src
         self.dest = dest
         self.data_size = data_size
-        self.type = type
+        self.type = data_type
 
