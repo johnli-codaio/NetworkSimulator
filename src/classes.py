@@ -41,7 +41,6 @@ class bufferQueue:
         :param packet: The packet to put into the buffer
         :type packet: Packet
         """
-
         self.packets.insert(0, packet)
         self.occupancy += packet.data_size
 
@@ -58,7 +57,6 @@ class bufferQueue:
     def currentSize(self):
         """ Returns the current size of the buffer in terms of memory
         """
-
         return self.occupancy
 
     def peek(self):
@@ -69,6 +67,9 @@ class bufferQueue:
             raise BufferError("Tried to peek element from empty bufferQueue")
         return self.packets[len(self.packets) - 1]
 
+    def bufferFullWith(self, packet):
+        """Returns True if packet cannot be added to the buffer queue, False otherwise."""
+        return (self.maxSize < self.occupancy + packet.data_size)
 
 class Device:
 
@@ -111,22 +112,29 @@ class Device:
         # if it is equal to the device 2 of the link, then the direction
         # is going from dev2->dev1 (so it's in buffer 2). Else, it will
         # be moving from dev1->dev2 (so it's in buffer 1).
-        if packet.curr == link.device2:
-            link.putIntoBuffer2(packet)
-        elif packet.curr == link.device1:
+        try:
+            if packet.curr == link.device2:
+                link.dev1todev2 = False
+                link.linkBuffer2.put(packet)
 
-        # Update the location of the packet to the corresponding link.
-        packet.updateLoc(link)
+            elif packet.curr == link.device1:
+                link.dev1todev2 = True
+                link.linkBuffer1.put(packet)
 
+            # Update the location of the packet to the corresponding link.
+            packet.updateLoc(link)
+
+        except BufferError as e:
+            print e
 
 class Router(Device):
 
-     def createTable(self, table):
-         """Compute routing table via Bellman Ford.
+    def createTable(self, table):
+        """Compute routing table via Bellman Ford.
 
-         :param table: Routing table for the router
-         :type Table: dict<(Device, Link)>
-         """
+        :param table: Routing table for the router
+        :type Table: dict<(Device, Link)>
+        """
         return table
 
     def transfer(self, packet):
@@ -268,12 +276,6 @@ class Link:
 
         self.dev1todev2 = None
 
-        
-    def bufferFullWith(self, packet):
-        """Returns True if packet cannot be added to the buffer queue, False otherwise."""
-        return (self.buffer_size < self.current_buffer_occupancy + 
-                packet.data_size)
-
     def rateFullWith(self, packet):
         """Returns True if packet cannot be sent, False otherwise."""
         return (self.rate < self.current_rate + packet.data_size)
@@ -285,25 +287,31 @@ class Link:
         """
 
         try:
-            packet = self.peekFromBuffer()
-        except BufferError as e:
-            print e
-            #TODO: Fix this up, updating link stuff.
-        if not self.rateFullWith(packet):
             if link.dev1todev2:
-                print "Sending a packet: dev1 -> dev2"
-                packet = self.popFromBuffer()
-                nextLocation = link.device2
-                packet.updateLoc(nextLocation)
-                nextLocation.sendToHostBuffer(packet)
+                packet = self.linkBuffer1.peek()
+                if not self.rateFullWith(packet):
+                    print "Sending a packet: dev1 -> dev2"
+                    packet = self.linkBuffer1.get()
+                    link.incrRate(packet)
 
             elif link.dev1todev2 == False:
-                print "Sending a packet: dev2 -> dev1"
-                packet = self.popFromBuffer()
-                nextLocation = link.device1
-                packet.updateLoc(nextLocation)
-            return True
-        return False
+                packet = self.linkBuffer2.peek()
+                if not self.rateFullWith(packet):
+                    print "Sending a packet: dev2 -> dev1"
+                    packet = self.linkBuffer2.get()
+                    link.incrRate(packet)
+
+            # The destination for this packet will be found in the link
+            # information; the boolean will give hints to the destination.
+            # This destination will be the device that calls the receive event.
+            return packet
+
+        except BufferError as e:
+            print e
+
+        # If you cannot send, then don't return anything and wait.
+        # We'll just send another SEND event.
+        return None
 
     def decrRate(self, packet):
         """Decrease current rate by packet size."""
@@ -312,63 +320,28 @@ class Link:
     def incrRate(self, packet):
         """Increase current rate by packet size."""
         self.current_rate += packet.data_size
-
-    def bufferEmpty(self):
-        """Returns True if linkBuffer is empty, False otherwise"""
-        return self.linkBuffer.empty()
-
-    def peekFromBuffer(self):
-        """Returns top element of linkBuffer without popping."""
-        return self.linkBuffer.peek()
-
-    def popFromBuffer(self):
-        """Pops top element of linkBuffer and returns it.
-
-        Modifies current buffer occupany"""
-        if()
-        popped_elem = self.linkBuffer.get()
-        print "Popped off buffer!"
-        self.current_buffer_occupancy -= popped_elem.data_size
-        return popped_elem
-
-
-    def putIntoBuffer(self, packet):
-        """Adds packet to linkBuffer. Returns True if added, else False.
-
-        Modifies current buffer occupancy as well."""
-
-        if not self.bufferFullWith(packet):
-            print "Putting into buffer..."
-            self.linkBuffer.put(packet)
-            self.current_buffer_occupancy += packet.data_size
-            return True
-        else:
-            print "Unable to put in buffer"
-            return False
-
-
+            
 
 class Packet:
 
-
     def __init__(self, src, dest, data_size, data_type, curr_loc):
-    """ Instatiates a Packet.
+        """ Instatiates a Packet.
 
-    :param src: Source (device) of packet
-    :type src: Device
+        :param src: Source (device) of packet
+        :type src: Device
 
-    :param dest: Destination (device) of packet
-    :type dest: Device
+        :param dest: Destination (device) of packet
+        :type dest: Device
 
-    :param data_size: data size (in bytes)
-    :type data_size: int
+        :param data_size: data size (in bytes)
+        :type data_size: int
 
-    :param data_type: metadata, either ACK or DATA
-    :type data_type: str
+        :param data_type: metadata, either ACK or DATA
+        :type data_type: str
 
-    :param curr_loc: Device or Link where the packet is.
-    :type curr_loc: Device or Link
-    """
+        :param curr_loc: Device or Link where the packet is.
+        :type curr_loc: Device or Link
+        """
         self.src = src
         self.dest = dest
         self.data_size = data_size
@@ -376,10 +349,10 @@ class Packet:
         self.curr = curr_loc
 
     def updateLoc(self, newLoc):
-    """ Updates the location of the packet.
+        """ Updates the location of the packet.
 
-    :param newLoc: New location of the packet.
-    :type newLoc: Device or Link
-    """
+        :param newLoc: New location of the packet.
+        :type newLoc: Device or Link
+        """
         self.curr = newLoc
 
