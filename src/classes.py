@@ -81,14 +81,11 @@ class Device:
          
         :param deviceID: Unique ID of device
         :type deviceID: str
-        :param queue: a Queue data structure which keeps track of received packets for host, and moving packets for routers.
-        :type queue: Queue.Queue()
         :param links: Stores all attached links to the device
         :type links: Array of links
         """
         self.deviceID = deviceID
         self.links = []
-        self.queue = Queue.Queue()
 
 
     def attachLink(self, link):
@@ -109,46 +106,77 @@ class Device:
         :type packet: Packet
         """
 
-        link.putIntoBuffer(packet)
+        # We have two buffers on the link, one for each side.
+        # The current packet location is the temporary "Source"; 
+        # if it is equal to the device 2 of the link, then the direction
+        # is going from dev2->dev1 (so it's in buffer 2). Else, it will
+        # be moving from dev1->dev2 (so it's in buffer 1).
+        if packet.curr == link.device2:
+            link.putIntoBuffer2(packet)
+        elif packet.curr == link.device1:
+
+        # Update the location of the packet to the corresponding link.
         packet.updateLoc(link)
 
-    def sendToHostBuffer(self, packet):
-        """Attach the packet to the device queue.
-
-        :param packet: packet that will be sent to the buffer.
-        :type packet: Packet
-        """
-        self.queue.put(packet)
 
 class Router(Device):
 
-    # def createTable(self, table):
-    #     """Compute routing table via Bellman Ford.
-    #     :param table: Routing table for the router
-    #     :type Table: Dictionary
-    #    return table
+     def createTable(self, table):
+         """Compute routing table via Bellman Ford.
 
-    def receiving(self, link, packet):
-        pass
-        
+         :param table: Routing table for the router
+         :type Table: dict<(Device, Link)>
+         """
+        return table
+
+    def transfer(self, packet):
+        """ Instantaneous transfer from receiving a packet to sending a packet.
+
+        :param packet: packet that will be transferred
+        :type packet: Packet
+        """
+        prevLink = packet.curr
+        prevLink.decrRate(packet)
+
+        nextLink = table[packet.dest]
+        packet.curr = self
+        Device.sendToLink(self, nextLink, packet)
+
 class Host(Device):
 
     def getLink(self):
+        """ Will return the link attached to the host.
+        """
         return self.links[0]
 
-    # TO FIX:
-    # #processes the receiving packet
-    # def receiving(self):
-    #     packet = Device.receiving(self, self.getLink())
-    #     if packet.type == "ACK":
-    #         # do nothing
-    #         # decrease the current link rate
-    #         pass
-    #     elif packet.type == "DATA":
-    #         # send an acknowledgment packet
-    #         # TODO
-    #         pass
-    #     return packet
+
+    def receive(self, packet):
+        """ Will receive a packet and do two things:
+            1) If the packet is an ACK, the host will just print that it got it.
+            2) If it's data, then the packet has arrived at destination.
+            3) Return the packet.
+        
+        :param packet: packet that will be received
+        :type packet: Packet
+        """
+
+        if packet.type == "ACK":
+            # do nothing
+            # decrease the current link rate
+            link = packet.curr
+            link.decrRate(packet)
+            print "Packet acknowledged by Host " + str(self.deviceID)
+
+        elif packet.type == "DATA":
+            # send an acknowledgment packet
+            pass
+
+        # What we can do:
+        # We will send an acknowledgement from event handler:
+        # IF packet.curr = packet.dest and packet.type = "DATA"
+        packet.curr = self
+        return packet
+
 
 class Flow:
 
@@ -177,14 +205,19 @@ class Flow:
         self.flow_start = flow_start
         # self.sendTime = sendTime
 
-    # This method will generate data packets for the flow.
+
     def generateDataPacket(self):
-        packet = Packet(self.src, self.dest, DATA_SIZE, "data", self.src)
+        """ This will produce aa data packet, heading the forward
+        direction
+        """
+        packet = Packet(self.src, self.dest, DATA_SIZE, "DATA", self.src)
         return packet
 
-    # This method will generate acknowledgment packets for the flow.
     def generateAckPacket(self):
-        packet = Packet(self.src, self.dest, ACK_SIZE, "acknowlegment", self.src)
+        """ This will produce an acknowledgment packet, heading the reverse
+        direction
+        """
+        packet = Packet(self.dest, self.src, ACK_SIZE, "ACK", self.dest)
         return packet
 
 
@@ -228,13 +261,11 @@ class Link:
         self.device2 = device2
         self.device2.attachLink(self)
 
-        self.current_buffer_occupancy = 0
         self.current_rate = 0
 
         self.linkBuffer1 = bufferQueue(buffer_size * KB_TO_B)
         self.linkBuffer2 = bufferQueue(buffer_size * KB_TO_B)
 
-        # Links are initially inactive.
         self.dev1todev2 = None
 
         
@@ -257,7 +288,7 @@ class Link:
             packet = self.peekFromBuffer()
         except BufferError as e:
             print e
-
+            #TODO: Fix this up, updating link stuff.
         if not self.rateFullWith(packet):
             if link.dev1todev2:
                 print "Sending a packet: dev1 -> dev2"
