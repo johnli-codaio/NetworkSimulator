@@ -43,15 +43,15 @@ class Event:
 
 class Simulator:
     # TODO
-    def __init__(self, flows):
+    def __init__(self, network):
         """ This will initialize the simulation with a Priority Queue
         that sorts based on time.
 
-        :param flows: flows that this simulation has stored.
-        :type flows : Flow[]
+        :param network: Network system parsed from json
+        :type network : Network
         """
         self.q = Queue.PriorityQueue()
-        self.flows = flows
+        self.network = network
 
     def insertEvent(self, event):
         """ This will insert an event into the Priority Queue.
@@ -59,11 +59,11 @@ class Simulator:
         :param event: This is the event we're adding into the queue.
         :type event: Event
         """
-        self.q.put(event)
+        self.q.push(event)
 
     def processEvent(self):
         """Pops and processes event from queue."""
-        event = self.q.get()
+        event = self.q.pop()
 
         print event.type
         if event.type == "PUT":
@@ -97,8 +97,8 @@ class Simulator:
                 host = event.handler
                 host.receive(packet)
 
-                for i in range(len(self.flows)):
-                    tempFlow = self.flows[i]
+                for i in range(len(self.network.flows)):
+                    tempFlow = self.network.flows[i]
                     if tempFlow.src == event.packet.src and tempFlow.dest == event.packet.dest:
                         eventFlow = tempFlow
                 newEvent = Event(None, eventFlow, "GENERATEACK", event.time)
@@ -154,10 +154,6 @@ class Simulator:
             # Send the event to put this packet onto the link.
             newEvent = Event(newPacket, (host, link), "PUT", event.time)
             self.q.insert(newEvent)
-
-            # For now, we want flow to periodically generate packets.
-            generateEvent = Event(None, flow, "GENERATEPACK", event.time + 1)
-            self.q.insert(generateEvent)
 
   #def processEvent(self, event):
   #          print event.type

@@ -102,30 +102,28 @@ def main():
         print "Data amount in MB is: ", flows[flow_name].data_amt
         print "Flow start time is: ", flows[flow_name].flow_start
 
+
+    print "----------STARTING SIMULATION------------"
+    simulation = Simulation(network)
+
     # Have flows create sending events...
 
     for flow_name in flows:
         flow = flows[flow_name] 
 
         counter = 0
-        while(counter < flow.data_amt):
-            
-            
-            counter += 
+        timer = flow.flow_start
+        # We're assuming that the data_amounts are in megabytes
+        while(counter < flow.data_amt * MB_TO_KB * KB_TO_B):
+            genPacket = Event(None, flow, "GENERATEPACK", timer)
+            simulation.q.insert(genPacket)
+            timer += 1
+            counter += DATA_SIZE
 
+    while not simulation.q.empty():
+        simulation.processEvent()
 
-
-
-
-
-
-
-
-
-
-
-
-
+        # Starting the processing.
 
 if __name__ == "__main__":
     main()
