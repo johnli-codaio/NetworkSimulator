@@ -127,6 +127,8 @@ class Simulator:
 
         elif event.type == "GENERATEACK":
             # Processes a flow to generate an ACK.
+
+            assert(isinstance(event.handler, Flow))
             flow = event.handler
 
             # Generate the new Ack Packet
@@ -140,6 +142,8 @@ class Simulator:
 
         elif event.type == "GENERATEPACK":
             # Processes a flow to generate a regular data packet.
+
+            assert(isinstance(event.handler, Flow))
             flow = event.handler
 
             # Generate the new packet.
@@ -154,17 +158,6 @@ class Simulator:
             # For now, we want flow to periodically generate packets.
             generateEvent = Event(None, flow, "GENERATEPACK", event.time + 1)
             self.q.insert(generateEvent)
-
-        elif(event.type == "GENERATE"):
-            # Flow generates packet
-            assert(isinstance(event.handler, Flow))
-            flow = event.handler
-            packet = flow.generateDataPacket()
-            
-            sendPacketEvent = Event(flow.src.getLink(), "SEND", event.time, packet)
-            self.insertEvent(sendPacketEvent)
-
-
 
   #def processEvent(self, event):
   #          print event.type
