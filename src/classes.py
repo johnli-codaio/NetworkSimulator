@@ -79,9 +79,22 @@ class Network:
     ####       contain all the links, flows, etc. in the same way    ####
     #####################################################################
 
-    def __init__(self):
-        return
+    def __init__(self, devices, links, flows):
+        """ Takes in a list of devices, links, and flows, to make up the
+        entire network.
 
+        :param devices: List of devices that will be part of the network
+        :type devices: List<Device>
+
+        :param links: List of links that will be part of the network.
+        :type links: List<Link>
+
+        :param flows: List of flows that will be part of network.
+        :type flows: List<Flow>
+        """
+        self.devices = devices
+        self.links = links
+        self.flows = flows
 
 
 class Device:

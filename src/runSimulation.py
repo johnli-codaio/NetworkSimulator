@@ -75,6 +75,9 @@ def main():
         flows[str(flow_name)] = flow
     print "Flows instantiated: ", "\n\n"
 
+    print "Creating network..."
+    network = Network(devices, links, flows)
+    
     print "----------DEVICE DETAILS----------"
     for device_name in devices:
         print "Device is: ", "HOST" if isinstance(devices[device_name], classes.Host) else "ROUTER"
