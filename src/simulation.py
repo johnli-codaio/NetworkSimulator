@@ -114,7 +114,7 @@ class Simulator:
             # If dev1->dev2, then we pop from device 1.
             # Else, we pop from device 2.
             # If we can't pop, then we call another send event 1 ms later.
-            if link.sendPacket(event.packet):
+            if link.sendPacket(event.packet, event.handler):
                 if link.dev1todev2:
                     newEvent = Event(event.packet, link.device1, "RECEIVE", event.time + 10)
                 else:

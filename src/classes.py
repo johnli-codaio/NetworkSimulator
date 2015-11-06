@@ -120,7 +120,7 @@ class Device:
         :type packet: Packet
         """
 
-        link.putIntoBuffer(packet, device)
+        link.putIntoBuffer(packet, self)
 
 class Router(Device):
 
@@ -271,7 +271,7 @@ class Link:
         """Returns True if packet cannot be sent, False otherwise."""
         return (self.rate < self.current_rate + packet.data_size)
 
-    def sendPacket(self, device):
+    def sendPacket(self, packet, device):
         """Sends next packet in buffer queue corresponding to device along link. 
 
         Returns True if success, else False.
