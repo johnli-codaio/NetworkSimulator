@@ -155,104 +155,42 @@ class Simulator:
             newEvent = Event(newPacket, (host, link), "PUT", event.time)
             self.q.insert(newEvent)
 
-  #def processEvent(self, event):
-  #          print event.type
-  #          if event.type == "SEND":
-  #          
-  #              assert(isinstance(event.handler, Link))
-  #
-  #              # here, event.handler is a link
-  #              try:
-  #                  packet = event.handler.peekFromBuffer()
-  #              # no packets in the buffer
-  #              except BufferError:
-  #                  return
-  #
-  #              # it's not ready to be sent, because the current link
-  #              # rate is too full
-  #              # so, requeue it as an event later in time
-  #              if not event.handler.sendPacket(packet):
-  #                  sameEvent = Event(event.handler, "send", event.time + 1)
-  #                  self.insertEvent(newEvent)
-  #              else:
-  #                  # this packet is ready to be sent, handled by the link
-  #                  # so, we have to enqueue a receive event,
-  #                  # which should occur exactly after (specificed by link delay)
-  #                  newEvent = Event(packet.dest, "receive", event.time + event.handler.delay)
-  #                  self.insertEvent(newEvent)
 
-  #                  # TODO read this
-  #                  # also, check to see if there's more packets to be sent
-  #                  # from the buffer!
-  #                  # if the link rate is not full, then we should be
-  #                  # able to send multiple packets simultaneously?
-  #                  if not event.handler.linkBuffer.empty():
-  #                      newEvent = Event(event.handler, "send", event.time)
-  #                      self.insertEvent(newEvent)
+    # def run(self):
+    #     # set up hosts, link, flow
+    #     # host with address H1
+    #     host1 = Host("H1")
+    #     print "---------------DEVICE DETAILS-----------------"
+    #     print "Host Address: " + str(host1.deviceID)
 
-  #          elif event.type == "RECEIVE":
-  #              # here, event.handler is a host
-  #              # this packet can be dequeued by the receiving host
-  #              packet = event.handler.receiving()
-  #              # update the amount of data sent
-  #              self.current_state[0] += packet.data_size
-  #              print "Current Memory Sent: " + str(self.current_state[0])
+    #     # host with address H1
+    #     host2 = Host("H2")
+    #     print "Host Address: " + str(host2.deviceID)
 
-  #          elif event.type == "GENERATE":
-  #              # here, event.handler is a flow
-  #              # the flow will generate a packet
-  #              newPacket = event.handler.generateDataPacket()
+    #     # With this host and router, we create a link.v
+    #     # The link will have an id of L1, with a rate of 10 mbps
+    #     # and a delay of 10 ms, with a buffer size of 64kb.
+    #     # It will be attached to host and router
+    #     testLink = Link("L1", 10, 10, 64, host1, host2)
 
-  #              # and then, put this data packet into the outgoing
-  #              # link buffer
-  #              link = event.handler.src.getLink()
-  #              link.putIntoBuffer(newPacket)
-
-  #              # now, we have to enqueue a send event,
-  #              # becuase it might be ready for sending
-  #              newEvent = Event(link, "SEND", event.time + 1)
-  #              self.insertEvent(newEvent)
-
-  #              # also, generate more packets to be sent!
-  #              generateEvent = Event(event.handler, "GENERATE", event.time + 1)
-  #              self.insertEvent(generateEvent) '''
+    #     # attach a link to the two hosts
 
 
-    def run(self):
-        # set up hosts, link, flow
-        # host with address H1
-        host1 = Host("H1")
-        print "---------------DEVICE DETAILS-----------------"
-        print "Host Address: " + str(host1.deviceID)
+    #     # creates a flow between host1 and host2.
+    #     # currently, the amount of data sent through the flow is 0
+    #     # as of now, the flow only generates packets.
+    #     flow = Flow("F1", host1, host2, 0, 1.0)
 
-        # host with address H1
-        host2 = Host("H2")
-        print "Host Address: " + str(host2.deviceID)
+    #     # now, insert into the queue a "generate packet" event
+    #     # the flow starts at 1.0s = 1000 ms
+    #     event = Event(flow, "generate", flow.flow_start * s_to_ms)
+    #     self.insertEvent(event)
 
-        # With this host and router, we create a link.v
-        # The link will have an id of L1, with a rate of 10 mbps
-        # and a delay of 10 ms, with a buffer size of 64kb.
-        # It will be attached to host and router
-        testLink = Link("L1", 10, 10, 64, host1, host2)
-
-        # attach a link to the two hosts
-
-
-        # creates a flow between host1 and host2.
-        # currently, the amount of data sent through the flow is 0
-        # as of now, the flow only generates packets.
-        flow = Flow("F1", host1, host2, 0, 1.0)
-
-        # now, insert into the queue a "generate packet" event
-        # the flow starts at 1.0s = 1000 ms
-        event = Event(flow, "generate", flow.flow_start * s_to_ms)
-        self.insertEvent(event)
-
-        while not self.conditions_met():
-            try:
-                event = self.q.get()
-            except BufferError:
-                pass
-            self.processEvent(event)
+    #     while not self.conditions_met():
+    #         try:
+    #             event = self.q.get()
+    #         except BufferError:
+    #             pass
+    #         self.processEvent(event)
 
 

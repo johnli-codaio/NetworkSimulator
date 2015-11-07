@@ -210,19 +210,35 @@ class Flow:
 
         :param flow_start: Time flow begins
         :type flow_start: float
+
+        :param inTransit: List of packet ID's in transit at the moment.
+        :type inTransit: List<int>
         """
         self.flowID = flowID
         self.src = src
         self.dest = dest
         self.data_amt = data_amt
         self.flow_start = flow_start
+        self.inTransit = []
 
+
+    def addPacketToTransit(self, packet):
+        """ This will add a packet into the transit link.
+
+        :param packet: Packet that is now in transit.
+        :type packet: Packet
+        """
+
+        self.inTransit.append(packet.id)
 
     def generateDataPacket(self):
-        """ This will produce aa data packet, heading the forward
+        """ This will produce a data packet, heading the forward
         direction
         """
         packet = Packet(self.src, self.dest, DATA_SIZE, "DATA", None)
+
+        # This packet is now in transit.
+
         return packet
 
     def generateAckPacket(self):
@@ -232,7 +248,13 @@ class Flow:
         packet = Packet(self.dest, self.src, ACK_SIZE, "ACK", None)
         return packet
 
+    def removePacketFromTransit(self, packet):
+        """ This will remove a packet from the transit list
 
+        :param packet : packet that has finished its trip.
+        :type packet : Packet
+        """
+        self.inTransit.remove(packet.id);
 class Link:
 
     ###############################################################
@@ -347,8 +369,11 @@ class Link:
 
 class Packet:
 
-    def __init__(self, src, dest, data_size, data_type, curr_loc):
+    def __init__(self, packetId, src, dest, data_size, data_type, curr_loc):
         """ Instatiates a Packet.
+
+        :param packetId: ID of the packet.
+        :type packetId: int
 
         :param src: Source (device) of packet
         :type src: Device
@@ -365,6 +390,7 @@ class Packet:
         :param curr_loc: Link where the packet is.
         :type curr_loc: Link
         """
+        self.id = packetId
         self.src = src
         self.dest = dest
         self.data_size = data_size
