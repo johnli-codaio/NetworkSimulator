@@ -152,7 +152,7 @@ class Simulator:
                     host = event.handler
                     host.receive(packet)
 
-
+                    
                     sendMore = self.flow.receiveAcknowledgement(packet)
                     # boolean = ^ which tells us whether window is completed or not
 

@@ -250,21 +250,6 @@ class Flow:
         selfinstantiate_packets(self)
 
 
-    def instantiate_packets(self):
-        """ This will instantiate all packets that will be needed to
-            be sent during the simulation."""
-
-        total_data = 0
-        temp_id = 1
-        while (total_data <= self.data_amt):
-            generateDataPacket(temp_id)
-            self.packets.append(temp_id)    
-            total_data += DATA_SIZE
-            temp_id += 1
-
-        return
-    
-
     def addPacketToTransit(self, packet):
         """ This will add a packet into the transit link.
 
@@ -272,8 +257,7 @@ class Flow:
         :type packet: Packet
         """
 
-        self.inTransit.append(packet.id)
-        self.outstanding_packets += 1
+        self.inTransit.append(packet.packetId)
 
 
     def generateDataPacket(self):
@@ -285,7 +269,7 @@ class Flow:
             string packetId = self.flowID + "token" + str(self.packets_counter)
             packet = Packet(self.packets_counter, self.src, self.dest, DATA_SIZE, "DATA", None)
             self.current_amt += DATA_SIZE
-            self.packets.append(packet)
+            self.packets.append(packet.packetId)
             return packet
         return None
 
@@ -303,20 +287,20 @@ class Flow:
 
     def receiveAcknowledgement(self, packet):
         """ This will return a boolean that tells us whether the window is full or not"""
-
         self.ackpackets.append(packet.packetId)
         self.packets.remove(packet.packetId)
+        self.inTransit.remove(packetId.packetId)
         self.data_acknowledged += DATA_SIZE
-        return
+
+        if(len(self.inTransit) == 0):
+            return True
+        return False
 
 
+    def getInTransit(self):
+        """ This will check if a packet is lost..."""
 
-
-
-
-
-
-
+        return self.inTransit;
 
 
     def removePacketFromTransit(self, packet):
@@ -326,16 +310,7 @@ class Flow:
         :type packet : Packet
         """
         self.inTransit.remove(packet.id)
-
-    def send_packets(self):
-        while !self.packets.empty():
-            # Send WINDOW packets to transit
-            int window_counter = 0;
-            while (window_counter < self.window_size):
-                addPacketToTransit(packets[window_counter])
-                window_counter += 1;
             
-
             # At this point, check if ack packets have been received.
 
 
@@ -346,7 +321,7 @@ class Flow:
 
     def getWindowSize(self):
         #TODO
-        return
+        return self.window_size
 
 
 

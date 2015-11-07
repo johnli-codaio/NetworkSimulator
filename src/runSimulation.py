@@ -113,7 +113,7 @@ def main():
 
         counter = 0
         timer = flow.flow_start
-        # We're assuming that the data_amounts are in megabytes
+        # We send WINDOW_SIZE packets ALL at the same time.
         while(counter < flow.data_amt * MB_TO_KB * KB_TO_B):
             genPacket = Event(None, flow, "GENERATEPACK", timer)
             simulation.q.insert(genPacket)
