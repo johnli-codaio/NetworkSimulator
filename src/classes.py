@@ -234,6 +234,7 @@ class Flow:
         self.flow_start = flow_start
         self.inTransit = []
 
+        self.outstanding_packets = 0
         self.window_size = 1
 
         # Congestion Control Variables
@@ -241,7 +242,7 @@ class Flow:
         self.packets_counter = 0
         self.ackpackets = []
         self.ackpackets_counter = 0
-        self.window_size = 100
+
 
     def instantiate_packets(self):
         """ This will instantiate all packets that will be needed to
@@ -266,27 +267,56 @@ class Flow:
         """
 
         self.inTransit.append(packet.id)
+        self.outstanding_packets += 1
 
-    # Added ID field so that the generated packet will have an ID
-    def generateDataPacket(self, ID):
+
+
+
+
+
+
+
+
+
+    def generateDataPacket(self):
         """ This will produce a data packet, heading the forward
         direction
         """
         packet = Packet(ID, self.src, self.dest, DATA_SIZE, "DATA", None)
 
-
         # This packet is now in transit.
 
         return packet
 
-
     def generateAckPacket(self, packet):
-        # Added ID field so that the generated packet will have an ID
-        """ This will produce an acknowledgment packet, heading the reverse
+        """ This will produce an acknowledgment packet with same ID, heading the reverse
         direction
         """
-        packet = Packet(ID, self.dest, self.src, ACK_SIZE, "ACK", None)
+        packet.data_size = ACK_SIZE
+        packet.data_type = "ACK"
+        temp = packet.dest
+        packet.dest = packet.src
+        packet.src = temp
+
         return packet
+
+    def receiveAcknowledgement(self, packet):
+        """ This will return a boolean that tells us whether the window is full or not"""
+
+        self.ackpackets.append(packet.packetId)
+        self.packets.remove(packet.packetId)
+
+        return
+
+
+
+
+
+
+
+
+
+
 
     def removePacketFromTransit(self, packet):
         """ This will remove a packet from the transit list
@@ -296,19 +326,14 @@ class Flow:
         """
         self.inTransit.remove(packet.id)
 
-    def receiveAcknowledgement(self, packet):
-        #TODO
-        return
-
-
     def send_packets(self):
         while !self.packets.empty():
             # Send WINDOW packets to transit
             int window_counter = 0;
-            while (window_counter < self.window_size) {
-                addPacketToTransit(packets[window_counter]);
+            while (window_counter < self.window_size):
+                addPacketToTransit(packets[window_counter])
                 window_counter += 1;
-            }
+            
 
             # At this point, check if ack packets have been received.
 
