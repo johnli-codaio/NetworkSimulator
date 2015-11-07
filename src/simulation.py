@@ -162,6 +162,8 @@ class Simulator:
                     #######################################
 
                     if(sendMore):
+                        for i in range(flow.window_size):
+                            newEvent = Event(None, None, "GENERATEPACK", event.time, event.flow)
 
 
 
@@ -189,7 +191,7 @@ class Simulator:
             link = host.getLink()
 
             # Send the event to put this packet onto the link.
-            newEvent = Event(None, None, "PUT", event.time, event.flow)
+            newEvent = Event(newPacket, (link, host), "PUT", event.time, event.flow)
             self.insertEvent(newEvent)
 
 
