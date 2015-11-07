@@ -176,7 +176,7 @@ class Simulator:
             link = host.getLink()
 
             # Send the event to put this packet onto the link.
-            newEvent = Event(ackPacket, (link, host), "PUT", event.time, event.flow)
+            newEvent = Event(ackPacket, (link, host), "PUT", event.time + 1, event.flow)
             self.insertEvent(newEvent)
 
 

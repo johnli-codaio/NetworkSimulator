@@ -179,6 +179,7 @@ class Host(Device):
         :type packet: Packet
         """
 
+        print "Host " + self.deviceID + " received " + packet.type
 
         if packet.type == "ACK":
             # do nothing
@@ -191,7 +192,7 @@ class Host(Device):
             # send an acknowledgment packet
             link = packet.curr
             link.decrRate(packet)
-            print "Packet data received by recipient... sending ack from " + str(self.deviceID)
+            print "Packet data received by Host" + self.deviceID
 
 
 class Flow:
@@ -389,6 +390,9 @@ class Link:
                     self.dev1todev2 = True
                 else:
                     print "Sending a packet from device 2 to 1"
+
+                    print packet.data_type
+
                     self.dev1todev2 = False
                 return packet
                 # possibly need to update packet location?
