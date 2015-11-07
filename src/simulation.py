@@ -11,7 +11,7 @@ class Event:
     (Link, Device, Flow, respectively).
     """
 
-    def __init__(self, packet, EventHandler, EventType, EventTime, FlowID):
+    def __init__(self, packet, EventHandler, EventType, EventTime, flow):
         """ This will initialize an event.
 
         :param packet: The packet associated with the event.
@@ -29,9 +29,9 @@ class Event:
         EventType               EventHandler        Packet
         PUT                     (Link, Device)
         SEND                    (Link, Device)      None
-        RECEIVE                 (Device)
-        GENERATEACK             (None)              None
-        GENERATEPACK            (None)              None
+        RECEIVE                 Device
+        GENERATEACK             None                None
+        GENERATEPACK            None                None
 
         """
 
@@ -40,7 +40,7 @@ class Event:
         self.type = EventType
         self.time = EventTime
 
-        self.flow = flowID
+        self.flow = flow
 
     def __cmp__(self, other):
         """Ordering by time.
@@ -69,7 +69,7 @@ class Simulator:
         :param event: This is the event we're adding into the queue.
         :type event: Event
         """
-        self.q.push(event)
+        self.q.put(event)
 
     def processEvent(self):
         """Pops and processes event from queue."""
@@ -78,7 +78,7 @@ class Simulator:
             print "No events in queue."
             return
 
-        event = self.q.pop()
+        event = self.q.get()
 
         print event.type
         if event.type == "PUT":
@@ -91,7 +91,7 @@ class Simulator:
             device = event.handler[1]
 
             if not link.rateFullWith(event.packet):
-                host.sendToLink(link, event.packet)
+                device.sendToLink(link, event.packet)
                 newEvent = Event(None, (link, device), "SEND", event.time, event.flow)
                 self.insertEvent(newEvent)
 
@@ -152,7 +152,7 @@ class Simulator:
                     host = event.handler
                     host.receive(packet)
 
-                    
+
                     sendMore = self.flow.receiveAcknowledgement(packet)
                     # boolean = ^ which tells us whether window is completed or not
 

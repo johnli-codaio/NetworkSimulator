@@ -246,9 +246,6 @@ class Flow:
         # How much successfully sent.
         self.data_acknowledged = 0
 
-        #Instantiates all the packets to be sent via flow
-        selfinstantiate_packets(self)
-
 
     def addPacketToTransit(self, packet):
         """ This will add a packet into the transit link.
@@ -266,8 +263,8 @@ class Flow:
         """
         if(self.current_amt <= self.data_amt):
             self.packets_counter += 1
-            string packetId = self.flowID + "token" + str(self.packets_counter)
-            packet = Packet(self.packets_counter, self.src, self.dest, DATA_SIZE, "DATA", None)
+            packetId = self.flowID + "token" + str(self.packets_counter)
+            packet = Packet(packetId, self.src, self.dest, DATA_SIZE, "DATA", None)
             self.current_amt += DATA_SIZE
             self.packets.append(packet.packetId)
             return packet
@@ -331,7 +328,7 @@ class Link:
     ## TODO: Write what members each Link has, and its functions ##
     ###############################################################
 
-    def __init__(self, linkID, rate, delay, buffer_size, device1, device2, direction):
+    def __init__(self, linkID, rate, delay, buffer_size, device1, device2):
         """ Instantiates a Link
         
         :param linkID: unique ID of link

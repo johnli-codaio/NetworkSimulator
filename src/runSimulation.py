@@ -70,13 +70,14 @@ def main():
         flow_data = parsed_data['flows'][flow_name]
         print "Flow ", flow_name, "has data: ", flow_data
 
-        flow = classes.Flow(str(flow_name), flow_data['flow_src'], flow_data['flow_dest'],
+        flow = classes.Flow(str(flow_name), devices[flow_data['flow_src']], 
+                            devices[flow_data['flow_dest']],
                             flow_data['data_amt'], flow_data['flow_start'])
         flows[str(flow_name)] = flow
     print "Flows instantiated: ", "\n\n"
 
     print "Creating network..."
-    network = Network(devices, links, flows)
+    network = classes.Network(devices, links, flows)
     
     print "----------DEVICE DETAILS----------"
     for device_name in devices:
@@ -91,7 +92,7 @@ def main():
         print "Connects devices: ", links[link_name].device1.deviceID, links[link_name].device2.deviceID
         print "Link rate: ", links[link_name].rate
         print "Link delay", links[link_name].delay
-        print "Link buffer size: ", links[link_name].buffer_size
+        print "Link buffer size: ", links[link_name].linkBuffer.maxSize
         print "\n"
 
     print "----------FLOW DETAILS----------"
@@ -105,7 +106,7 @@ def main():
 
     print "----------STARTING SIMULATION------------"
 
-    simulation = Simulation(network)
+    simulator = simulation.Simulator(network)
 
     # Have flows create sending events...
 
@@ -115,12 +116,12 @@ def main():
         counter = 0
         timer = flow.flow_start
 
-        for i in range((int) flow.window_size)
-            newGenEvent = Event(None, flow, "GENERATEPACK", timer)
-            simulation.insertEvent(newGenEvent)
+        for i in range(int(flow.window_size)):
+            newGenEvent = simulation.Event(None, None, "GENERATEPACK", timer, flow)
+            simulator.insertEvent(newGenEvent)
 
-    while not simulation.q.empty():
-        simulation.processEvent()
+    while not simulator.q.empty():
+        simulator.processEvent()
 
         # Starting the processing.
 
