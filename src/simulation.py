@@ -131,6 +131,7 @@ class Simulator:
                 self.insertEvent(newEvent)
 
             # Host
+
             elif isinstance(event.handler, Host):
                 if(packet.type == "DATA"):
                     host = event.handler
