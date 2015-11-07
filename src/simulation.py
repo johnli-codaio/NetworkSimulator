@@ -164,7 +164,7 @@ class Simulator:
                     if(sendMore):
                         for i in range(event.flow.window_size):
                             newEvent = Event(None, None, "GENERATEPACK", event.time, event.flow)
-
+                            self.insertEvent(newEvent)
 
 
         elif event.type == "GENERATEACK":
