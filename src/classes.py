@@ -193,6 +193,12 @@ class Host(Device):
 
 class Flow:
 
+
+    # Should be responsible for 
+    # - Generating all packets
+    # - Dealing with congestion control
+    # - 
+
     def __init__(self, flowID, src, dest, data_amt, flow_start):
         """ Instantiates a Flow
 
@@ -223,12 +229,18 @@ class Flow:
         self.data_amt = data_amt
         self.flow_start = flow_start
         self.inTransit = []
-        sef.packets = []
+
+        # Congestion Control Variables
+        self.packets = []
+        self.packets_counter = 0
+        self.ackpackets = []
+        self.ackpackets_counter = 0
+        self.window_size = 100
 
     def instantiate_packets(self):
         """ This will instantiate all packets that will be needed to
             be sent during the simulation."""
-            
+
         total_data = 0
         id = 1
         while (total_data <= self.data_amt):
@@ -236,6 +248,8 @@ class Flow:
             self.packets.append(id)    
             total_data += DATA_SIZE
             id += 1
+
+        return
     
 
     def addPacketToTransit(self, packet):
@@ -253,6 +267,7 @@ class Flow:
         direction
         """
         packet = Packet(ID, self.src, self.dest, DATA_SIZE, "DATA", None)
+
 
         # This packet is now in transit.
 
@@ -273,6 +288,26 @@ class Flow:
         :type packet : Packet
         """
         self.inTransit.remove(packet.id)
+
+    def send_packets(self):
+        while !self.packets.empty():
+            # Send WINDOW packets to transit
+            int window_counter = 0;
+            while (window_counter < self.window_size) {
+                addPacketToTransit(packets[window_counter]);
+                window_counter += 1;
+            }
+
+            # At this point, check if ack packets have been received.
+
+
+
+
+
+    # Congestion Control:
+
+    def getWindowSize(self):
+
 
 
 class Link:
