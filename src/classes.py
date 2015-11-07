@@ -143,6 +143,7 @@ class Router(Device):
         :param table: Routing table for the router
         :type Table: dict<(Device, Link)>
         """
+        # self.table  = ...
         return table
 
     def transfer(self, packet):
@@ -154,7 +155,7 @@ class Router(Device):
         prevLink = packet.curr
         prevLink.decrRate(packet)
 
-        nextLink = table[packet.dest]
+        nextLink = self.table[packet.dest]
         return nextLink
 
 class Host(Device):
@@ -213,6 +214,9 @@ class Flow:
 
         :param inTransit: List of packet ID's in transit at the moment.
         :type inTransit: List<int>
+
+        :param window_sze: Window size in packets
+        :type window_size: int
         """
         self.flowID = flowID
         self.src = src
@@ -220,6 +224,8 @@ class Flow:
         self.data_amt = data_amt
         self.flow_start = flow_start
         self.inTransit = []
+
+        self.window_size = 1
 
 
     def addPacketToTransit(self, packet):
@@ -241,7 +247,7 @@ class Flow:
 
         return packet
 
-    def generateAckPacket(self):
+    def generateAckPacket(self, packet):
         """ This will produce an acknowledgment packet, heading the reverse
         direction
         """
@@ -254,7 +260,14 @@ class Flow:
         :param packet : packet that has finished its trip.
         :type packet : Packet
         """
-        self.inTransit.remove(packet.id);
+        self.inTransit.remove(packet.id)
+
+    def receiveAcknowledgement(self, packet):
+        #TODO
+        return
+
+
+
 class Link:
 
     ###############################################################
@@ -309,33 +322,25 @@ class Link:
     def sendPacket(self, device):
         """Sends next packet in buffer queue corresponding to device along link. 
 
-        Returns True if success, else False.
+        Returns packet if success, else None.
         """
-
         try:
-            if(device == device1):
-                packet = self.linkBuffer.peek()
-                if(not self.rateFullWith(packet)):
-                    print "Sending a packet from device 1 to device 2"
-                    self.linkBuffer.get()
-                    link.incrRate(packet)
+            packet = self.linkBuffer.peek()
+            if(not self.rateFullWith(packet)):
+                self.linkBuffer.get()
+                link.incrRate(packet)
+                if(device == device1):
+                    print "Sending a packet from device 1 to 2"
                     link.dev1todev2 = True
-                    return True
-                return False
-
-            else:
-                packet = self.linkBuffer.peek()
-                if(not self.rateFullWith(packet)):
-                    print "Sending a packet from device 2 to device 1"
-                    self.linkBuffer.get()
-                    link.incrRate(packet)
+                else:
+                    print "Sending a packet from device 2 to 1"
                     link.dev1todev2 = False
-                    return True
-                return False
-
+                return packet
+                # possibly need to update packet location?
+            else:
+                return None
         except BufferError as e:
             print e
-
 
     def putIntoBuffer(self, packet):
         """Puts packet into buffer.
@@ -371,7 +376,7 @@ class Packet:
         :param data_size: data size (in bytes)
         :type data_size: int
 
-        :param data_type: metadata, either ACK or DATA
+        :param data_type: type of packet, either ACK or DATA
         :type data_type: str
 
         :param curr_loc: Link where the packet is.

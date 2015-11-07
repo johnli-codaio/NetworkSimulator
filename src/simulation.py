@@ -11,26 +11,36 @@ class Event:
     (Link, Device, Flow, respectively).
     """
 
-    def __init__(self, packet, EventHandler, EventType, EventTime):
+    def __init__(self, packet, EventHandler, EventType, EventTime, FlowID):
         """ This will initialize an event.
 
         :param packet: The packet associated with the event.
-        :type packet: Packet/None (None is usually reserved for flows)
+        :type packet: Packet/None (None for GENERATE...)
 
-        :param EventHandler: The object that sent the event request.
-        :type EventHandler: Device, Packet, Flow, Link.
+        :param EventHandler: Object associated with event request.
+        :type EventHandler: Device, Link, or None
 
         :param EventType: The type of event that will be sent.
-        :type EventType: Str
+        :type EventType: str
 
         :param EventTime: The time of the particular event, in milliseconds.
-        :type EventTime: Int
+        :type EventTime: int
+
+        EventType               EventHandler        Packet
+        PUT                     (Link, Device)
+        SEND                    (Link, Device)      None
+        RECEIVE                 (Device)
+        GENERATEACK             (None)              None
+        GENERATEPACK            (None)              None
+
         """
 
         self.packet = packet
         self.handler = EventHandler
         self.type = EventType
         self.time = EventTime
+
+        self.flow = flowID
 
     def __cmp__(self, other):
         """Ordering by time.
@@ -69,67 +79,77 @@ class Simulator:
         if event.type == "PUT":
             # Tries to put packet into link buffer
             # This happens whenever a device receives a packet.
-            # The event handler will take in a tuple, first index
-            # is the device, and second index is the link.
-            assert(isinstance(event.handler, Device))
-            host = event.handler[0]
-            link = event.handler[1]
+
+            assert(isinstance(event.handler[0], Link))
+            assert(isinstance(event.handler[1], Device))
+            link = event.handler[0]
+            device = event.handler[1]
 
             if not link.rateFullWith(event.packet):
                 host.sendToLink(link, event.packet)
-                newEvent = Event(None, link, "SEND", event.time)
+                newEvent = Event(None, (link, device), "SEND", event.time, event.flow)
+                self.insertEvent(newEvent)
+
+        elif event.type == "SEND":
+            # Processes a link to send.
+            assert(isinstance(event.handler[0], Link))
+            assert(isinstance(event.handler[1], Device))
+            link = event.handler[0]
+            device = event.handler[1]
+            
+            # If you can send the packet, we check what buffer is currently in action.
+            # If dev1->dev2, then we pop from device 1.
+            # Else, we pop from device 2.
+            # If we can't pop, then we call another send event 1 ms later.
+
+            packet = link.sendPacket(device)
+
+            if packet:
+                if(device == link.device1):
+                    newEvent = Event(packet, link.device2, "RECEIVE", event.time + 
+                                     link.delay, self.flow)
+                    self.insertEvent(newEvent)
+                else:
+                    newEvent = Event(packet, link.device1, "RECEIVE", event.time +
+                                     link.delay, self.flow)
+                    self.insertEvent(newEvent)
+
+            else:
+                newEvent = Event(None, (link, device), "SEND", event.time + 1, self.flow)
                 self.q.insert(newEvent)
 
         elif event.type == "RECEIVE":
             # Processes a host/router action that would receive things.
             assert(isinstance(event.handler, Device))
 
-            # First, the issue with the router.
+            # Router.
             if isinstance(event.handler, Router):
                 router = event.handler
                 newLink = router.transfer(event.packet)
 
-                newEvent = Event(event.packet, (router, newLink), "PUT", event.time)
-                self.q.insert(newEvent)
+                newEvent = Event(event.packet, (newLink, router), "PUT", event.time)
+                self.insertEvent(newEvent)
 
-            # The packet reaches it's host destination...
+            # Host
             elif isinstance(event.handler, Host):
-                host = event.handler
-                host.receive(packet)
+                if(packet.type == "DATA"):
+                    host = event.handler
+                    host.receive(packet)
 
-                for i in range(len(self.network.flows)):
-                    tempFlow = self.network.flows[i]
-                    if tempFlow.src == event.packet.src and tempFlow.dest == event.packet.dest:
-                        eventFlow = tempFlow
-                newEvent = Event(None, eventFlow, "GENERATEACK", event.time)
-                self.q.insert(newEvent)
-
-        elif event.type == "SEND":
-            # Processes a link to send.
-            assert(isinstance(event.handler, Link))
-
-            link = event.handler
-            
-            # If you can send the packet, we check what buffer is currently in action.
-            # If dev1->dev2, then we pop from device 1.
-            # Else, we pop from device 2.
-            # If we can't pop, then we call another send event 1 ms later.
-            if link.sendPacket(event.packet, event.handler):
-                if link.dev1todev2:
-                    newEvent = Event(event.packet, link.device2, "RECEIVE", event.time + 10)
+                    newEvent = Event(None, None, "GENERATEACK", event.time, self.flow)
+                    self.insertEvent(newEvent)
                 else:
-                    newEvent = Event(event.packet, link.device1, "RECEIVE", event.time + 10)
-                self.q.insert(newEvent)
+                    ########################################
+                    ####### TODO: Acknowledgement got ######
+                    ########################################
 
-            else:
-                newEvent = Event(None, link, "SEND", event.time + 1)
-                self.q.insert(newEvent)
+                    host = event.handler
+                    host.receive(packet)
+
+                    self.flow.receiveAcknowledgement(packet)
 
         elif event.type == "GENERATEACK":
             # Processes a flow to generate an ACK.
-
-            assert(isinstance(event.handler, Flow))
-            flow = event.handler
 
             # Generate the new Ack Packet
             ackPacket = flow.generateAckPacket()
@@ -137,8 +157,8 @@ class Simulator:
             link = host.getLink()
 
             # Send the event to put this packet onto the link.
-            newEvent = Event(ackPacket, (host, link), "PUT", event.time)
-            self.q.insert(newEvent)
+            newEvent = Event(ackPacket, (link, host), "PUT", event.time)
+            self.insertEvent(newEvent)
 
         elif event.type == "GENERATEPACK":
             # Processes a flow to generate a regular data packet.
@@ -152,8 +172,8 @@ class Simulator:
             link = host.getLink()
 
             # Send the event to put this packet onto the link.
-            newEvent = Event(newPacket, (host, link), "PUT", event.time)
-            self.q.insert(newEvent)
+            newEvent = Event(newPacket, (link, host), "PUT", event.time)
+            self.insertEvent(newEvent)
 
 
     # def run(self):
