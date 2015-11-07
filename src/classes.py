@@ -273,6 +273,7 @@ class Flow:
             packet = Packet(packetId, self.src, self.dest, DATA_SIZE, "DATA", None)
             self.current_amt += DATA_SIZE
             self.packets.append(packet.packetId)
+            self.inTransit.append(packet.packetId)
             return packet
         return None
 
@@ -281,7 +282,7 @@ class Flow:
         direction
         """
         packet.data_size = ACK_SIZE
-        packet.data_type = "ACK"
+        packet.type = "ACK"
         temp = packet.dest
         packet.dest = packet.src
         packet.src = temp
@@ -292,7 +293,7 @@ class Flow:
         """ This will return a boolean that tells us whether the window is full or not"""
         self.ackpackets.append(packet.packetId)
         self.packets.remove(packet.packetId)
-        self.inTransit.remove(packetId.packetId)
+        self.inTransit.remove(packet.packetId)
         self.data_acknowledged += DATA_SIZE
 
         if(len(self.inTransit) == 0):
@@ -391,7 +392,7 @@ class Link:
                 else:
                     print "Sending a packet from device 2 to 1"
 
-                    print packet.data_type
+                    print packet.type
 
                     self.dev1todev2 = False
                 return packet

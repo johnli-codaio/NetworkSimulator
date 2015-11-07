@@ -108,7 +108,7 @@ class Simulator:
             # If we can't pop, then we call another send event 1 ms later.
 
             packet = link.sendPacket(device)
-
+            print packet.type
             if packet:
                 if(device == link.device1):
                     newEvent = Event(packet, link.device2, "RECEIVE", event.time + 
@@ -150,10 +150,10 @@ class Simulator:
                     ########################################
 
                     host = event.handler
-                    host.receive(packet)
+                    host.receive(event.packet)
 
 
-                    sendMore = event.flow.receiveAcknowledgement(packet)
+                    sendMore = event.flow.receiveAcknowledgement(event.packet)
                     # boolean = ^ which tells us whether window is completed or not
 
                     # IF SO, 
@@ -162,7 +162,7 @@ class Simulator:
                     #######################################
 
                     if(sendMore):
-                        for i in range(flow.window_size):
+                        for i in range(event.flow.window_size):
                             newEvent = Event(None, None, "GENERATEPACK", event.time, event.flow)
 
 
