@@ -104,6 +104,7 @@ def main():
 
 
     print "----------STARTING SIMULATION------------"
+
     simulation = Simulation(network)
 
     # Have flows create sending events...
@@ -113,12 +114,10 @@ def main():
 
         counter = 0
         timer = flow.flow_start
-        # We're assuming that the data_amounts are in megabytes
-        while(counter < flow.data_amt * MB_TO_KB * KB_TO_B):
-            genPacket = Event(None, flow, "GENERATEPACK", timer)
-            simulation.q.insert(genPacket)
-            timer += 1
-            counter += DATA_SIZE
+
+        for i in range((int) flow.window_size)
+            newGenEvent = Event(None, flow, "GENERATEPACK", timer)
+            simulation.insertEvent(newGenEvent)
 
     while not simulation.q.empty():
         simulation.processEvent()
