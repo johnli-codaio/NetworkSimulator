@@ -296,6 +296,7 @@ class Link:
 
         :param direction: Link direction of packets. NoneType
                           indicates inactive link.
+
         :param type: Boolean or NoneType
         """
 
@@ -309,8 +310,7 @@ class Link:
 
         self.current_rate = 0
 
-        self.linkBuffer1 = bufferQueue(buffer_size * KB_TO_B)
-        self.linkBuffer2 = bufferQueue(buffer_size * KB_TO_B)
+        self.linkBuffer = bufferQueue(buffer_size * KB_TO_B)
 
         self.dev1todev2 = None
 
@@ -318,7 +318,7 @@ class Link:
         """Returns True if packet cannot be sent, False otherwise."""
         return (self.rate < self.current_rate + packet.data_size)
 
-    def sendPacket(self, packet, device):
+    def sendPacket(self, device):
         """Sends next packet in buffer queue corresponding to device along link. 
 
         Returns True if success, else False.
@@ -326,49 +326,36 @@ class Link:
 
         try:
             if(device == device1):
-                if(link.dev1todev2 == False):
-                    # Currently sending the other way
-                    return False
-                elif(link.dev1todev2 == None):
-                    # Nothing being sent
-                    packet = self.linkBuffer1.get()
+                packet = self.linkBuffer.peek()
+                if(not self.rateFullWith(packet)):
+                    print "Sending a packet from device 1 to device 2"
+                    self.linkBuffer.get()
                     link.incrRate(packet)
+                    link.dev1todev2 = True
                     return True
-                elif(link.dev1todev2 == True):
-                    packet = self.linkBuffer1.peek()
-                    if(not self.rateFullWith(packet)):
-                        print "Sending a packet from device 1 to device 2"
-                        self.linkBuffer1.get()
-                        link.incrRate(packet)
-                        return True
+                return False
 
             else:
-                if(link.dev1todev2 == True):
-                    # Currently sending the other way
-                    return False
-                elif(link.dev1todev2 == None):
-                    # Nothing being sent
-                    packet = self.linkBuffer2.get()
+                packet = self.linkBuffer.peek()
+                if(not self.rateFullWith(packet)):
+                    print "Sending a packet from device 2 to device 1"
+                    self.linkBuffer.get()
                     link.incrRate(packet)
+                    link.dev1todev2 = False
                     return True
-                elif(link.dev1todev2 == False):
-                    packet = self.linkBuffer2.peek()
-                    if(not self.rateFullWith(packet)):
-                        print "Sending a packet from device 2 to device 1"
-                        self.linkBuffer2.get()
-                        link.incrRate(packet)
-                        return True
+                return False
 
         except BufferError as e:
             print e
 
 
-    def putIntoBuffer(self, packet, device):
-        """Puts packet into buffer corresponding to device."""
-        if(device == device1):
-            self.linkBuffer1.put(packet)
-        else:
-            self.linkBuffer2.put(packet)
+    def putIntoBuffer(self, packet):
+        """Puts packet into buffer.
+
+        :param packet : Packet to be put into the buffer.
+        :type packet : Packet
+        """
+        self.linkBuffer.put(packet)
 
     def decrRate(self, packet):
         """Decrease current rate by packet size."""
