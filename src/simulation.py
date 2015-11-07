@@ -73,6 +73,11 @@ class Simulator:
 
     def processEvent(self):
         """Pops and processes event from queue."""
+
+        if(self.q.empty()):
+            print "No events in queue."
+            return
+
         event = self.q.pop()
 
         print event.type
@@ -115,7 +120,7 @@ class Simulator:
                     self.insertEvent(newEvent)
 
             else:
-                newEvent = Event(None, (link, device), "SEND", event.time + 1, self.flow)
+                newEvent = Event(None, (link, device), "SEND", event.time + 1, event.flow)
                 self.q.insert(newEvent)
 
         elif event.type == "RECEIVE":
@@ -127,7 +132,7 @@ class Simulator:
                 router = event.handler
                 newLink = router.transfer(event.packet)
 
-                newEvent = Event(event.packet, (newLink, router), "PUT", event.time)
+                newEvent = Event(event.packet, (newLink, router), "PUT", event.time, event.flow)
                 self.insertEvent(newEvent)
 
             # Host
@@ -135,9 +140,9 @@ class Simulator:
             elif isinstance(event.handler, Host):
                 if(packet.type == "DATA"):
                     host = event.handler
-                    host.receive(packet)
+                    host.receive(event.packet)
 
-                    newEvent = Event(None, None, "GENERATEACK", event.time, self.flow)
+                    newEvent = Event(event.packet, None, "GENERATEACK", event.time, event.flow)
                     self.insertEvent(newEvent)
                 else:
                     ########################################
@@ -147,24 +152,35 @@ class Simulator:
                     host = event.handler
                     host.receive(packet)
 
-                    self.flow.receiveAcknowledgement(packet)
+
+                    sendMore = self.flow.receiveAcknowledgement(packet)
+                    # boolean = ^ which tells us whether window is completed or not
+
+                    # IF SO, 
+                    #######################################
+                    ##### Push in new GENERATEPACKS... ####
+                    #######################################
+
+                    if(sendMore):
+
+
 
         elif event.type == "GENERATEACK":
             # Processes a flow to generate an ACK.
 
             # Generate the new Ack Packet
-            ackPacket = flow.generateAckPacket()
+            ackPacket = flow.generateAckPacket(event.packet)
             host = ackPacket.src
             link = host.getLink()
 
             # Send the event to put this packet onto the link.
-            newEvent = Event(ackPacket, (link, host), "PUT", event.time)
+            newEvent = Event(ackPacket, (link, host), "PUT", event.time, event.flow)
             self.insertEvent(newEvent)
+
 
         elif event.type == "GENERATEPACK":
             # Processes a flow to generate a regular data packet.
 
-            assert(isinstance(event.handler, Flow))
             flow = event.handler
 
             # Generate the new packet.
@@ -173,7 +189,7 @@ class Simulator:
             link = host.getLink()
 
             # Send the event to put this packet onto the link.
-            newEvent = Event(newPacket, (link, host), "PUT", event.time)
+            newEvent = Event(None, None, "PUT", event.time, event.flow)
             self.insertEvent(newEvent)
 
 
