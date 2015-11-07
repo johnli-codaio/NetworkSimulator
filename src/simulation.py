@@ -183,8 +183,6 @@ class Simulator:
         elif event.type == "GENERATEPACK":
             # Processes a flow to generate a regular data packet.
 
-            flow = event.handler
-
             # Generate the new packet.
             newPacket = flow.generateDataPacket()
             host = newPacket.src

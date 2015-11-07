@@ -249,12 +249,12 @@ class Flow:
             be sent during the simulation."""
 
         total_data = 0
-        id = 1
+        temp_id = 1
         while (total_data <= self.data_amt):
-            generateDataPacket(id)
-            self.packets.append(id)    
+            generateDataPacket(temp_id)
+            self.packets.append(temp_id)    
             total_data += DATA_SIZE
-            id += 1
+            temp_id += 1
 
         return
     
@@ -268,14 +268,6 @@ class Flow:
 
         self.inTransit.append(packet.id)
         self.outstanding_packets += 1
-
-
-
-
-
-
-
-
 
 
     def generateDataPacket(self):
