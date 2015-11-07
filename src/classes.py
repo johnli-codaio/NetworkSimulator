@@ -235,7 +235,7 @@ class Flow:
         self.inTransit = []
 
         self.outstanding_packets = 0
-        self.window_size = 1
+        self.window_size = 20
 
         # Congestion Control Variables
         self.packets = []
@@ -243,18 +243,21 @@ class Flow:
         self.ackpackets = []
         self.ackpackets_counter = 0
 
+        #Instantiates all the packets to be sent via flow
+        selfinstantiate_packets(self)
+
 
     def instantiate_packets(self):
         """ This will instantiate all packets that will be needed to
             be sent during the simulation."""
 
         total_data = 0
-        id = 1
+        temp_id = 1
         while (total_data <= self.data_amt):
-            generateDataPacket(id)
-            self.packets.append(id)    
+            generateDataPacket(temp_id)
+            self.packets.append(temp_id)    
             total_data += DATA_SIZE
-            id += 1
+            temp_id += 1
 
         return
     
@@ -283,8 +286,6 @@ class Flow:
         direction
         """
         packet = Packet(ID, self.src, self.dest, DATA_SIZE, "DATA", None)
-
-        # This packet is now in transit.
 
         return packet
 
