@@ -92,7 +92,7 @@ class Simulator:
                 newEvent = Event(event.packet, (router, newLink), "PUT", event.time)
                 self.q.insert(newEvent)
 
-            # The packet reaches it's host destination...
+            # The packet reaches its host destination...
             elif isinstance(event.handler, Host):
                 host = event.handler
                 host.receive(packet)
