@@ -235,13 +235,16 @@ class Flow:
         self.inTransit = []
 
         self.outstanding_packets = 0
-        self.window_size = 1
+        self.window_size = 20
 
         # Congestion Control Variables
         self.packets = []
         self.packets_counter = 0
         self.ackpackets = []
         self.ackpackets_counter = 0
+
+        #Instantiates all the packets to be sent via flow
+        selfinstantiate_packets(self)
 
 
     def instantiate_packets(self):
@@ -275,8 +278,6 @@ class Flow:
         direction
         """
         packet = Packet(ID, self.src, self.dest, DATA_SIZE, "DATA", None)
-
-        # This packet is now in transit.
 
         return packet
 
