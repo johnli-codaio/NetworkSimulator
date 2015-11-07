@@ -116,9 +116,9 @@ class Simulator:
             # If we can't pop, then we call another send event 1 ms later.
             if link.sendPacket(event.packet, event.handler):
                 if link.dev1todev2:
-                    newEvent = Event(event.packet, link.device1, "RECEIVE", event.time + 10)
-                else:
                     newEvent = Event(event.packet, link.device2, "RECEIVE", event.time + 10)
+                else:
+                    newEvent = Event(event.packet, link.device1, "RECEIVE", event.time + 10)
                 self.q.insert(newEvent)
 
             else:
