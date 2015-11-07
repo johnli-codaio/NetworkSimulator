@@ -281,7 +281,7 @@ class Flow:
         direction
         """
         packet.data_size = ACK_SIZE
-        packet.data_type = "ACK"
+        packet.type = "ACK"
         temp = packet.dest
         packet.dest = packet.src
         packet.src = temp
@@ -391,7 +391,7 @@ class Link:
                 else:
                     print "Sending a packet from device 2 to 1"
 
-                    print packet.data_type
+                    print packet.type
 
                     self.dev1todev2 = False
                 return packet
