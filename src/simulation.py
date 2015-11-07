@@ -80,7 +80,7 @@ class Simulator:
 
         event = self.q.get()
 
-        print event.type
+        print "Popped event type: ", event.type
         if event.type == "PUT":
             # Tries to put packet into link buffer
             # This happens whenever a device receives a packet.
@@ -112,11 +112,11 @@ class Simulator:
             if packet:
                 if(device == link.device1):
                     newEvent = Event(packet, link.device2, "RECEIVE", event.time + 
-                                     link.delay, self.flow)
+                                     link.delay, event.flow)
                     self.insertEvent(newEvent)
                 else:
                     newEvent = Event(packet, link.device1, "RECEIVE", event.time +
-                                     link.delay, self.flow)
+                                     link.delay, event.flow)
                     self.insertEvent(newEvent)
 
             else:
@@ -138,7 +138,7 @@ class Simulator:
             # Host
 
             elif isinstance(event.handler, Host):
-                if(packet.type == "DATA"):
+                if(event.packet.type == "DATA"):
                     host = event.handler
                     host.receive(event.packet)
 
@@ -153,7 +153,7 @@ class Simulator:
                     host.receive(packet)
 
 
-                    sendMore = self.flow.receiveAcknowledgement(packet)
+                    sendMore = event.flow.receiveAcknowledgement(packet)
                     # boolean = ^ which tells us whether window is completed or not
 
                     # IF SO, 
@@ -185,49 +185,16 @@ class Simulator:
 
             # Generate the new packet.
             newPacket = event.flow.generateDataPacket()
+
+            if(newPacket == None):
+                return
             host = newPacket.src
             link = host.getLink()
 
             # Send the event to put this packet onto the link.
-            newEvent = Event(newPacket, (link, host), "PUT", event.time, event.flow)
+            newEvent = Event(newPacket, (link, host), "PUT", event.time + 1, event.flow)
             self.insertEvent(newEvent)
 
 
-    # def run(self):
-    #     # set up hosts, link, flow
-    #     # host with address H1
-    #     host1 = Host("H1")
-    #     print "---------------DEVICE DETAILS-----------------"
-    #     print "Host Address: " + str(host1.deviceID)
-
-    #     # host with address H1
-    #     host2 = Host("H2")
-    #     print "Host Address: " + str(host2.deviceID)
-
-    #     # With this host and router, we create a link.v
-    #     # The link will have an id of L1, with a rate of 10 mbps
-    #     # and a delay of 10 ms, with a buffer size of 64kb.
-    #     # It will be attached to host and router
-    #     testLink = Link("L1", 10, 10, 64, host1, host2)
-
-    #     # attach a link to the two hosts
-
-
-    #     # creates a flow between host1 and host2.
-    #     # currently, the amount of data sent through the flow is 0
-    #     # as of now, the flow only generates packets.
-    #     flow = Flow("F1", host1, host2, 0, 1.0)
-
-    #     # now, insert into the queue a "generate packet" event
-    #     # the flow starts at 1.0s = 1000 ms
-    #     event = Event(flow, "generate", flow.flow_start * s_to_ms)
-    #     self.insertEvent(event)
-
-    #     while not self.conditions_met():
-    #         try:
-    #             event = self.q.get()
-    #         except BufferError:
-    #             pass
-    #         self.processEvent(event)
 
 

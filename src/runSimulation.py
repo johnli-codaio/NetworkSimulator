@@ -123,6 +123,8 @@ def main():
     while not simulator.q.empty():
         simulator.processEvent()
 
+    print "Simulation done!"
+
         # Starting the processing.
 
 if __name__ == "__main__":

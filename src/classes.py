@@ -133,7 +133,8 @@ class Device:
         :type packet: Packet
         """
 
-        link.putIntoBuffer(packet, self)
+        link.putIntoBuffer(packet)
+        packet.curr = link
 
 class Router(Device):
 
@@ -177,6 +178,7 @@ class Host(Device):
         :param packet: packet that will be received
         :type packet: Packet
         """
+
 
         if packet.type == "ACK":
             # do nothing
@@ -261,6 +263,9 @@ class Flow:
         """ This will produce a data packet, heading the forward
         direction
         """
+
+        print self.current_amt
+
         if(self.current_amt <= self.data_amt):
             self.packets_counter += 1
             packetId = self.flowID + "token" + str(self.packets_counter)
@@ -309,10 +314,6 @@ class Flow:
         self.inTransit.remove(packet.id)
             
             # At this point, check if ack packets have been received.
-
-
-
-
 
     # Congestion Control:
 
@@ -382,13 +383,13 @@ class Link:
             packet = self.linkBuffer.peek()
             if(not self.rateFullWith(packet)):
                 self.linkBuffer.get()
-                link.incrRate(packet)
-                if(device == device1):
+                self.incrRate(packet)
+                if(device == self.device1):
                     print "Sending a packet from device 1 to 2"
-                    link.dev1todev2 = True
+                    self.dev1todev2 = True
                 else:
                     print "Sending a packet from device 2 to 1"
-                    link.dev1todev2 = False
+                    self.dev1todev2 = False
                 return packet
                 # possibly need to update packet location?
             else:
@@ -402,7 +403,13 @@ class Link:
         :param packet : Packet to be put into the buffer.
         :type packet : Packet
         """
-        self.linkBuffer.put(packet)
+
+        if(packet.data_size + self.linkBuffer.occupancy >
+           self.linkBuffer.maxSize):
+            print "Packet dropped"
+        else:
+            self.linkBuffer.put(packet)
+
 
     def decrRate(self, packet):
         """Decrease current rate by packet size."""
