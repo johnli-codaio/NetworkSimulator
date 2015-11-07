@@ -225,10 +225,18 @@ class Flow:
         self.inTransit = []
         sef.packets = []
 
-    def instantiate_packets(self) {
-
-    }
-
+    def instantiate_packets(self):
+        """ This will instantiate all packets that will be needed to
+            be sent during the simulation."""
+            
+        total_data = 0
+        id = 1
+        while (total_data <= self.data_amt):
+            generateDataPacket(id)
+            self.packets.append(id)    
+            total_data += DATA_SIZE
+            id += 1
+    
 
     def addPacketToTransit(self, packet):
         """ This will add a packet into the transit link.
