@@ -171,7 +171,7 @@ class Simulator:
             # Processes a flow to generate an ACK.
 
             # Generate the new Ack Packet
-            ackPacket = flow.generateAckPacket(event.packet)
+            ackPacket = event.flow.generateAckPacket(event.packet)
             host = ackPacket.src
             link = host.getLink()
 
@@ -184,7 +184,7 @@ class Simulator:
             # Processes a flow to generate a regular data packet.
 
             # Generate the new packet.
-            newPacket = flow.generateDataPacket()
+            newPacket = event.flow.generateDataPacket()
             host = newPacket.src
             link = host.getLink()
 

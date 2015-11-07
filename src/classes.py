@@ -230,11 +230,11 @@ class Flow:
         self.flowID = flowID
         self.src = src
         self.dest = dest
-        self.data_amt = data_amt
-        self.flow_start = flow_start
+        self.data_amt = data_amt * MB_TO_KB * KB_TO_B
+        self.current_amt = 0
+        self.flow_start = flow_start * s_to_ms
         self.inTransit = []
 
-        self.outstanding_packets = 0
         self.window_size = 20
 
         # Congestion Control Variables
@@ -242,6 +242,9 @@ class Flow:
         self.packets_counter = 0
         self.ackpackets = []
         self.ackpackets_counter = 0
+
+        # How much successfully sent.
+        self.data_acknowledged = 0
 
         #Instantiates all the packets to be sent via flow
         selfinstantiate_packets(self)
@@ -277,9 +280,14 @@ class Flow:
         """ This will produce a data packet, heading the forward
         direction
         """
-        packet = Packet(ID, self.src, self.dest, DATA_SIZE, "DATA", None)
-
-        return packet
+        if(self.current_amt <= self.data_amt):
+            self.packets_counter += 1
+            string packetId = self.flowID + "token" + str(self.packets_counter)
+            packet = Packet(self.packets_counter, self.src, self.dest, DATA_SIZE, "DATA", None)
+            self.current_amt += DATA_SIZE
+            self.packets.append(packet)
+            return packet
+        return None
 
     def generateAckPacket(self, packet):
         """ This will produce an acknowledgment packet with same ID, heading the reverse
@@ -298,7 +306,7 @@ class Flow:
 
         self.ackpackets.append(packet.packetId)
         self.packets.remove(packet.packetId)
-
+        self.data_acknowledged += DATA_SIZE
         return
 
 
@@ -439,7 +447,7 @@ class Packet:
         """ Instatiates a Packet.
 
         :param packetId: ID of the packet.
-        :type packetId: int
+        :type packetId: string
 
         :param src: Source (device) of packet
         :type src: Device
@@ -456,7 +464,7 @@ class Packet:
         :param curr_loc: Link where the packet is.
         :type curr_loc: Link
         """
-        self.id = packetId
+        self.packetId = packetId
         self.src = src
         self.dest = dest
         self.data_size = data_size
