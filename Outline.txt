@@ -57,4 +57,8 @@ Congestion control. (Managed by routers?)
 
 
 
+11/6/2015
+=====================================================================
+Test Case 0 should manage congestion control: TCP Reno / FAST-TCP.
 
+We need to keep in mind the packet ID's in transit.

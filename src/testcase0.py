@@ -11,11 +11,11 @@ if __name__ == "__main__":
     # host with address H1
     host1 = Host("H1")
     print "---------------DEVICE DETAILS-----------------"
-    print "Host Address: " + str(host1.address)
+    print "Host Address: " + str(host1.deviceID)
 
     # host with address H1
     host2 = Host("H2")
-    print "Host Address: " + str(host2.address)
+    print "Host Address: " + str(host2.deviceID)
 
     # router with address R1
     # router = Router("R1")
@@ -29,17 +29,17 @@ if __name__ == "__main__":
     testLink = Link("L1", 10, 10, 64, host1, host2)
 
     print "----------------LINK DETAILS------------------"
-    print "Link ID: " + str(testLink.linkId)
+    print "Link ID: " + str(testLink.linkID)
     print "Link Rate: " + str(testLink.rate) + " Mbps"
     print "Link Delay: " + str(testLink.delay) + " ms"
     print "Link Buffer: " + str(testLink.buffer_size) + " B"
-    print "Link Device1: " + str(testLink.device1.address)
-    print "Link Device2: " + str(testLink.device2.address) + "\n"
+    print "Link Device1: " + str(testLink.device1.deviceID)
+    print "Link Device2: " + str(testLink.device2.deviceID) + "\n"
 
     print "----------------PACKET DETAILS----------------"
 
-    src = host1.address
-    dest = host2.address
+    src = host1.deviceID
+    dest = host2.deviceID
     flow = Flow("F1", host1, host2, 20, 1.0)
 
     # Fills buffer until it's full

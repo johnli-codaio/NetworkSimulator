@@ -1,129 +1,199 @@
 import Queue
-from event import *
 import datetime
 import time
 from classes import *
 
+
+class Event:
+    """Events are enqueued into the Simulator priority queue by their time. Events
+    have a type (PUT, SEND, RECEIVE, GENERATEACK, GENERATEPACK) describing what is 
+    done to the packet. Each type of event has an associated network handler 
+    (Link, Device, Flow, respectively).
+    """
+
+    def __init__(self, packet, EventHandler, EventType, EventTime, flow):
+        """ This will initialize an event.
+
+        :param packet: The packet associated with the event.
+        :type packet: Packet/None (None for GENERATE...)
+
+        :param EventHandler: Object associated with event request.
+        :type EventHandler: Device, Link, or None
+
+        :param EventType: The type of event that will be sent.
+        :type EventType: str
+
+        :param EventTime: The time of the particular event, in milliseconds.
+        :type EventTime: int
+
+        EventType               EventHandler        Packet
+        PUT                     (Link, Device)
+        SEND                    (Link, Device)      None
+        RECEIVE                 Device
+        GENERATEACK             None                None
+        GENERATEPACK            None                None
+
+        """
+
+        self.packet = packet
+        self.handler = EventHandler
+        self.type = EventType
+        self.time = EventTime
+
+        self.flow = flow
+
+    def __cmp__(self, other):
+        """Ordering by time.
+
+        :param other: The other event we're comparing with.
+        :type other: Event
+        """
+        return cmp(self.time, other.time)
+
+
 class Simulator:
     # TODO
-    def __init__(self, conditions):
+    def __init__(self, network):
+        """ This will initialize the simulation with a Priority Queue
+        that sorts based on time.
+
+        :param network: Network system parsed from json
+        :type network : Network
+        """
         self.q = Queue.PriorityQueue()
-        self.conditions = conditions
-        self.current_state = [0]
+        self.network = network
 
     def insertEvent(self, event):
+        """ This will insert an event into the Priority Queue.
+
+        :param event: This is the event we're adding into the queue.
+        :type event: Event
+        """
         self.q.put(event)
 
-    def processEvent(self, event):
-        print event.type
-        if event.type == "send":
-            # here, event.handler is a link
-            packet = event.handler.peekFromBuffer()
-            # no packets in the buffer
-            if packet == -1:
-                return
+    def processEvent(self):
+        """Pops and processes event from queue."""
 
-            # it's not ready to be sent, because the current link
-            # rate is too full
-            # so, requeue it as an event later in time
-            if not event.handler.sendPacket(packet):
-                sameEvent = Event(event.handler, "send", event.time + 1)
-                self.insertEvent(newEvent)
-            else:
-                # this packet is ready to be sent, handled by the link
-                # so, we have to enqueue a receive event,
-                # which should occur exactly after 10 ms
-                # (specificed by link delay)
-                newEvent = Event(packet.dest, "receive", event.time + 10)
+        if(self.q.empty()):
+            print "No events in queue."
+            return
+
+        event = self.q.get()
+
+        print "Popped event type: ", event.type
+        if event.type == "PUT":
+            # Tries to put packet into link buffer
+            # This happens whenever a device receives a packet.
+
+            assert(isinstance(event.handler[0], Link))
+            assert(isinstance(event.handler[1], Device))
+            link = event.handler[0]
+            device = event.handler[1]
+
+            if not link.rateFullWith(event.packet):
+                device.sendToLink(link, event.packet)
+                newEvent = Event(None, (link, device), "SEND", event.time, event.flow)
                 self.insertEvent(newEvent)
 
-                # TODO read this
-                # also, check to see if there's more packets to be sent
-                # from the buffer!
-                # if the link rate is not full, then we should be
-                # able to send multiple packets simultaneously?
-                if not event.handler.linkBuffer.empty():
-                    newEvent = Event(event.handler, "send", event.time)
+        elif event.type == "SEND":
+            # Processes a link to send.
+            assert(isinstance(event.handler[0], Link))
+            assert(isinstance(event.handler[1], Device))
+            link = event.handler[0]
+            device = event.handler[1]
+            
+            # If you can send the packet, we check what buffer is currently in action.
+            # If dev1->dev2, then we pop from device 1.
+            # Else, we pop from device 2.
+            # If we can't pop, then we call another send event 1 ms later.
+
+            packet = link.sendPacket(device)
+            print packet.type
+            if packet:
+                if(device == link.device1):
+                    newEvent = Event(packet, link.device2, "RECEIVE", event.time + 
+                                     link.delay, event.flow)
+                    self.insertEvent(newEvent)
+                else:
+                    newEvent = Event(packet, link.device1, "RECEIVE", event.time +
+                                     link.delay, event.flow)
                     self.insertEvent(newEvent)
 
-        elif event.type == "receive":
-            # here, event.handler is a host
-            # this packet can be dequeued by the receiving host
-            packet = event.handler.receiving()
-            # update the amount of data sent
-            self.current_state[0] += packet.data_size
-            print "Current Memory Sent: " + str(self.current_state[0])
+            else:
+                newEvent = Event(None, (link, device), "SEND", event.time + 1, event.flow)
+                self.q.insert(newEvent)
 
-        elif event.type == "generate":
-            # here, event.handler is a flow
-            # the flow will generate a packet
-            newPacket = event.handler.generateDataPacket()
+        elif event.type == "RECEIVE":
+            # Processes a host/router action that would receive things.
+            assert(isinstance(event.handler, Device))
 
-            # and then, put this data packet into the outgoing
-            # link buffer
-            link = event.handler.src.getLink()
-            link.putIntoBuffer(newPacket)
+            # Router.
+            if isinstance(event.handler, Router):
+                router = event.handler
+                newLink = router.transfer(event.packet)
 
-            # now, we have to enqueue a send packet,
-            # becuase it might be ready for sending
-            newEvent = Event(link, "send", event.time + 1)
+                newEvent = Event(event.packet, (newLink, router), "PUT", event.time, event.flow)
+                self.insertEvent(newEvent)
+
+            # Host
+
+            elif isinstance(event.handler, Host):
+                if(event.packet.type == "DATA"):
+                    host = event.handler
+                    host.receive(event.packet)
+
+                    newEvent = Event(event.packet, None, "GENERATEACK", event.time, event.flow)
+                    self.insertEvent(newEvent)
+                else:
+                    ########################################
+                    ####### TODO: Acknowledgement got ######
+                    ########################################
+
+                    host = event.handler
+                    host.receive(event.packet)
+
+
+                    sendMore = event.flow.receiveAcknowledgement(event.packet)
+                    # boolean = ^ which tells us whether window is completed or not
+
+                    # IF SO, 
+                    #######################################
+                    ##### Push in new GENERATEPACKS... ####
+                    #######################################
+
+                    if(sendMore):
+                        for i in range(event.flow.window_size):
+                            newEvent = Event(None, None, "GENERATEPACK", event.time, event.flow)
+                            self.insertEvent(newEvent)
+
+
+        elif event.type == "GENERATEACK":
+            # Processes a flow to generate an ACK.
+
+            # Generate the new Ack Packet
+            ackPacket = event.flow.generateAckPacket(event.packet)
+            host = ackPacket.src
+            link = host.getLink()
+
+            # Send the event to put this packet onto the link.
+            newEvent = Event(ackPacket, (link, host), "PUT", event.time + 1, event.flow)
             self.insertEvent(newEvent)
 
-            # also, generate more packets to be sent!
-            generateEvent = Event(event.handler, "generate", event.time + 1)
-            self.insertEvent(generateEvent)
 
+        elif event.type == "GENERATEPACK":
+            # Processes a flow to generate a regular data packet.
 
-    def run(self):
-        # set up hosts, link, flow
-        # host with address H1
-        host1 = Host("H1")
-        print "---------------DEVICE DETAILS-----------------"
-        print "Host Address: " + str(host1.address)
+            # Generate the new packet.
+            newPacket = event.flow.generateDataPacket()
 
-        # host with address H1
-        host2 = Host("H2")
-        print "Host Address: " + str(host2.address)
+            if(newPacket == None):
+                return
+            host = newPacket.src
+            link = host.getLink()
 
-        # With this host and router, we create a link.v
-        # The link will have an id of L1, with a rate of 10 mbps
-        # and a delay of 10 ms, with a buffer size of 64kb.
-        # It will be attached to host and router
-        testLink = Link("L1", 10, 10, 64, host1, host2)
-
-        # attach a link to the two hosts
-
-
-        # creates a flow between host1 and host2.
-        # currently, the amount of data sent through the flow is 0
-        # as of now, the flow only generates packets.
-        flow = Flow("F1", host1, host2, 0, 1.0)
-
-        # now, insert into the queue a "generate packet" event
-        # the flow starts at 1.0s = 1000 ms
-        event = Event(flow, "generate", 1000)
-        self.insertEvent(event)
-
-        while not self.conditions_met():
-            event = self.q.get()
-            print event
-            self.processEvent(event)
-
-
-        # while not self.conditions_met():
-        #     event = self.q.get()
-        #     self.processEvent(event)
-
-    # for test case 0: have we sent in 20MB of data yet?
-    # TODO
-    def conditions_met(self):
-        return self.conditions[0] == self.current_state[0]
-
-
-if __name__ == "__main__":
-    s = Simulator([20 * MB_TO_KB])
-    s.run()
-
+            # Send the event to put this packet onto the link.
+            newEvent = Event(newPacket, (link, host), "PUT", event.time + 1, event.flow)
+            self.insertEvent(newEvent)
 
 
 
