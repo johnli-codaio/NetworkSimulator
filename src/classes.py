@@ -16,6 +16,7 @@ s_to_ms = 1000
 #   ACK_SIZE: the size of an acknowledgment packet (64B)
 DATA_SIZE = 1024
 ACK_SIZE = 64
+ROUTING_SIZE = 8
 
 class bufferQueue:
     def __init__(self, size):
@@ -148,10 +149,11 @@ class Router(Device):
         return
 
 
-    def sendRoutingPackets(self, packet):
+    def sendRoutingPackets(self, packet = None):
         """Sends a routing packet to each adjacent device."""
 
-        return
+        if(packet == None):
+            packet = RoutingPacket(self, self, rout_to = None, distance = 0)
 
 
     def initializeDistTable(self):
@@ -274,7 +276,7 @@ class Flow:
         :type packet: Packet
         """
 
-        self.inTransit.append(packet.packetId)
+        self.inTransit.append(packet.packetID)
 
 
     def generateDataPacket(self):
@@ -286,11 +288,11 @@ class Flow:
 
         if(self.current_amt <= self.data_amt):
             self.packets_counter += 1
-            packetId = self.flowID + "token" + str(self.packets_counter)
-            packet = Packet(packetId, self.src, self.dest, DATA_SIZE, "DATA", None)
+            packetID = self.flowID + "token" + str(self.packets_counter)
+            packet = Packet(packetID, self.src, self.dest, DATA_SIZE, "DATA", None)
             self.current_amt += DATA_SIZE
-            self.packets.append(packet.packetId)
-            self.inTransit.append(packet.packetId)
+            self.packets.append(packet.packetID)
+            self.inTransit.append(packet.packetID)
             return packet
         return None
 
@@ -308,9 +310,9 @@ class Flow:
 
     def receiveAcknowledgement(self, packet):
         """ This will return a boolean that tells us whether the window is full or not"""
-        self.ackpackets.append(packet.packetId)
-        self.packets.remove(packet.packetId)
-        self.inTransit.remove(packet.packetId)
+        self.ackpackets.append(packet.packetID)
+        self.packets.remove(packet.packetID)
+        self.inTransit.remove(packet.packetID)
         self.data_acknowledged += DATA_SIZE
 
         if(len(self.inTransit) == 0):
@@ -470,11 +472,11 @@ class Link:
 
 class Packet:
 
-    def __init__(self, packetId, src, dest, data_size, data_type, curr_loc):
+    def __init__(self, packetID, src, dest, data_size, data_type, curr_loc):
         """ Instatiates a Packet.
 
-        :param packetId: ID of the packet.
-        :type packetId: string
+        :param packetID: ID of the packet.
+        :type packetID: string
 
         :param src: Source (device) of packet
         :type src: Device
@@ -491,7 +493,7 @@ class Packet:
         :param curr_loc: Link where the packet is.
         :type curr_loc: Link
         """
-        self.packetId = packetId
+        self.packetID = packetID
         self.src = src
         self.dest = dest
         self.data_size = data_size
@@ -510,4 +512,26 @@ class Packet:
         :type newLoc: Device, Link
         """
         self.curr = newLoc
+
+
+class RoutingPacket(Packet):
+
+    ####################################################################
+    ####################################################################
+    ############ TODO: Does routing packet need ID? ####################
+    ####################################################################
+    ####################################################################
+
+    def __init__(self, curr_loc, router, rout_to = None, distance = 0):
+        #self.packetID = packetID
+        self.curr = curr_loc
+
+        self.router = router
+        self.rout_to = rout_to
+        self.distance = distance
+
+        self.data_size = ROUTING_SIZE
+        self.data_type = "ROUTING"
+
+
 
