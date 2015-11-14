@@ -138,14 +138,32 @@ class Device:
 
 class Router(Device):
 
-    def createTable(self, table):
-        """Compute routing table via Bellman Ford.
 
-        :param table: Routing table for the router
-        :type Table: dict<(Device, Link)>
+    def receiveRoutingPacket(self, packet):
+        """Receives a routing packet.
+
+        If packet is from host, update routing table. 
+        If packet is from another router, send new packets.
         """
-        # self.table  = ...
-        return table
+        return
+
+
+    def sendRoutingPackets(self, packet):
+        """Sends a routing packet to each adjacent device."""
+
+        return
+
+
+    def initializeDistTable(self):
+        """Initializes table of distances to other devices.
+        """
+        
+        self.distTable = {}
+        self.distTable[self] = 0
+
+        for link in links:
+            otherDev = link.otherDevice(self)
+            self.distTable[otherDev] = link.delay
 
     def transfer(self, packet):
         """ Returns the link that the packet will be forwarded to.
@@ -248,7 +266,6 @@ class Flow:
 
         # How much successfully sent.
         self.data_acknowledged = 0
-
 
     def addPacketToTransit(self, packet):
         """ This will add a packet into the transit link.
@@ -372,6 +389,19 @@ class Link:
 
         self.dev1todev2 = None
 
+
+    def otherDevice(self, device):
+        """Returns the other device
+
+        :param device: One of the devices connected to the link
+        :type device: Device
+        """
+
+        if(self.device1 == device):
+            return self.device2 
+        else:
+            return self.device1
+
     def rateFullWith(self, packet):
         """Returns True if packet cannot be sent, False otherwise."""
         return (self.rate < self.current_rate + packet.data_size)
@@ -442,7 +472,7 @@ class Packet:
         :param data_size: data size (in bytes)
         :type data_size: int
 
-        :param data_type: type of packet, either ACK or DATA
+        :param data_type: type of packet, either ACK, DATA, ROUTING
         :type data_type: str
 
         :param curr_loc: Link where the packet is.
