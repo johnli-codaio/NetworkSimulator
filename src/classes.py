@@ -62,7 +62,7 @@ class bufferQueue:
     def peek(self):
         """ Returns the next "poppable" element, without actually popping it.
         """
-        
+
         if self.empty():
             raise BufferError("Tried to peek element from empty bufferQueue")
         return self.packets[len(self.packets) - 1]
@@ -102,10 +102,10 @@ class Device:
     ###################################################################
     ### TODO: Write what members each Device has, and its functions ###
     ###################################################################
-    
+
     def __init__(self, deviceID):
         """Instantiates the Device.
-         
+
         :param deviceID: Unique ID of device
         :type deviceID: str
         :param links: Stores all attached links to the device
@@ -114,6 +114,10 @@ class Device:
         self.deviceID = deviceID
         self.links = []
 
+        # PUT_INTO_BUFFER_TIME: how much time to put a packet in link
+        # buffer
+        # currently is 1 ms. may be too slow
+        self.PUT_INTO_BUFFER_TIME = 0
 
     def attachLink(self, link):
         """Attach single link to Device.
@@ -174,7 +178,7 @@ class Host(Device):
             1) If the packet is an ACK, the host will just print that it got it.
             2) If it's data, then the packet has arrived at destination.
             3) Return the packet.
-        
+
         :param packet: packet that will be received
         :type packet: Packet
         """
@@ -198,10 +202,10 @@ class Host(Device):
 class Flow:
 
 
-    # Should be responsible for 
+    # Should be responsible for
     # - Generating all packets
     # - Dealing with congestion control
-    # - 
+    # -
 
     def __init__(self, flowID, src, dest, data_amt, flow_start):
         """ Instantiates a Flow
@@ -260,12 +264,17 @@ class Flow:
         self.inTransit.append(packet.packetId)
 
 
+    def printDataSent(self):
+        """ Prints how much data this flow has printed so far
+        """
+
+        print "Flow " + str(self.flowID) + " has sent " + str(self.current_amt) + " so far"
+
     def generateDataPacket(self):
         """ This will produce a data packet, heading the forward
         direction
         """
 
-        print self.current_amt
 
         if(self.current_amt <= self.data_amt):
             self.packets_counter += 1
@@ -314,7 +323,7 @@ class Flow:
         :type packet : Packet
         """
         self.inTransit.remove(packet.id)
-            
+
             # At this point, check if ack packets have been received.
 
     # Congestion Control:
@@ -333,22 +342,22 @@ class Link:
 
     def __init__(self, linkID, rate, delay, buffer_size, device1, device2):
         """ Instantiates a Link
-        
+
         :param linkID: unique ID of link
         :type linkID: str
 
         :param rate: max link rate (in Mbps)
         :type rate: int
-        
+
         :param delay: link delay (in ms)
         :type delay: int
-        
+
         :param buffer_size: buffer size (in KB)
         :type buffer_size: int
-        
+
         :param device1: Device 1 joined by link
         :type device1: Device
-        
+
         :param device2: Device 2 joined by link
         :type device2: Device
 
@@ -377,7 +386,7 @@ class Link:
         return (self.rate < self.current_rate + packet.data_size)
 
     def sendPacket(self, device):
-        """Sends next packet in buffer queue corresponding to device along link. 
+        """Sends next packet in buffer queue corresponding to device along link.
 
         Returns packet if success, else None.
         """
@@ -423,7 +432,7 @@ class Link:
     def incrRate(self, packet):
         """Increase current rate by packet size."""
         self.current_rate += packet.data_size
-            
+
 
 class Packet:
 

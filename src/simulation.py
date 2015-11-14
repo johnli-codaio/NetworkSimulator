@@ -63,6 +63,12 @@ class Simulator:
         self.q = Queue.PriorityQueue()
         self.network = network
 
+    def totalTime(self, event):
+        """ Prints the time that has elapsed since the start 
+            of the simulation.
+        """
+        print "Total time: " + str(event.time) + " ms"
+
     def insertEvent(self, event):
         """ This will insert an event into the Priority Queue.
 
@@ -79,6 +85,10 @@ class Simulator:
             return
 
         event = self.q.get()
+        
+        # the queue is empty when our simulation is complete
+        if (self.q.empty()):
+            self.totalTime(event)
 
         print "Popped event type: ", event.type
         if event.type == "PUT":
@@ -176,7 +186,7 @@ class Simulator:
             link = host.getLink()
 
             # Send the event to put this packet onto the link.
-            newEvent = Event(ackPacket, (link, host), "PUT", event.time + 1, event.flow)
+            newEvent = Event(ackPacket, (link, host), "PUT", event.time + host.PUT_INTO_BUFFER_TIME, event.flow)
             self.insertEvent(newEvent)
 
 
@@ -192,7 +202,7 @@ class Simulator:
             link = host.getLink()
 
             # Send the event to put this packet onto the link.
-            newEvent = Event(newPacket, (link, host), "PUT", event.time + 1, event.flow)
+            newEvent = Event(newPacket, (link, host), "PUT", event.time + host.PUT_INTO_BUFFER_TIME, event.flow)
             self.insertEvent(newEvent)
 
 
