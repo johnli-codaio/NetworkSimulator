@@ -9,7 +9,7 @@ import Queue
 KB_TO_B = 1024
 B_to_b = 8
 MB_TO_KB = 1024
-s_to_ms = 1000
+s_to_ms = float(1000)
 
 # some static constants:
 #   DATA_SIZE: the size of a data packet (1024B)
@@ -117,7 +117,7 @@ class Device:
         # PUT_INTO_BUFFER_TIME: how much time to put a packet in link
         # buffer
         # currently is 1 ms. may be too slow
-        self.PUT_INTO_BUFFER_TIME = 0
+        self.PUT_INTO_BUFFER_TIME = 1
 
     def attachLink(self, link):
         """Attach single link to Device.
@@ -190,13 +190,13 @@ class Host(Device):
             # decrease the current link rate
             link = packet.curr
             link.decrRate(packet)
-            print "Packet acknowledged by Host " + str(self.deviceID)
+            print "Packet " + packet.packetID + " acknowledged by Host " + str(self.deviceID)
 
         elif packet.type == "DATA":
             # send an acknowledgment packet
             link = packet.curr
             link.decrRate(packet)
-            print "Packet data received by Host" + self.deviceID
+            print "Packet " + packet.packetID + " received by Host" + str(self.deviceID)
 
 
 class Flow:
@@ -261,14 +261,14 @@ class Flow:
         :type packet: Packet
         """
 
-        self.inTransit.append(packet.packetId)
+        self.inTransit.append(packet.packetID)
 
 
     def printDataSent(self):
-        """ Prints how much data this flow has printed so far
+        """ Prints how much data this flow has generated so far
         """
 
-        print "Flow " + str(self.flowID) + " has sent " + str(self.current_amt) + " so far"
+        print "Flow " + str(self.flowID) + " has generated " + str(self.current_amt) + " so far"
 
     def generateDataPacket(self):
         """ This will produce a data packet, heading the forward
@@ -278,11 +278,13 @@ class Flow:
 
         if(self.current_amt <= self.data_amt):
             self.packets_counter += 1
-            packetId = self.flowID + "token" + str(self.packets_counter)
-            packet = Packet(packetId, self.src, self.dest, DATA_SIZE, "DATA", None)
+            packetID = self.flowID + "token" + str(self.packets_counter)
+            packet = Packet(packetID, self.src, self.dest, DATA_SIZE, "DATA", None)
             self.current_amt += DATA_SIZE
-            self.packets.append(packet.packetId)
-            self.inTransit.append(packet.packetId)
+            # how much data sent?
+            self.printDataSent()
+            self.packets.append(packet.packetID)
+            self.inTransit.append(packet.packetID)
             return packet
         return None
 
@@ -296,13 +298,16 @@ class Flow:
         packet.dest = packet.src
         packet.src = temp
 
+        # how much data sent?
+        self.printDataSent()
+
         return packet
 
     def receiveAcknowledgement(self, packet):
         """ This will return a boolean that tells us whether the window is full or not"""
-        self.ackpackets.append(packet.packetId)
-        self.packets.remove(packet.packetId)
-        self.inTransit.remove(packet.packetId)
+        self.ackpackets.append(packet.packetID)
+        self.packets.remove(packet.packetID)
+        self.inTransit.remove(packet.packetID)
         self.data_acknowledged += DATA_SIZE
 
         if(len(self.inTransit) == 0):
@@ -369,7 +374,7 @@ class Link:
 
         self.linkID = linkID
         self.rate = rate * MB_TO_KB * KB_TO_B / B_to_b
-        self.delay = delay
+        self.delay = delay / s_to_ms
         self.device1 = device1
         self.device1.attachLink(self)
         self.device2 = device2
@@ -383,7 +388,8 @@ class Link:
 
     def rateFullWith(self, packet):
         """Returns True if packet cannot be sent, False otherwise."""
-        return (self.rate < self.current_rate + packet.data_size)
+        return (self.rate < 
+                (self.current_rate + packet.data_size) / self.delay)
 
     def sendPacket(self, device):
         """Sends next packet in buffer queue corresponding to device along link.
@@ -433,14 +439,17 @@ class Link:
         """Increase current rate by packet size."""
         self.current_rate += packet.data_size
 
+    def getLinkRate(self):
+        """Gets the link rate. Used for logging."""
+        return float(self.current_rate) #/ (MB_TO_KB * KB_TO_B / B_to_b)
 
 class Packet:
 
-    def __init__(self, packetId, src, dest, data_size, data_type, curr_loc):
+    def __init__(self, packetID, src, dest, data_size, data_type, curr_loc):
         """ Instatiates a Packet.
 
-        :param packetId: ID of the packet.
-        :type packetId: string
+        :param packetID: ID of the packet.
+        :type packetID: string
 
         :param src: Source (device) of packet
         :type src: Device
@@ -457,7 +466,7 @@ class Packet:
         :param curr_loc: Link where the packet is.
         :type curr_loc: Link
         """
-        self.packetId = packetId
+        self.packetID = packetID
         self.src = src
         self.dest = dest
         self.data_size = data_size
