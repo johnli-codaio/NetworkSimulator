@@ -9,9 +9,10 @@ Welcome to NetworkSimulator's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    classes
+   simulation
 
 
 Indices and tables
@@ -20,5 +21,4 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-* :ref:
 

@@ -327,8 +327,8 @@ class Flow:
     def removePacketFromTransit(self, packet):
         """ This will remove a packet from the transit list
 
-        :param packet : packet that has finished its trip.
-        :type packet : Packet
+        :param packet: packet that has finished its trip.
+        :type packet: Packet
         """
         self.inTransit.remove(packet.id)
             
@@ -403,13 +403,19 @@ class Link:
             return self.device1
 
     def rateFullWith(self, packet):
-        """Returns True if packet cannot be sent, False otherwise."""
+        """Returns True if packet cannot be sent, False otherwise.
+
+           :param packet: packet to be sent
+           :type packet: Packet
+        """
         return (self.rate < self.current_rate + packet.data_size)
 
     def sendPacket(self, device):
-        """Sends next packet in buffer queue corresponding to device along link. 
+        """Sends next packet in buffer queue corresponding to device along link. Returns packet if success, else None.
 
-        Returns packet if success, else None.
+            :param device: device packet should be sent to
+            :type device: Device
+        
         """
         try:
             packet = self.linkBuffer.peek()
@@ -447,11 +453,18 @@ class Link:
 
 
     def decrRate(self, packet):
-        """Decrease current rate by packet size."""
+        """Decrease current rate by packet size.
+
+        :param packet : uses the size of the passed in packet.
+        :type packet : Packet"""
         self.current_rate -= packet.data_size
 
     def incrRate(self, packet):
-        """Increase current rate by packet size."""
+        """Increase current rate by packet size.
+        
+        :param packet : uses the size of the passed in packet.
+        :type packet : Packet
+        """
         self.current_rate += packet.data_size
             
 
@@ -494,7 +507,7 @@ class Packet:
         """ Updates the location of the packet.
 
         :param newLoc: New location of the packet.
-        :type newLoc: Device or Link
+        :type newLoc: Device, Link
         """
         self.curr = newLoc
 
