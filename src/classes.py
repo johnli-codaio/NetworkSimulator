@@ -464,7 +464,7 @@ class Packet:
         """ Updates the location of the packet.
 
         :param newLoc: New location of the packet.
-        :type newLoc: Device or Link
+        :type newLoc: Device, Link
         """
         self.curr = newLoc
 
