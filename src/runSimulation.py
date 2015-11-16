@@ -1,32 +1,34 @@
 import argparse
 import json
 import pprint
-
+import metrics
 import classes
+import constants
 import simulation
 
-import metrics
+
 def main():
     # parser = argparse.ArgumentParser(description = 'Run simulation on JSON file.')
     # parser.add_argument('--json', '-j', action = 'store', dest = 'json_file_name',
     #                     help = 'Store JSON file name')
-    # # TODO: options for method of congestion control?
-    # #
+    # options for parsing a JSON file
     parser = argparse.ArgumentParser(description = 'Run simulation on JSON file.')
     parser.add_argument('--json', '-j', action = 'store', dest = 'json_file_name',
                         help = 'Store JSON file name')
+
+    # options for graphing metrics
+    parser.add_argument('--m', dest = 'metrics',
+            action = 'store_true', help = 'Print graphs for metrics')
+
     # TODO: options for method of congestion control?
     #
+
+    # TODO: options for verbose? for debugging purposes
 
     args = parser.parse_args()
 
     f = open(args.json_file_name)
 
-    # TODO: uncomment above, this  line below is for testing
-    f = open("test0.json")
-
-    # TODO: uncomment above, this  line below is for testing
-    # f = open("test0.json")
     print "JSON DATA:"
     parsed_data = json.loads(f.read())
 
@@ -117,7 +119,8 @@ def main():
         timer = flow.flow_start
 
         for i in range(int(flow.window_size)):
-            newGenEvent = simulation.Event(None, None, "GENERATEPACK", timer, flow)
+            newGenEvent = simulation.Event(None, None, "GENERATEPACK", 
+                    timer + i * constants.EPSILON_DELAY, flow)
             simulator.insertEvent(newGenEvent)
 
     while not simulator.q.empty():
@@ -128,8 +131,9 @@ def main():
     simulator.done()
 
     # log the metrics
-    m = metrics.Metrics()
-    m.run()
+    if args.metrics:
+        m = metrics.Metrics()
+        m.run()
 
 
 
