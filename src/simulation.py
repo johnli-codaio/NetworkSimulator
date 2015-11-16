@@ -80,7 +80,7 @@ class Simulator:
 
         event = self.q.get()
 
-        print "Popped event type: ", event.type
+        print "Popped event type, time: ", event.type, event.time
         if event.type == "PUT":
             # Tries to put packet into link buffer
             # This happens whenever a device receives a packet.

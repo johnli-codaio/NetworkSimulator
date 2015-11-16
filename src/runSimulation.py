@@ -15,8 +15,9 @@ def main():
     parser = argparse.ArgumentParser(description = 'Run simulation on JSON file.')
     parser.add_argument('--json', '-j', action = 'store', dest = 'json_file_name', 
                         help = 'Store JSON file name')
-    # TODO: options for method of congestion control?
-    # 
+    ##############################################################################
+    ############ TODO: options for method of congestion control ##################
+    ##############################################################################
 
     args = parser.parse_args()
 
