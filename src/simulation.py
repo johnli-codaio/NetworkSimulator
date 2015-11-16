@@ -153,18 +153,19 @@ class Simulator:
                     host.receive(event.packet)
 
 
-                    sendMore = event.flow.receiveAcknowledgement(event.packet)
-                    # boolean = ^ which tells us whether window is completed or not
+                    event.flow.receiveAcknowledgement(event.packet)
+                    #  ^ This will update the packet index that it will be
+                    #    sending from. Thus, constantly be monitoring
 
                     # IF SO, 
                     #######################################
                     ##### Push in new GENERATEPACKS... ####
                     #######################################
 
-                    if(sendMore):
-                        for i in range(event.flow.window_size):
-                            newEvent = Event(None, None, "GENERATEPACK", event.time, event.flow)
-                            self.insertEvent(newEvent)
+                    while(event.flow.window_counter < event.flow.window_size):
+                        newEvent = Event(None, None, "GENERATEPACK", event.time, event.flow)
+                        event.flow.window_counter = event.flow.window_counter + 1
+                        self.insertEvent(newEvent)
 
 
         elif event.type == "GENERATEACK":
@@ -184,7 +185,7 @@ class Simulator:
             # Processes a flow to generate a regular data packet.
 
             # Generate the new packet.
-            newPacket = event.flow.generateDataPacket()
+            newPacket = event.flow.selectDataPacket()
 
             if(newPacket == None):
                 return
