@@ -143,7 +143,7 @@ class Simulator:
                 # don't capture every single data point we generate:
                 # otherwise our plot has too many data points
                 self.linkRateLog.write(str(event.time / s_to_ms)
-                        + " " + str(link.getLinkRate()) + "\n")
+                        + " " + str(link.currentRateMbps(None)) + "\n")
 
             else:
                 newEvent = Event(None, (link, device), "SEND", event.time + ONE_MS, event.flow)

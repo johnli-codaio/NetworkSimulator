@@ -116,8 +116,8 @@ class Device:
 
         # PUT_INTO_BUFFER_TIME: how much time to put a packet in link
         # buffer
-        # currently is 1 ms. may be too slow
-        self.PUT_INTO_BUFFER_TIME = 1
+        # currently 1 ms
+        self.PUT_INTO_BUFFER_TIME = 0.01
 
     def attachLink(self, link):
         """Attach single link to Device.
@@ -219,10 +219,10 @@ class Flow:
         :param dest: Host destination of flow
         :type dest: Host
 
-        :param data_amt: Data amount (in MB)
+        :param data_amt: Data amount (in bytes)
         :type data_amt: float
 
-        :param flow_start: Time flow begins
+        :param flow_start: Time flow begins (in ms)
         :type flow_start: float
 
         :param inTransit: List of packet ID's in transit at the moment.
@@ -268,7 +268,9 @@ class Flow:
         """ Prints how much data this flow has generated so far
         """
 
-        print "Flow " + str(self.flowID) + " has generated " + str(self.current_amt) + " so far"
+        print ("Flow " + str(self.flowID) + " has generated "
+                + str(float(self.current_amt) / (MB_TO_KB * KB_TO_B))
+                + " MB so far")
 
     def generateDataPacket(self):
         """ This will produce a data packet, heading the forward
@@ -298,9 +300,6 @@ class Flow:
         packet.dest = packet.src
         packet.src = temp
 
-        # how much data sent?
-        self.printDataSent()
-
         return packet
 
     def receiveAcknowledgement(self, packet):
@@ -309,6 +308,7 @@ class Flow:
         self.packets.remove(packet.packetID)
         self.inTransit.remove(packet.packetID)
         self.data_acknowledged += DATA_SIZE
+        print len(self.inTransit)
 
         if(len(self.inTransit) == 0):
             return True
@@ -373,13 +373,14 @@ class Link:
         """
 
         self.linkID = linkID
-        self.rate = rate * MB_TO_KB * KB_TO_B / B_to_b
-        self.delay = delay / s_to_ms
+        self.rate = rate
+        self.delay = delay
         self.device1 = device1
         self.device1.attachLink(self)
         self.device2 = device2
         self.device2.attachLink(self)
 
+        # this is in BYTES
         self.current_rate = 0
 
         self.linkBuffer = bufferQueue(buffer_size * KB_TO_B)
@@ -387,12 +388,16 @@ class Link:
         self.dev1todev2 = None
 
     def rateFullWith(self, packet):
-        """Returns True if packet cannot be sent, False otherwise."""
-        return (self.rate < 
-                (self.current_rate + packet.data_size) / self.delay)
+        """Returns True if packet cannot be sent, False otherwise.
+        :param packet: the packet that is about to be sent out
+        :type packet: Packet
+        """
+        return (self.rate <= self.currentRateMbps(packet))
 
     def sendPacket(self, device):
         """Sends next packet in buffer queue corresponding to device along link.
+        :param device: the device that will receive a packet
+        :type device: Device
 
         Returns packet if success, else None.
         """
@@ -432,16 +437,42 @@ class Link:
 
 
     def decrRate(self, packet):
-        """Decrease current rate by packet size."""
+        """Decrease current rate by packet size. Called after a packet
+        gets received.
+
+        :param packet : Packet to be removed from the link.
+        :type packet : Packet
+        """
+
         self.current_rate -= packet.data_size
 
     def incrRate(self, packet):
-        """Increase current rate by packet size."""
+        """Increase current rate by packet size. Called after a packet
+        gets sent.
+
+        :param packet : Packet to be sent using this link.
+        :type packet : Packet
+        """
         self.current_rate += packet.data_size
 
-    def getLinkRate(self):
-        """Gets the link rate. Used for logging."""
-        return float(self.current_rate) #/ (MB_TO_KB * KB_TO_B / B_to_b)
+    def currentRateMbps(self, packet):
+        """Gets the link rate, in Mbps, if a packet were added.
+        Used for logging. If the packet argument
+        isn't specified, then it just returns the current rate.
+        :param packet : Packet to be sent using this link
+        :type packet : Packet
+        """
+        if packet:
+            return (float(self.current_rate + packet.data_size) /
+                (MB_TO_KB * KB_TO_B / B_to_b) /
+                (self.delay / s_to_ms))
+
+        else:
+            return (float(self.current_rate) /
+                (MB_TO_KB * KB_TO_B / B_to_b) /
+                (self.delay / s_to_ms))
+
+
 
 class Packet:
 
