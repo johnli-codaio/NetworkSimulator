@@ -256,15 +256,14 @@ class Flow:
         self.data_amt = data_amt * MB_TO_KB * KB_TO_B
         self.current_amt = 0
         self.flow_start = flow_start * s_to_ms
-        self.inTransit = []
 
         self.window_size = 20
 
         # Congestion Control Variables
         self.packets = []
-        self.packets_counter = 0
+        self.packets_index = 0
         self.ackpackets = []
-        self.ackpackets_counter = 0
+        self.ackpackets_index = 0
 
         # How much successfully sent.
         self.data_acknowledged = 0
@@ -287,7 +286,6 @@ class Flow:
         print self.current_amt
 
         if(self.current_amt <= self.data_amt):
-            self.packets_counter += 1
             packetID = self.flowID + "token" + str(self.packets_counter)
             packet = Packet(packetID, self.src, self.dest, DATA_SIZE, "DATA", None)
             self.current_amt += DATA_SIZE
@@ -337,6 +335,29 @@ class Flow:
             # At this point, check if ack packets have been received.
 
     # Congestion Control:
+    # IDEA: We have an array of all the packets. We also will store 
+    #       several congestion control variables: 
+    #           packet index
+    #           ackPacket index. 
+    #
+    #       The ackPacket index will only change if a host receives a 
+    #       correct ackPacket in order. The packet 
+    #       
+    def TCPReno(self, ):
+        """ This will check the inTransit array. If it still has
+            items inside, then we will cut the window size by 2
+            and resend the packets.
+
+            If inTransit is empty: increase window size by 1.
+            If inTransit is not empty: cut window size by 2.
+        """
+
+        # If the inTransit is empty (no lost packets):
+        if len(self.getInTransit()) == 0:
+            self.window_size = self.window_size + 1
+
+        else:
+            self.window_size = self.window_size / 2
 
     def getWindowSize(self):
         #TODO
