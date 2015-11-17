@@ -1,10 +1,9 @@
 import Queue
 import datetime
 import time
+import constants
 from classes import *
 
-# Trying not to use magic numbers
-ONE_MS = 1
 
 class Event:
     """Events are enqueued into the Simulator priority queue by their time. Events
@@ -66,11 +65,22 @@ class Simulator:
         self.network = network
 
         # file for logging
+        # the current link rate
         self.linkRateLog = open('linkRateLog.txt', 'w')
+
+        # the current buffer occupancy
         self.bufferLog = open('bufferLog.txt', 'w')
+
+        # the current packet loss
         self.packetLog = open('packetLog.txt', 'w')
+
+        # the current flow rate
         self.flowRateLog = open('flowRateLog.txt', 'w')
+
+        # the current window size
         self.windowLog = open('windowLog.txt', 'w')
+
+        # the current packet delay
         self.delayLog = open('delayLog.txt', 'w')
 
         self.counter = 0
@@ -111,6 +121,7 @@ class Simulator:
                 self.insertEvent(newEvent)
 
         elif event.type == "PUT":
+
             # Tries to put packet into link buffer
             # This happens whenever a device receives a packet.
 
@@ -119,10 +130,15 @@ class Simulator:
             link = event.handler[0]
             device = event.handler[1]
 
-            if not link.rateFullWith(event.packet):
+            print event.packet.type, event.packet.packetID
+
+            # is the buffer full? you can put a packet in
+            if not link.linkBuffer.bufferFullWith(event.packet):
                 device.sendToLink(link, event.packet)
                 newEvent = Event(None, (link, device), "SEND", event.time, event.flow)
                 self.insertEvent(newEvent)
+            else: # packet dropped!!
+                print "Packet ", event.packet.packetID, " dropped"
 
         elif event.type == "SEND":
             # Processes a link to send.
@@ -131,14 +147,15 @@ class Simulator:
             link = event.handler[0]
             device = event.handler[1]
 
+
             # If you can send the packet, we check what buffer is currently in action.
             # If dev1->dev2, then we pop from device 1.
             # Else, we pop from device 2.
-            # If we can't pop, then we call another send event 1 ms later.
+            # If we can't pop from the
+            # link's buffer, then we call another send event 1 ms later.
 
             packet = link.sendPacket(device)
             if packet:
-                print packet.type
                 if(device == link.device1):
                     newEvent = Event(packet, link.device2, "RECEIVE", event.time +
                                      link.delay, event.flow)
@@ -149,13 +166,12 @@ class Simulator:
                     self.insertEvent(newEvent)
 
                 # log the link rate. Log these in seconds, and in Mbps
-                # don't capture every single data point we generate:
-                # otherwise our plot has too many data points
-                self.linkRateLog.write(str(event.time / s_to_ms)
+                self.linkRateLog.write(str(event.time / constants.s_to_ms)
                         + " " + str(link.currentRateMbps(None)) + "\n")
 
             else:
-                newEvent = Event(None, (link, device), "SEND", event.time + ONE_MS, event.flow)
+                newEvent = Event(None, (link, device), "SEND",
+                        event.time + constants.ONE_MS, event.flow)
                 self.insertEvent(newEvent)
 
         elif event.type == "RECEIVE":
@@ -167,7 +183,8 @@ class Simulator:
                 router = event.handler
                 newLink = router.transfer(event.packet)
 
-                newEvent = Event(event.packet, (newLink, router), "PUT", event.time, event.flow)
+                newEvent = Event(event.packet, (newLink, router), "PUT",
+                        event.time + constants.EPSILON_DELAY, event.flow)
                 self.insertEvent(newEvent)
 
             # Host
@@ -177,7 +194,8 @@ class Simulator:
                     host = event.handler
                     host.receive(event.packet)
 
-                    newEvent = Event(event.packet, None, "GENERATEACK", event.time, event.flow)
+                    newEvent = Event(event.packet, None, "GENERATEACK",
+                            event.time + constants.EPSILON_DELAY, event.flow)
                     self.insertEvent(newEvent)
                 else:
                     ########################################
@@ -196,7 +214,6 @@ class Simulator:
                     #######################################
                     ##### Push in new GENERATEPACKS... ####
                     #######################################
-
         
 
                     while(event.flow.window_counter < event.flow.window_size):
@@ -214,7 +231,8 @@ class Simulator:
             link = host.getLink()
 
             # Send the event to put this packet onto the link.
-            newEvent = Event(ackPacket, (link, host), "PUT", event.time + host.PUT_INTO_BUFFER_TIME, event.flow)
+            newEvent = Event(ackPacket, (link, host), "PUT",
+                    event.time + constants.EPSILON_DELAY, event.flow)
             self.insertEvent(newEvent)
 
 
@@ -230,7 +248,8 @@ class Simulator:
             link = host.getLink()
 
             # Send the event to put this packet onto the link.
-            newEvent = Event(newPacket, (link, host), "PUT", event.time + host.PUT_INTO_BUFFER_TIME, event.flow)
+            newEvent = Event(newPacket, (link, host), "PUT",
+                    event.time + constants.EPSILON_DELAY, event.flow)
             self.insertEvent(newEvent)
 
 
