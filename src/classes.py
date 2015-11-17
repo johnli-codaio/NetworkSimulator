@@ -501,16 +501,7 @@ class Link:
 
     def rateFullWith(self, packet):
         """Returns True if packet cannot be sent, False otherwise.
-<<<<<<< HEAD
 
-           :param packet: packet to be sent
-           :type packet: Packet
-        """
-        return (self.rate < self.current_rate + packet.data_size)
-
-    def sendPacket(self, device):
-        """Sends next packet in buffer queue corresponding to device along link. Returns packet if success, else None.
-=======
         :param packet: the packet that is about to be sent out
         :type packet: Packet
         """
@@ -520,11 +511,7 @@ class Link:
         """Sends next packet in buffer queue corresponding to device along link.
         :param device: the device that will receive a packet
         :type device: Device
->>>>>>> metrics
 
-            :param device: device packet should be sent to
-            :type device: Device
-        
         """
         try:
             packet = self.linkBuffer.peek()
