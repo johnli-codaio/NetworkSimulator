@@ -2,6 +2,22 @@
 import Queue
 import constants
 
+# four conversion constants:
+#   KB_TO_B: converts kilobytes to bytes.
+#   B_to_b: converts bytes to bits
+#   MB_TO_KB: converts megabytes to kilobytes
+#   s_to_ms: converts seconds to milliseconds
+KB_TO_B = 1024
+B_to_b = 8
+MB_TO_KB = 1024
+s_to_ms = float(1000)
+
+# some static constants:
+#   DATA_SIZE: the size of a data packet (1024B)
+#   ACK_SIZE: the size of an acknowledgment packet (64B)
+DATA_SIZE = 1024
+ACK_SIZE = 64
+ROUTING_SIZE = 8
 
 class bufferQueue:
     def __init__(self, size):
