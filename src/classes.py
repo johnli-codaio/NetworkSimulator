@@ -277,11 +277,11 @@ class Flow:
 
         index = 0
 
-        while(current_amt < data_amt):
+        while(self.current_amt < self.data_amt):
             packetID = self.flowID + "token" + str(index)
             packet = Packet(packetID, self.src, self.dest, DATA_SIZE, "DATA", None)
             self.packets.append(packet)
-            current_amt = current_amt + DATA_SIZE
+            self.current_amt = self.current_amt + DATA_SIZE
             index = index + 1
 
 
