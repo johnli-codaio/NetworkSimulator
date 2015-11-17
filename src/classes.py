@@ -211,11 +211,8 @@ class Host(Device):
 
             link = packet.curr
             link.decrRate(packet)
-<<<<<<< HEAD
+
             print "Packet" + str(packet.packetID) + " acknowledged by Host " + str(self.deviceID)
-=======
-            print "Packet " + packet.packetID + " acknowledged by Host " + str(self.deviceID)
->>>>>>> metrics
 
         elif packet.type == "DATA":
             # send an acknowledgment packet
@@ -292,7 +289,6 @@ class Flow:
             self.current_amt = self.current_amt + DATA_SIZE
             index = index + 1
 
-<<<<<<< HEAD
 
 
     def selectDataPacket(self):
@@ -314,8 +310,6 @@ class Flow:
 
             self.packets_index = self.packets_index + 1
 
-=======
-        self.inTransit.append(packet.packetID)
 
 
     def printDataSent(self):
@@ -341,8 +335,9 @@ class Flow:
             self.printDataSent()
             self.packets.append(packet.packetID)
             self.inTransit.append(packet.packetID)
->>>>>>> metrics
+
             return packet
+        return None
 
 
     def generateAckPacket(self, packet):
@@ -359,18 +354,9 @@ class Flow:
 
 
     def receiveAcknowledgement(self, packet):
-<<<<<<< HEAD
+
         """ This will call TCPReno to update the window size depending on
             the ACK ID...
-=======
-        """ This will return a boolean that tells us whether the window is full or not"""
-        self.ackpackets.append(packet.packetID)
-        self.packets.remove(packet.packetID)
-        self.inTransit.remove(packet.packetID)
-        self.data_acknowledged += DATA_SIZE
-        print len(self.inTransit)
->>>>>>> metrics
-
         :param packet: packet that will be compared.
         :type packet: Packet
         """
