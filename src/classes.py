@@ -2,6 +2,22 @@
 import Queue
 import constants
 
+# four conversion constants:
+#   KB_TO_B: converts kilobytes to bytes.
+#   B_to_b: converts bytes to bits
+#   MB_TO_KB: converts megabytes to kilobytes
+#   s_to_ms: converts seconds to milliseconds
+KB_TO_B = 1024
+B_to_b = 8
+MB_TO_KB = 1024
+s_to_ms = float(1000)
+
+# some static constants:
+#   DATA_SIZE: the size of a data packet (1024B)
+#   ACK_SIZE: the size of an acknowledgment packet (64B)
+DATA_SIZE = 1024
+ACK_SIZE = 64
+ROUTING_SIZE = 8
 
 class bufferQueue:
     def __init__(self, size):
@@ -189,9 +205,11 @@ class Host(Device):
         if packet.type == "ACK":
             # do nothing
             # decrease the current link rate
+
             link = packet.curr
             link.decrRate(packet)
-            print "Packet " + packet.packetID + " acknowledged by Host " + str(self.deviceID)
+
+            print "Packet" + str(packet.packetID) + " acknowledged by Host " + str(self.deviceID)
 
         elif packet.type == "DATA":
             # send an acknowledgment packet
@@ -240,28 +258,58 @@ class Flow:
         self.dest = dest
         self.data_amt = data_amt * constants.MB_TO_KB * constants.KB_TO_B
         self.current_amt = 0
-        self.flow_start = flow_start * constants.s_to_ms
-        self.inTransit = []
+        self.flow_start = flow_start * s_to_ms
+
 
         self.window_size = 20
 
         # Congestion Control Variables
         self.packets = []
-        self.packets_counter = 0
-        self.ackpackets = []
-        self.ackpackets_counter = 0
+        self.packets_index = 0
+        self.host_expect = 0
+        self.window_counter = 1
+        self.error_counter = 0
 
         # How much successfully sent.
         self.data_acknowledged = 0
 
-    def addPacketToTransit(self, packet):
-        """ This will add a packet into the transit link.
-
-        :param packet: Packet that is now in transit.
-        :type packet: Packet
+    def initializePackets(self):
+        """ We will create all the packets and put them into
+            an array.
         """
 
-        self.inTransit.append(packet.packetID)
+        index = 0
+
+        while(self.current_amt < self.data_amt):
+            packetID = self.flowID + "token" + str(index)
+            packet = Packet(packetID, self.src, self.dest, DATA_SIZE, "DATA", None)
+            self.packets.append(packet)
+            self.current_amt = self.current_amt + DATA_SIZE
+            index = index + 1
+
+
+
+    def selectDataPacket(self):
+        """ When we call SELECTPACK events, we
+            just send in the next packet that can be sent in the 
+            array. (This is tracked by packets_index).
+        """
+
+        if self.packets_index >= len(self.packets):
+            return None
+
+        else:
+            ## TODO: Refactor so that we're just taking packets out of an array.
+            ## We want to create all the packets before hand. 
+            ## So, we'll probably need a new event like "Initialize" or something
+            ## To initialize the flow packet.
+
+            packet = self.packets[self.packets_index]
+
+            self.packets_index = self.packets_index + 1
+
+            return packet
+
 
 
     def printDataSent(self):
@@ -282,14 +330,17 @@ class Flow:
         if(self.current_amt <= self.data_amt):
             self.packets_counter += 1
             packetID = self.flowID + "token" + str(self.packets_counter)
-            packet = Packet(packetID, self.src, self.dest, constants.DATA_SIZE, "DATA", None)
-            self.current_amt += constants.DATA_SIZE
+            packet = Packet(packetID, self.src, self.dest, DATA_SIZE, "DATA", None)
+            self.current_amt += DATA_SIZE
+
             # how much data sent?
             self.printDataSent()
             self.packets.append(packet.packetID)
             self.inTransit.append(packet.packetID)
+
             return packet
         return None
+
 
     def generateAckPacket(self, packet):
         """ This will produce an acknowledgment packet with same ID, heading the reverse
@@ -303,23 +354,32 @@ class Flow:
 
         return packet
 
+
     def receiveAcknowledgement(self, packet):
-        """ This will return a boolean that tells us whether the window is full or not"""
-        self.ackpackets.append(packet.packetID)
-        self.packets.remove(packet.packetID)
-        self.inTransit.remove(packet.packetID)
-        self.data_acknowledged += constants.DATA_SIZE
 
-        if(len(self.inTransit) == 0):
-            return True
-        return False
+        """ This will call TCPReno to update the window size depending on
+            the ACK ID...
+        :param packet: packet that will be compared.
+        :type packet: Packet
+        """
 
+        # Updates the expected ack packet id.
 
-    def getInTransit(self):
-        """ This will check if a packet is lost..."""
+        # If the ACK ID matches the host's expected ACK ID, then 
+        # we increment the hosts expected ACK ID by one.
 
-        return self.inTransit;
+        if self.packets[self.host_expect] == packet.packetID:
 
+            self.packets.remove(packet.packetID)
+            self.data_acknowledged += DATA_SIZE
+            self.window_counter = self.window_counter - 1
+            self.TCPReno(True)
+
+        else:
+            self.error_counter = self.error_counter + 1
+            
+            if(self.error_counter == 3):
+                self.TCPReno(False)
 
     def removePacketFromTransit(self, packet):
         """ This will remove a packet from the transit list
@@ -332,6 +392,33 @@ class Flow:
             # At this point, check if ack packets have been received.
 
     # Congestion Control:
+    # IDEA: We have an array of all the packets. We also will store 
+    #       several congestion control variables: 
+    #           packet index
+    #           ackPacket index. 
+    #
+    #       The ackPacket index will only change if a host receives a 
+    #       correct ackPacket in order. The packet counter will change
+    #       after a packet is sent.
+    #       
+    #       We will be detecting lost packets (controlled by the host)
+    #       by comparing the ackPacket id to the expected ack packet id.
+    #       Then, we will update things accordingly.
+
+    def TCPReno(self, boolean):
+        """ The boolean that will determine if window size 
+            increases or decreases.
+        """
+
+        # If true, we increment window size slightly.
+        if boolean == True:
+            self.window_size = self.window_size + float(1) / float(self.window_size)
+
+        # Else, we will halve the window size, and reset the index of the packet.
+        else:
+            self.window_size = self.window_size / 2
+            self.window_counter = 1
+            self.packets_index = self.host_expect
 
     def getWindowSize(self):
         #TODO
@@ -402,6 +489,7 @@ class Link:
 
     def rateFullWith(self, packet):
         """Returns True if packet cannot be sent, False otherwise.
+
         :param packet: the packet that is about to be sent out
         :type packet: Packet
         """

@@ -110,8 +110,18 @@ class Simulator:
 
         event = self.q.get()
 
-        print "Popped event type:", event.type, "at", event.time, "ms"
-        if event.type == "PUT":
+        print "Popped event type: ", event.type
+        if event.type == "INITIALIZEFLOW":
+    
+            event.flow.initializePackets()
+
+            while(event.flow.window_counter < event.flow.window_size):
+                newEvent = Event(None, None, "SELECTPACK", event.time, event.flow)
+                event.flow.window_counter = event.flow.window_counter + 1
+                self.insertEvent(newEvent)
+
+        elif event.type == "PUT":
+
             # Tries to put packet into link buffer
             # This happens whenever a device receives a packet.
 
@@ -195,20 +205,21 @@ class Simulator:
                     host = event.handler
                     host.receive(event.packet)
 
-
-                    # boolean: which tells us whether window is completed or not
-                    sendMore = event.flow.receiveAcknowledgement(event.packet)
+                    
+                    event.flow.receiveAcknowledgement(event.packet)
+                    #  ^ This will update the packet index that it will be
+                    #    sending from. Thus, constantly be monitoring
 
                     # IF SO,
                     #######################################
                     ##### Push in new GENERATEPACKS... ####
                     #######################################
+        
 
-                    if(sendMore):
-                        for i in range(event.flow.window_size):
-                            newEvent = Event(None, None, "GENERATEPACK",
-                                    event.time + i * constants.EPSILON_DELAY, event.flow)
-                            self.insertEvent(newEvent)
+                    while(event.flow.window_counter < event.flow.window_size):
+                        newEvent = Event(None, None, "SELECTPACK", event.time, event.flow)
+                        event.flow.window_counter = event.flow.window_counter + 1
+                        self.insertEvent(newEvent)
 
 
         elif event.type == "GENERATEACK":
@@ -225,11 +236,11 @@ class Simulator:
             self.insertEvent(newEvent)
 
 
-        elif event.type == "GENERATEPACK":
+        elif event.type == "SELECTPACK":
             # Processes a flow to generate a regular data packet.
 
             # Generate the new packet.
-            newPacket = event.flow.generateDataPacket()
+            newPacket = event.flow.selectDataPacket()
 
             if(newPacket == None):
                 return

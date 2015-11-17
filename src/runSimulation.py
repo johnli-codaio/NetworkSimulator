@@ -118,10 +118,9 @@ def main():
         counter = 0
         timer = flow.flow_start
 
-        for i in range(int(flow.window_size)):
-            newGenEvent = simulation.Event(None, None, "GENERATEPACK", 
-                    timer + i * constants.EPSILON_DELAY, flow)
-            simulator.insertEvent(newGenEvent)
+        newGenEvent = simulation.Event(None, None, "INITIALIZEFLOW", timer, flow)
+        simulator.insertEvent(newGenEvent)
+
 
     while not simulator.q.empty():
         simulator.processEvent()
