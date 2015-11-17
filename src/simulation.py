@@ -81,7 +81,16 @@ class Simulator:
         event = self.q.get()
 
         print "Popped event type: ", event.type
-        if event.type == "PUT":
+        if event.type == "INITIALIZEFLOW":
+    
+            event.flow.initializePackets()
+
+            while(event.flow.window_counter < event.flow.window_size):
+                newEvent = Event(None, None, "SELECTPACK", event.time, event.flow)
+                event.flow.window_counter = event.flow.window_counter + 1
+                self.insertEvent(newEvent)
+
+        elif event.type == "PUT":
             # Tries to put packet into link buffer
             # This happens whenever a device receives a packet.
 
@@ -162,8 +171,10 @@ class Simulator:
                     ##### Push in new GENERATEPACKS... ####
                     #######################################
 
+        
+
                     while(event.flow.window_counter < event.flow.window_size):
-                        newEvent = Event(None, None, "GENERATEPACK", event.time, event.flow)
+                        newEvent = Event(None, None, "SELECTPACK", event.time, event.flow)
                         event.flow.window_counter = event.flow.window_counter + 1
                         self.insertEvent(newEvent)
 
@@ -181,7 +192,7 @@ class Simulator:
             self.insertEvent(newEvent)
 
 
-        elif event.type == "GENERATEPACK":
+        elif event.type == "SELECTPACK":
             # Processes a flow to generate a regular data packet.
 
             # Generate the new packet.

@@ -271,19 +271,31 @@ class Flow:
         self.data_acknowledged = 0
 
     def initializePackets(self):
-        # TODO: Create all data_amt packets and put into array.
-        pass
+        """ We will create all the packets and put them into
+            an array.
+        """
+
+        index = 0
+
+        while(current_amt < data_amt):
+            packetID = self.flowID + "token" + str(index)
+            packet = Packet(packetID, self.src, self.dest, DATA_SIZE, "DATA", None)
+            self.packets.append(packet)
+            current_amt = current_amt + DATA_SIZE
+            index = index + 1
+
+
 
     def selectDataPacket(self):
-        """ This will produce a data packet, heading the forward
-        direction
+        """ When we call SELECTPACK events, we
+            just send in the next packet that can be sent in the 
+            array. (This is tracked by packets_index).
         """
 
         if self.packets_index >= len(self.packets):
             return None
 
         else:
-            packetID = self.flowID + "token" + str(self.packets_index)
             ## TODO: Refactor so that we're just taking packets out of an array.
             ## We want to create all the packets before hand. 
             ## So, we'll probably need a new event like "Initialize" or something
@@ -293,7 +305,7 @@ class Flow:
 
             self.packets_index = self.packets_index + 1
 
-            self.current_amt += DATA_SIZE
+            return packet
 
 
     def generateAckPacket(self, packet):
