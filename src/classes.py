@@ -308,6 +308,8 @@ class Flow:
 
             self.packets_index = self.packets_index + 1
 
+            return packet
+
 
 
     def printDataSent(self):
