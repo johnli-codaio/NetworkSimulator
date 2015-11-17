@@ -14,7 +14,7 @@
              },
     "flows": {"F1": {"flow_src": "H1",
                      "flow_dest": "H2",
-                     "data_amt": 20,
+                     "data_amt": 1,
                      "flow_start": 1.0
                     }
              }

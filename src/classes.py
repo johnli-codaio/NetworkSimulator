@@ -258,13 +258,13 @@ class Flow:
         self.current_amt = 0
         self.flow_start = flow_start * s_to_ms
 
-        self.window_size = 20
+        self.window_size = 1
 
         # Congestion Control Variables
         self.packets = []
         self.packets_index = 0
         self.host_expect = 0
-        self.window_counter = 1
+        self.window_counter = 0
         self.error_counter = 0
 
         # How much successfully sent.
@@ -277,11 +277,11 @@ class Flow:
 
         index = 0
 
-        while(current_amt < data_amt):
+        while(self.current_amt < self.data_amt):
             packetID = self.flowID + "token" + str(index)
             packet = Packet(packetID, self.src, self.dest, DATA_SIZE, "DATA", None)
             self.packets.append(packet)
-            current_amt = current_amt + DATA_SIZE
+            self.current_amt = self.current_amt + DATA_SIZE
             index = index + 1
 
 
@@ -300,7 +300,6 @@ class Flow:
             ## We want to create all the packets before hand. 
             ## So, we'll probably need a new event like "Initialize" or something
             ## To initialize the flow packet.
-
             packet = self.packets[self.packets_index]
 
             self.packets_index = self.packets_index + 1
@@ -333,12 +332,13 @@ class Flow:
 
         # If the ACK ID matches the host's expected ACK ID, then 
         # we increment the hosts expected ACK ID by one.
-
-        if self.packets[self.host_expect] == packet.packetID:
-
-            self.packets.remove(packet.packetID)
+        print "Host expects: " + self.packets[self.host_expect].packetID
+        print "Host received: " + packet.packetID
+        if self.packets[self.host_expect].packetID == packet.packetID:
             self.data_acknowledged += DATA_SIZE
             self.window_counter = self.window_counter - 1
+            self.host_expect = self.host_expect + 1
+            self.error_counter = 0
             self.TCPReno(True)
 
         else:
@@ -347,13 +347,7 @@ class Flow:
             if(self.error_counter == 3):
                 self.TCPReno(False)
 
-    def removePacketFromTransit(self, packet):
-        """ This will remove a packet from the transit list
-
-        :param packet: packet that has finished its trip.
-        :type packet: Packet
-        """
-        self.inTransit.remove(packet.id)
+        print "Window counter: " + str(self.window_counter)
             
             # At this point, check if ack packets have been received.
 
@@ -383,8 +377,10 @@ class Flow:
         # Else, we will halve the window size, and reset the index of the packet.
         else:
             self.window_size = self.window_size / 2
-            self.window_counter = 1
+            self.window_counter = 0
             self.packets_index = self.host_expect
+
+        print "Window size: " + str(self.window_size)
 
     def getWindowSize(self):
         #TODO
@@ -477,8 +473,6 @@ class Link:
                     self.dev1todev2 = True
                 else:
                     print "Sending a packet from device 2 to 1"
-
-                    print packet.type
 
                     self.dev1todev2 = False
                 return packet

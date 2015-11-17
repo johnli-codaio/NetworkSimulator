@@ -2,6 +2,7 @@ import Queue
 import datetime
 import time
 from classes import *
+from math import *
 
 
 class Event:
@@ -85,9 +86,10 @@ class Simulator:
     
             event.flow.initializePackets()
 
-            while(event.flow.window_counter < event.flow.window_size):
+            while(event.flow.window_counter < floor(event.flow.window_size)):
                 newEvent = Event(None, None, "SELECTPACK", event.time, event.flow)
                 event.flow.window_counter = event.flow.window_counter + 1
+                print "Window counter: " + str(event.flow.window_counter)
                 self.insertEvent(newEvent)
 
         elif event.type == "PUT":
@@ -117,7 +119,6 @@ class Simulator:
             # If we can't pop, then we call another send event 1 ms later.
 
             packet = link.sendPacket(device)
-            print packet.type
             if packet:
                 if(device == link.device1):
                     newEvent = Event(packet, link.device2, "RECEIVE", event.time + 
@@ -172,11 +173,13 @@ class Simulator:
                     #######################################
 
         
-
-                    while(event.flow.window_counter < event.flow.window_size):
-                        newEvent = Event(None, None, "SELECTPACK", event.time, event.flow)
+                    increment = 0.1
+                    while(event.flow.window_counter < floor(event.flow.window_size)):
+                        newEvent = Event(None, None, "SELECTPACK", event.time + increment, event.flow)
                         event.flow.window_counter = event.flow.window_counter + 1
+                        print "Window counter: " + str(event.flow.window_counter)
                         self.insertEvent(newEvent)
+                        increment = increment + 0.1
 
 
         elif event.type == "GENERATEACK":
@@ -197,9 +200,10 @@ class Simulator:
 
             # Generate the new packet.
             newPacket = event.flow.selectDataPacket()
-
             if(newPacket == None):
                 return
+
+            print "Packet to be sent: " + newPacket.packetID
             host = newPacket.src
             link = host.getLink()
 
