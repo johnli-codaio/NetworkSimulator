@@ -254,6 +254,10 @@ class Flow:
         self.window_counter = 0
         self.error_counter = 0
 
+        #GoBackN variables
+        self.resending = False
+        self.threshIndex = 0
+
         # How much successfully sent.
         self.data_acknowledged = 0
 
@@ -330,20 +334,34 @@ class Flow:
         # we increment the hosts expected ACK ID by one.
         print "Host expects: " + self.packets[self.host_expect].packetID
         print "Host received: " + packet.packetID
+
+        print "HOST EXPECT: " + str(self.host_expect) + \
+              " PACKET INDEX: " + str(self.packets_index) + \
+              " ACK INDEX: " + str(packet.packetID)
         if self.packets[self.host_expect].packetID == packet.packetID:
             self.data_acknowledged = self.data_acknowledged + constants.DATA_SIZE
             self.window_counter = self.window_counter - 1
             self.host_expect = self.host_expect + 1
             self.error_counter = 0
+
             self.TCPReno(True)
+            self.resending = False
+
+
+        #elif self.
+        elif self.resending == True:
+            pass
 
         else:
             self.error_counter = self.error_counter + 1
-            
+            self.window_counter = self.window_counter - 1
             if(self.error_counter == 3):
+                #self.threshIndex = self.packets_index
                 self.TCPReno(False)
                 print "DROPPED PACKET " + self.packets[self.host_expect].packetID + \
-                     "... GOBACKN.\n"
+                    "... GOBACKN.\n"
+                self.resending = True
+                self.error_counter = 0
 
 
         print "Window counter: " + str(self.window_counter)
@@ -376,6 +394,7 @@ class Flow:
             self.window_size = self.window_size / 2
             self.window_counter = 0
             self.packets_index = self.host_expect
+
 
         print "Window size: " + str(self.window_size)
 
