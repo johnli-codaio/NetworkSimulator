@@ -226,6 +226,8 @@ class Simulator:
 
 
                     event.flow.receiveAcknowledgement(event.packet)
+                    print "HOST EXPECT: " + str(event.flow.host_expect) + \
+                          " TIME: " + str(event.time)
                     #  ^ This will update the packet index that it will be
                     #    sending from. Thus, constantly be monitoring
 
