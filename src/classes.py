@@ -1,7 +1,7 @@
 #TODO: Add some stuff to the classes...
 import Queue
 import constants
-
+from math import *
 
 class bufferQueue:
     def __init__(self, size):
@@ -249,14 +249,15 @@ class Flow:
 
         # Congestion Control Variables
         self.packets = []
+        self.acksAcknowledged = [] # Array of bools that will go from false to true
+                                   # when an ack is received.
+        self.window_upper = 0
         self.packets_index = 0
-        self.host_expect = 0
+        self.window_lower = 0
         self.window_counter = 0
         self.error_counter = 0
 
-        #GoBackN variables
         self.resending = False
-        self.threshIndex = 0
 
         # How much successfully sent.
         self.data_acknowledged = 0
@@ -270,12 +271,18 @@ class Flow:
 
         while(self.current_amt < self.data_amt):
             packetID = self.flowID + "token" + str(index)
-            packet = Packet(packetID, self.src, self.dest, constants.DATA_SIZE, "DATA", None)
+            packet = Packet(packetID, index, self.src, self.dest, constants.DATA_SIZE, "DATA", None)
             self.packets.append(packet)
+            self.acksAcknowledged.append(False)
             self.current_amt = self.current_amt + constants.DATA_SIZE
             index = index + 1
 
 
+    def checkIfAcked(self, packetId):
+        """ We will check if a particular packet has been acked.
+            this is for the timeOut portion.
+        """
+        return self.acksAcknowledged[packetId] == True
 
 
     def selectDataPacket(self):
@@ -294,7 +301,6 @@ class Flow:
             ## So, we'll probably need a new event like "Initialize" or something
             ## To initialize the flow packet.
             packet = self.packets[self.packets_index]
-
             self.packets_index = self.packets_index + 1
             return packet
 
@@ -320,6 +326,7 @@ class Flow:
 
         return packet
 
+    # TODO: Gotta refactor this.
     def receiveAcknowledgement(self, packet):
         """ This will call TCPReno to update the window size depending on
             the ACK ID...
@@ -332,39 +339,55 @@ class Flow:
 
         # If the ACK ID matches the host's expected ACK ID, then 
         # we increment the hosts expected ACK ID by one.
-        print "Host expects: " + self.packets[self.host_expect].packetID
+        print "Host expects: " + self.packets[self.window_lower].packetID
         print "Host received: " + packet.packetID
 
-        print "HOST EXPECT: " + str(self.host_expect) + \
+        print "HOST EXPECT: " + str(self.window_lower) + \
               " PACKET INDEX: " + str(self.packets_index) + \
               " ACK INDEX: " + str(packet.packetID)
-        if self.packets[self.host_expect].packetID == packet.packetID:
+
+        print str(packet.index)
+
+        if self.packets[self.window_lower].packetID == packet.packetID:
             self.data_acknowledged = self.data_acknowledged + constants.DATA_SIZE
-            self.window_counter = self.window_counter - 1
-            self.host_expect = self.host_expect + 1
+            self.acksAcknowledged[packet.index] = True
+
+            if self.window_lower != len(self.packets) - 1:
+                while self.acksAcknowledged[self.window_lower] == True:
+
+                    if self.window_lower == len(self.packets) - 1:
+                        pass
+                    else:
+                        self.window_lower = self.window_lower + 1
             self.error_counter = 0
-
-            self.TCPReno(True)
             self.resending = False
+            self.TCPReno(True)
 
-
-        #elif self.
         elif self.resending == True:
-            pass
+            if self.acksAcknowledged[packet.index] == False:
+                self.acksAcknowledged[packet.index] = True
+                self.data_acknowledged = self.data_acknowledged + constants.DATA_SIZE
+                self.TCPReno(True)
 
         else:
             self.error_counter = self.error_counter + 1
-            self.window_counter = self.window_counter - 1
+
+            if self.acksAcknowledged[packet.index] == False:
+                self.acksAcknowledged[packet.index] = True
+                self.data_acknowledged = self.data_acknowledged + constants.DATA_SIZE
+
             if(self.error_counter == 3):
                 #self.threshIndex = self.packets_index
                 self.TCPReno(False)
-                print "DROPPED PACKET " + self.packets[self.host_expect].packetID + \
+                print "DROPPED PACKET " + self.packets[self.window_lower].packetID + \
                     "... GOBACKN.\n"
                 self.resending = True
                 self.error_counter = 0
+                return True
 
 
         print "Window counter: " + str(self.window_counter)
+        return False
             
     # Congestion Control:
     # IDEA: We have an array of all the packets. We also will store 
@@ -388,15 +411,21 @@ class Flow:
         # If true, we increment window size slightly.
         if boolean == True:
             self.window_size = self.window_size + float(1) / float(self.window_size)
+            self.window_upper = floor(self.window_size) + self.window_lower - 1
+
+            if(self.window_upper > len(self.packets) - 1):
+                self.window_upper = len(self.packets) - 1
 
         # Else, we will halve the window size, and reset the index of the packet.
         else:
             self.window_size = self.window_size / 2
-            self.window_counter = 0
-            self.packets_index = self.host_expect
+            self.window_upper = floor(self.window_size) + self.window_lower - 1
 
+            if(self.window_upper > len(self.packets) - 1):
+                self.window_upper = len(self.packets) - 1
 
         print "Window size: " + str(self.window_size)
+        print "Window Upper: " + str(self.window_upper)
 
     def getWindowSize(self):
         #TODO
@@ -552,11 +581,14 @@ class Link:
 
 class Packet:
 
-    def __init__(self, packetID, src, dest, data_size, data_type, curr_loc):
+    def __init__(self, packetID, index, src, dest, data_size, data_type, curr_loc):
         """ Instatiates a Packet.
 
         :param packetID: ID of the packet.
         :type packetID: string
+
+        :param index: The packet (in #) that was sent by flow.
+        :type index: int 
 
         :param src: Source (device) of packet
         :type src: Device
@@ -574,6 +606,7 @@ class Packet:
         :type curr_loc: Link
         """
         self.packetID = packetID
+        self.index = index
         self.src = src
         self.dest = dest
         self.data_size = data_size

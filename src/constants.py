@@ -7,6 +7,9 @@ QUEUE_DELAY = 1
 # data packet and putting/sending into buffers
 EPSILON_DELAY = 0.001
 
+# TIME_DELAY: A small delay that occurs if there is a timeout, and we need to resend.
+TIME_DELAY = 500
+
 # four conversion constants:
 #   KB_TO_B: converts kilobytes to bytes.
 #   B_to_b: converts bytes to bits
