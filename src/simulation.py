@@ -203,7 +203,7 @@ class Simulator:
                 newLink = router.transfer(event.packet)
 
                 newEvent = Event(event.packet, (newLink, router), "PUT",
-                        event.time + constants.EPSILON_DELAY, event.flow)
+                        event.time, event.flow)
                 self.insertEvent(newEvent)
 
             # Host
@@ -269,7 +269,7 @@ class Simulator:
 
             # Send the event to put this packet onto the link.
             newEvent = Event(ackPacket, (link, host), "PUT",
-                    event.time + constants.EPSILON_DELAY, event.flow)
+                    event.time, event.flow)
             self.insertEvent(newEvent)
 
 
@@ -287,7 +287,7 @@ class Simulator:
 
             # Send the event to put this packet onto the link.
             newEvent = Event(newPacket, (link, host), "PUT",
-                    event.time + constants.EPSILON_DELAY, event.flow)
+                    event.time, event.flow)
             self.insertEvent(newEvent)
 
         elif event.type == "RESEND":
@@ -305,7 +305,7 @@ class Simulator:
 
             # Send the event to put this packet onto the link.
             newEvent = Event(newPacket, (link, host), "PUT",
-                    event.time + constants.EPSILON_DELAY, event.flow)
+                    event.time, event.flow)
             self.insertEvent(newEvent)
 
 
@@ -327,6 +327,5 @@ class Simulator:
                 host = newPacket.src
                 link = host.getLink()
 
-                newEvent = Event(newPacket, (link, host), "PUT", 
-                        event.time + constants.EPSILON_DELAY, event.flow)
+                newEvent = Event(newPacket, (link, host), "PUT", event.time , event.flow)
                 self.insertEvent(newEvent)
