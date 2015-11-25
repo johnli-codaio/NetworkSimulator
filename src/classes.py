@@ -130,7 +130,7 @@ class Device:
 
 class Router(Device):
 
-    def find_Neighbors(self):
+    def find_neighbors(self):
         """ Fills in "neighbors" list in the Device class."""
         for link in self.links:
             #Add the corresponding router that is not the self into the array

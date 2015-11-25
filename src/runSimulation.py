@@ -47,11 +47,18 @@ def main():
         devices[str(host_name)] = host
 
     print "Iterating over routers:"
+    print "TEST:"
     for router_name in parsed_data['routers']:
         print "Router ", router_name, "has data: ", parsed_data['routers'][router_name]
         router = classes.Router(str(router_name))
         devices[str(router_name)] = router
-    print "Hosts and routers instantiated: ", "\n\n"
+        #just added this, see if it works
+        router.find_neighbors()
+        print "asdfasdf"
+        for router in router.neighbors:
+            print "asdf"
+            print router
+    print "Hosts and routers instantiated. ", "\n\n"
 
     print "Iterating over links and adding to hosts/routers:"
     for link_name in parsed_data['links']:
