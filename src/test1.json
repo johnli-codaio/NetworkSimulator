@@ -3,7 +3,7 @@
               "H2": {"links": "L5"}
              },
 
-    "routers": {"R1": {"links": ["L0", "L1","L2"],
+    "routers": {"R1": {"links": ["L0", "L1","L2"]},
                 "R2": {"links": ["L1", "L3"]},
                 "R3": {"links": ["L2", "L4"]},
                 "R4": {"links": ["L3", "L4", "L5"]}
@@ -46,5 +46,4 @@
                      "flow_start": 0.5
                     }
              }
-
 }
