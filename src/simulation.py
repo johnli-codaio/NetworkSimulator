@@ -124,13 +124,6 @@ class Simulator:
 
         event = self.q.get()
 
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
-        print "Popped event type, time: ", event.type, event.time
-        if event.type == "PUT":
-=======
->>>>>>> Stashed changes
 
         print "\n"
         print "Popped event type:", event.type, "at", event.time, "ms"
@@ -146,10 +139,6 @@ class Simulator:
                 increment = increment + 1
 
         elif event.type == "PUT":
-<<<<<<< Updated upstream
-=======
->>>>>>> 58567cd43cd429036552012a1f18ece6e37f054a
->>>>>>> Stashed changes
             # Tries to put packet into link buffer
             # This happens whenever a device receives a packet.
 
@@ -293,7 +282,6 @@ class Simulator:
                 return
 
             print "Packet to be sent: " + newPacket.packetID
-<<<<<<< Updated upstream
             host = newPacket.src
             link = host.getLink()
 
@@ -305,43 +293,6 @@ class Simulator:
         elif event.type == "RESEND":
             newPacket = event.flow.packets[event.flow.window_lower]
 
-            # Resetting this packet to the original attributes
-            newPacket.data_size = constants.DATA_SIZE 
-            newPacket.type = "DATA"
-            newPacket.curr = None
-            newPacket.src = event.flow.src
-            newPacket.dest = event.flow.dest
-
-=======
->>>>>>> Stashed changes
-            host = newPacket.src
-            link = host.getLink()
-
-            # Send the event to put this packet onto the link.
-            newEvent = Event(newPacket, (link, host), "PUT",
-                    event.time, event.flow)
-            self.insertEvent(newEvent)
-
-        elif event.type == "RESEND":
-            newPacket = event.flow.packets[event.flow.window_lower]
-
-<<<<<<< Updated upstream
-        elif event.type == "TIMEOUT":
-            packetIdx = event.handler
-            print "TIMEOUT FOR: " + str(packetIdx)
-
-            isAcked = event.flow.checkIfAcked(packetIdx)
-
-            if isAcked == False:
-                newPacket = event.flow.packets[packetIdx]
-                # Resetting this packet to the original attributes
-                newPacket.data_size = constants.DATA_SIZE 
-                newPacket.type = "DATA"
-                newPacket.curr = None
-                newPacket.src = event.flow.src
-                newPacket.dest = event.flow.dest
-
-=======
             # Resetting this packet to the original attributes
             newPacket.data_size = constants.DATA_SIZE 
             newPacket.type = "DATA"
@@ -373,7 +324,6 @@ class Simulator:
                 newPacket.src = event.flow.src
                 newPacket.dest = event.flow.dest
 
->>>>>>> Stashed changes
                 host = newPacket.src
                 link = host.getLink()
 
