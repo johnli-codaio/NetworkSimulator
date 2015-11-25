@@ -31,7 +31,7 @@ def main():
 
     print "JSON DATA:"
     parsed_data = json.loads(f.read())
-
+    print "Parsed:"
     pprint.pprint(parsed_data)
 
     devices = {}
