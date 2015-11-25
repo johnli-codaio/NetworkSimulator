@@ -96,9 +96,15 @@ class Device:
         :type deviceID: str
         :param links: Stores all attached links to the device
         :type links: Array of links
+        :param neighbors: Stores all neighbors of the device
+        :type neighbors: Array of Routers.
         """
         self.deviceID = deviceID
         self.links = []
+
+        self.deviceID = deviceID
+        self.links = []
+        self.neighbors = []
 
 
     def attachLink(self, link):
@@ -124,6 +130,18 @@ class Device:
 
 class Router(Device):
 
+    def find_Neighbors(self):
+        """ Fills in "neighbors" list in the Device class."""
+        for link in self.links:
+            #Add the corresponding router that is not the self into the array
+            if (link.device1 == self):
+                self.neighbors.append(link.device2)
+            elif (link.device2 == self):
+                self.neighbors.append(link.device1)
+            else:
+                raise Exception("This should not have occurred unless i dun goofed - Joo")
+
+        return
 
     def receiveRoutingPacket(self, packet):
         """Receives a routing packet.
