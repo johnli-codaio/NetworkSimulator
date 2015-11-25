@@ -1,0 +1,63 @@
+We want to have a Go_back_N/Sliding Window protocol:
+
+
+3 variables:
+window_size = the window_size of packets that will be sent.
+
+window_counter = how many packets being sent for this particular window.
+
+host_expect = index to what ack Host expects
+
+packets_index = next packet to send from Host
+So what I have is this so far:
+
+
+
+
+EXAMPLE:
+
+Right now, no more packets being sent because window_counter = window_size
+
+(Bounds for window_counter between [0, floor(window_size)])
+
+|---------------------| <- window_size
+ =================================================
+*| 0 | 1 | 2 | 3 | 4 |* 5 | 6 | 7 | 8 | 9 | 10| 11|
+ =================================================
+   ^                    ^
+host_expect          packets_index
+
+
+* = Denotes window boundaries.
+
+If we get an ACK that is the ACK for packet 0:
+    window_counter -= 1 (since ack received successfully)
+    host_expect += 1
+    update window size accordingly
+
+    SINCE window_counter is now < window_size:
+    WHILE (window_counter <= window_size)
+        send a packet at the location packets_index
+        packets_index += 1
+        window_counter += 1
+
+
+Result:
+
+     |---------------------| <- window_size
+ =================================================
+ | 0 *| 1 | 2 | 3 | 4 | 5 |* 6 | 7 | 8 | 9 | 10| 11|
+ =================================================
+        ^                    ^
+    host_expect           packets_index
+
+(kinda like sliding window).
+
+
+End result: if host_expect = len(packets) - 1
+
+TODO:
+I think a lot of architecture is mostly/completely done. Check runSimulation to see if it supports this sort of thing. Before,
+we created packets over time, but now we're creating all packets
+before hand and then iterating through this array to send things.
+
