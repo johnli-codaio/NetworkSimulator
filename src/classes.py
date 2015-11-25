@@ -261,13 +261,7 @@ class Flow:
         self.data_amt = data_amt * constants.MB_TO_KB * constants.KB_TO_B
         self.current_amt = 0
         self.flow_start = flow_start * constants.s_to_ms
-<<<<<<< Updated upstream
 
-
-=======
-
-
->>>>>>> Stashed changes
         self.window_size = 1
 
         # Congestion Control Variables
