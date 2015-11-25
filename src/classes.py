@@ -261,8 +261,13 @@ class Flow:
         self.data_amt = data_amt * constants.MB_TO_KB * constants.KB_TO_B
         self.current_amt = 0
         self.flow_start = flow_start * constants.s_to_ms
+<<<<<<< Updated upstream
 
 
+=======
+
+
+>>>>>>> Stashed changes
         self.window_size = 1
 
         # Congestion Control Variables
@@ -348,6 +353,7 @@ class Flow:
     def receiveAcknowledgement(self, packet):
         """ This will call TCPReno to update the window size depending on
             the ACK ID...
+<<<<<<< Updated upstream
 
         :param packet: packet that will be compared.
         :type packet: Packet
@@ -370,6 +376,30 @@ class Flow:
             self.data_acknowledged = self.data_acknowledged + constants.DATA_SIZE
             self.acksAcknowledged[packet.index] = True
 
+=======
+
+        :param packet: packet that will be compared.
+        :type packet: Packet
+        """
+
+        # Updates the expected ack packet id.
+
+        # If the ACK ID matches the host's expected ACK ID, then 
+        # we increment the hosts expected ACK ID by one.
+        print "Host expects: " + self.packets[self.window_lower].packetID
+        print "Host received: " + packet.packetID
+
+        print "HOST EXPECT: " + str(self.window_lower) + \
+              " PACKET INDEX: " + str(self.packets_index) + \
+              " ACK INDEX: " + str(packet.packetID)
+
+        print str(packet.index)
+
+        if self.packets[self.window_lower].packetID == packet.packetID:
+            self.data_acknowledged = self.data_acknowledged + constants.DATA_SIZE
+            self.acksAcknowledged[packet.index] = True
+
+>>>>>>> Stashed changes
             if self.window_lower != len(self.packets) - 1:
                 while self.acksAcknowledged[self.window_lower] == True:
 
@@ -380,6 +410,7 @@ class Flow:
             self.error_counter = 0
             self.resending = False
             self.TCPReno(True)
+<<<<<<< Updated upstream
 
         elif self.resending == True:
             if self.acksAcknowledged[packet.index] == False:
@@ -390,6 +421,18 @@ class Flow:
         else:
             self.error_counter = self.error_counter + 1
 
+=======
+
+        elif self.resending == True:
+            if self.acksAcknowledged[packet.index] == False:
+                self.acksAcknowledged[packet.index] = True
+                self.data_acknowledged = self.data_acknowledged + constants.DATA_SIZE
+                self.TCPReno(True)
+
+        else:
+            self.error_counter = self.error_counter + 1
+
+>>>>>>> Stashed changes
             if self.acksAcknowledged[packet.index] == False:
                 self.acksAcknowledged[packet.index] = True
                 self.data_acknowledged = self.data_acknowledged + constants.DATA_SIZE
