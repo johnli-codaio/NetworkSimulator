@@ -78,11 +78,7 @@ class Network:
         self.flows = flows
 
 
-class Device:
-
-    ###################################################################
-    ### TODO: Write what members each Device has, and its functions ###
-    ###################################################################
+class Device(object):
 
     def __init__(self, deviceID):
         """Instantiates the Device.
@@ -99,19 +95,14 @@ class Device:
         self.links = []
         self.neighbors = []
 
-
     def attachLink(self, link):
         """Attach single link to Device.
 
         :param link: link to attach
         :type link: Link
         """
-        print self
-        print link
-
         self.links.append(link)
         self.neighbors.append(link.otherDevice(self))
-
 
     def sendToLink(self, link, packet):
         """Attach packet to the appropriate link buffer.
@@ -122,7 +113,6 @@ class Device:
         :param packet: packet that the device received.
         :type packet: Packet
         """
-
         link.putIntoBuffer(packet)
         packet.curr = link
 
@@ -135,33 +125,54 @@ class Device:
 
 class Router(Device):
 
-    def receiveRoutingPacket(self, packet):
-        """Receives a routing packet.
+    def __init__(self, deviceID):
+        super(Router, self).__init__(deviceID)
 
-        If packet is from host, update routing table.
-        If packet is from another router, send new packets.
+
+        # Dictionary rout_table:
+        #   - Device
+        #       - (latency, nextLink)
+        self.rout_table = {}
+
+    def initializeNeighborsTable(self):
+        """Initializes table to include neighbors.
         """
-        return
-
-
-    def sendRoutingPackets(self, packet = None):
-        """Sends a routing packet to each adjacent device."""
-
-        # TODO:
-        if(packet == None):
-            packet = RoutingPacket(self, self, rout_to = None, distance = 0)
-
-
-    def initializeDistTable(self):
-        """Initializes table of distances to other devices.
-        """
-
-        self.distTable = {}
-        self.distTable[self] = 0
-
-        for link in links:
+        for link in self.links:
             otherDev = link.otherDevice(self)
-            self.distTable[otherDev] = link.delay
+            self.distTable[otherDev] = (link.delay, link)
+
+    def handleRoutingPacket(self, packet):
+        #assert(isinstance(packet, RoutingPacket))
+        updated = False
+
+        for device in packet.data_table:
+            dist = packet.latency + packet.table[device][0]
+
+            if(device not in self.rout_table):
+                self.rout_table[device] = (dist, packet.link)
+                updated = True
+            else:
+                mindist = self.rout_table[device][0]
+                minNextLink = self.rout_table[device][1]
+
+                if(dist < mindist):
+                    self.rout_table[device] = (dist, packet.link)
+                    updated = True
+
+        if(updated):
+            self.floorNeighbors()
+
+    def floodNeighbors(self):
+        # send current table to all neighbors
+
+        for link in self.links:
+            otherDev = link.otherDevice(self)
+            routPacket = RoutingPacket(self, otherDev, link, constants.ROUTING_SIZE,
+                                       self.rout_table, packetID = None, curr_loc = None)
+            ##################################################
+            # TODO:                                    #######
+            # send packets out, handled by simulation? #######
+            ##################################################
 
     def transferTo(self, packet):
         """ Returns the link that the packet will be forwarded to.
@@ -645,8 +656,10 @@ class DataPacket(Packet):
 
 class RoutingPacket(Packet):
 
-    def __init__(self, src, dest, data_size, table, latency, packetID, curr_loc):
+    def __init__(self, src, dest, link, data_size, table, packetID, curr_loc):
         super(RoutingPacket, self).__init__(src, dest, "ROUT", constants.ROUTING_SIZE, packetID, curr_loc)
-
         self.latency = latency
         self.table = table
+
+        # RoutingPackets only travel across one link before "dying"
+        self.link = link
