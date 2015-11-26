@@ -23,6 +23,7 @@ s_to_ms = float(1000)
 # some static constants:
 #   DATA_SIZE: the size of a data packet (1024B)
 #   ACK_SIZE: the size of an acknowledgment packet (64B)
+#   ROUTING_SZIE: the size of routing packet (8B) (chosen to be small to avoid potential congestion problems)
 DATA_SIZE = 1024
 ACK_SIZE = 64
 ROUTING_SIZE = 8

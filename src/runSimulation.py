@@ -90,28 +90,15 @@ def main():
 
     print "----------DEVICE DETAILS----------"
     for device_name in devices:
-        print "Device is: ", "HOST" if isinstance(devices[device_name], classes.Host) else "ROUTER"
-        print "Name is: ", device_name
-        print "Links: ", [l.linkID for l in devices[device_name].links]
-        print "\n"
+        print devices[device_name]
 
     print "----------LINK DETAILS----------"
     for link_name in links:
-        print "Link name is: ", link_name
-        print "Connects devices: ", links[link_name].device1.deviceID, links[link_name].device2.deviceID
-        print "Link rate: ", links[link_name].rate
-        print "Link delay", links[link_name].delay
-        print "Link buffer size: ", links[link_name].linkBuffer.maxSize
-        print "\n"
+        print links[link_name]
 
     print "----------FLOW DETAILS----------"
     for flow_name in flows:
-        print "Flow name is: ", flow_name
-        print "Source is: ", flows[flow_name].src
-        print "Destination is: ", flows[flow_name].dest
-        print "Data amount in bytes is: ", flows[flow_name].data_amt
-        print "Flow start time in ms is: ", flows[flow_name].flow_start
-
+        print flows[flow_name]
 
     print "----------STARTING SIMULATION------------"
 

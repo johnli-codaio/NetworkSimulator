@@ -147,7 +147,7 @@ class Simulator:
             link = event.handler[0]
             device = event.handler[1]
 
-            print event.packet.type, event.packet.packetID
+            print type(event.packet), event.packet.packetID
 
             # is the buffer full? you can put a packet in
             if not link.linkBuffer.bufferFullWith(event.packet):
@@ -197,33 +197,26 @@ class Simulator:
             # Processes a host/router action that would receive things.
             assert(isinstance(event.handler, Device))
 
-            # Router.
+            # Router receives packet
             if isinstance(event.handler, Router):
                 router = event.handler
-                newLink = router.transfer(event.packet)
-
+                newLink = router.transferTo(event.packet)
                 newEvent = Event(event.packet, (newLink, router), "PUT",
                         event.time, event.flow)
                 self.insertEvent(newEvent)
 
-            # Host
-
+            # Host receives packet
             elif isinstance(event.handler, Host):
-                if(event.packet.type == "DATA"):
+                if(event.packet.data_type == "DATA"):
                     host = event.handler
                     host.receive(event.packet)
 
                     newEvent = Event(event.packet, None, "GENERATEACK",
                             event.time + constants.EPSILON_DELAY, event.flow)
                     self.insertEvent(newEvent)
-                else:
-                    ########################################
-                    ####### TODO: Acknowledgement got ######
-                    ########################################
-
+                elif(event.packet.data_type == "ACK"):
                     host = event.handler
                     host.receive(event.packet)
-
 
                     isDropped = event.flow.receiveAcknowledgement(event.packet)
                     print "HOST EXPECT: " + str(event.flow.window_lower) + \
@@ -232,10 +225,9 @@ class Simulator:
                     #    sending from. Thus, constantly be monitoring
 
                     # IF SO,
-                    #######################################
-                    ##### Push in new GENERATEPACKS... ####
-                    #######################################
-
+                    ####################################### ????
+                    ##### Push in new GENERATEPACKS... #### ???? is this done?
+                    ####################################### ????
                     
                     if isDropped == False:
 
