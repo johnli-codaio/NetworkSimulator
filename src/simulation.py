@@ -128,7 +128,7 @@ class Simulator:
         print "\n"
         print "Popped event type:", event.type, "at", event.time, "ms"
         if event.type == "INITIALIZEFLOW":
-    
+
             event.flow.initializePackets()
 
             increment = 1
@@ -236,7 +236,7 @@ class Simulator:
                     ##### Push in new GENERATEPACKS... ####
                     #######################################
 
-        
+
                     increment = 1
 
                     while(event.flow.window_counter < floor(event.flow.window_size)):
