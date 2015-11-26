@@ -3,7 +3,7 @@ import datetime
 import time
 import constants
 from classes import *
-from math import *
+
 
 
 class Event:
@@ -132,11 +132,11 @@ class Simulator:
             event.flow.initializePackets()
 
             increment = 1
-            while(event.flow.window_counter < floor(event.flow.window_size)):
+            while(event.flow.window_counter <= floor(event.flow.window_upper)):
                 newEvent = Event(None, None, "SELECTPACK", event.time + increment * constants.EPSILON_DELAY, event.flow)
                 event.flow.window_counter = event.flow.window_counter + 1
-                print "Window counter: " + str(event.flow.window_counter)
                 self.insertEvent(newEvent)
+                increment = increment + 1
 
         elif event.type == "PUT":
             # Tries to put packet into link buffer
@@ -203,7 +203,7 @@ class Simulator:
                 newLink = router.transfer(event.packet)
 
                 newEvent = Event(event.packet, (newLink, router), "PUT",
-                        event.time + constants.EPSILON_DELAY, event.flow)
+                        event.time, event.flow)
                 self.insertEvent(newEvent)
 
             # Host
@@ -225,8 +225,8 @@ class Simulator:
                     host.receive(event.packet)
 
 
-                    event.flow.receiveAcknowledgement(event.packet)
-                    print "HOST EXPECT: " + str(event.flow.host_expect) + \
+                    isDropped = event.flow.receiveAcknowledgement(event.packet)
+                    print "HOST EXPECT: " + str(event.flow.window_lower) + \
                           " TIME: " + str(event.time)
                     #  ^ This will update the packet index that it will be
                     #    sending from. Thus, constantly be monitoring
@@ -236,15 +236,27 @@ class Simulator:
                     ##### Push in new GENERATEPACKS... ####
                     #######################################
 
+                    
+                    if isDropped == False:
 
-                    increment = 1
+                        increment = 1
+                        print str(event.flow.packets_index)
+                        print str(event.flow.window_upper)
+                        while(event.flow.window_counter <= event.flow.window_upper):
+                            print str(event.flow.packets_index)
+                            newEvent = Event(None, None, "SELECTPACK", event.time + increment * constants.EPSILON_DELAY, event.flow)
+                            timeoutEvent = Event(None, event.flow.window_counter, "TIMEOUT", event.time + constants.TIME_DELAY + increment * constants.EPSILON_DELAY, event.flow)
+                            self.insertEvent(newEvent)
+                            self.insertEvent(timeoutEvent)
+                            event.flow.window_counter = event.flow.window_counter + 1
+                            increment = increment + 1
 
-                    while(event.flow.window_counter < floor(event.flow.window_size)):
-                        newEvent = Event(None, None, "SELECTPACK", event.time + increment * constants.EPSILON_DELAY, event.flow)
-                        event.flow.window_counter = event.flow.window_counter + 1
-                        print "Window counter: " + str(event.flow.window_counter)
+                    else:
+                        newEvent = Event(None, None, "RESEND", event.time + constants.EPSILON_DELAY, event.flow)
                         self.insertEvent(newEvent)
-                        increment = increment + 1
+                        timeoutEvent = Event(None, event.flow.window_lower, "TIMEOUT", event.time + constants.TIME_DELAY + constants.EPSILON_DELAY, event.flow)
+                        self.insertEvent(timeoutEvent)
+
 
 
         elif event.type == "GENERATEACK":
@@ -257,7 +269,7 @@ class Simulator:
 
             # Send the event to put this packet onto the link.
             newEvent = Event(ackPacket, (link, host), "PUT",
-                    event.time + constants.EPSILON_DELAY, event.flow)
+                    event.time, event.flow)
             self.insertEvent(newEvent)
 
 
@@ -275,7 +287,45 @@ class Simulator:
 
             # Send the event to put this packet onto the link.
             newEvent = Event(newPacket, (link, host), "PUT",
-                    event.time + constants.EPSILON_DELAY, event.flow)
+                    event.time, event.flow)
+            self.insertEvent(newEvent)
+
+        elif event.type == "RESEND":
+            newPacket = event.flow.packets[event.flow.window_lower]
+
+            # Resetting this packet to the original attributes
+            newPacket.data_size = constants.DATA_SIZE 
+            newPacket.type = "DATA"
+            newPacket.curr = None
+            newPacket.src = event.flow.src
+            newPacket.dest = event.flow.dest
+
+            host = newPacket.src
+            link = host.getLink()
+
+            # Send the event to put this packet onto the link.
+            newEvent = Event(newPacket, (link, host), "PUT",
+                    event.time, event.flow)
             self.insertEvent(newEvent)
 
 
+        elif event.type == "TIMEOUT":
+            packetIdx = event.handler
+            print "TIMEOUT FOR: " + str(packetIdx)
+
+            isAcked = event.flow.checkIfAcked(packetIdx)
+
+            if isAcked == False:
+                newPacket = event.flow.packets[packetIdx]
+                # Resetting this packet to the original attributes
+                newPacket.data_size = constants.DATA_SIZE 
+                newPacket.type = "DATA"
+                newPacket.curr = None
+                newPacket.src = event.flow.src
+                newPacket.dest = event.flow.dest
+
+                host = newPacket.src
+                link = host.getLink()
+
+                newEvent = Event(newPacket, (link, host), "PUT", event.time , event.flow)
+                self.insertEvent(newEvent)
