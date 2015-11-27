@@ -1,5 +1,4 @@
 #TODO: Add some stuff to the classes...
-import Queue
 import constants
 from math import *
 
@@ -60,17 +59,13 @@ class bufferQueue:
 
 
 class Network:
-    #####################################################################
-    #### TODO: Look at runSimulation.py, make this Network basically ####
-    ####       contain all the links, flows, etc. in the same way    ####
-    #####################################################################
 
     def __init__(self, devices, links, flows):
         """ Takes in a list of devices, links, and flows, to make up the
         entire network.
 
         :param devices: List of devices that will be part of the network
-        :type devices: List<Device>
+        :type devices: Dictionary<Device>
 
         :param links: List of links that will be part of the network.
         :type links: List<Link>
@@ -83,11 +78,7 @@ class Network:
         self.flows = flows
 
 
-class Device:
-
-    ###################################################################
-    ### TODO: Write what members each Device has, and its functions ###
-    ###################################################################
+class Device(object):
 
     def __init__(self, deviceID):
         """Instantiates the Device.
@@ -96,10 +87,13 @@ class Device:
         :type deviceID: str
         :param links: Stores all attached links to the device
         :type links: Array of links
+        :param neighbors: Stores all neighbors of the device
+        :type neighbors: Array of Routers.
         """
         self.deviceID = deviceID
+        
         self.links = []
-
+        self.neighbors = []
 
     def attachLink(self, link):
         """Attach single link to Device.
@@ -108,6 +102,7 @@ class Device:
         :type link: Link
         """
         self.links.append(link)
+        self.neighbors.append(link.otherDevice(self))
 
     def sendToLink(self, link, packet):
         """Attach packet to the appropriate link buffer.
@@ -118,41 +113,86 @@ class Device:
         :param packet: packet that the device received.
         :type packet: Packet
         """
-
         link.putIntoBuffer(packet)
         packet.curr = link
 
+    def __str__(self):
+        s = "Device is: " + "HOST" if isinstance(self, Host) else "ROUTER"
+        s += "\nName is: " + str(self.deviceID)
+        s += "\nLinks: " + str([l.linkID for l in self.links])
+        s += "\n"
+        return s
+
 class Router(Device):
 
+    def __init__(self, deviceID):
+        super(Router, self).__init__(deviceID)
 
-    def receiveRoutingPacket(self, packet):
-        """Receives a routing packet.
 
-        If packet is from host, update routing table.
-        If packet is from another router, send new packets.
+        # Dictionary rout_table:
+        #   - Device
+        #       - (latency, nextLink)
+        self.rout_table = {}
+        self.initializeNeighborsTable()
+
+    def __str__(self):
+        s = super(Router, self).__str__()
+        s += "Routing table: \n"
+        for device in self.rout_table:
+
+            (latency, nextLink) = self.rout_table[device]
+            s += "Device " + str(device.deviceID) + " has distance " + \
+                str(latency) + " with nextLink " + \
+                (str(nextLink.linkID) if nextLink != None else 'N/A')
+            s += "\n"
+        return s
+
+    def initializeNeighborsTable(self):
+        """Initializes table to include neighbors.
         """
-        return
-
-
-    def sendRoutingPackets(self, packet = None):
-        """Sends a routing packet to each adjacent device."""
-
-        if(packet == None):
-            packet = RoutingPacket(self, self, rout_to = None, distance = 0)
-
-
-    def initializeDistTable(self):
-        """Initializes table of distances to other devices.
-        """
-
-        self.distTable = {}
-        self.distTable[self] = 0
-
-        for link in links:
+        for link in self.links:
             otherDev = link.otherDevice(self)
-            self.distTable[otherDev] = link.delay
+            self.rout_table[otherDev] = (link.delay, link)
 
-    def transfer(self, packet):
+        self.rout_table[self] = (0, None)
+
+    def handleRoutingPacket(self, packet):
+        '''Updates routing table if appropriate. Returns whether table was updated.'''
+
+        #assert(isinstance(packet, RoutingPacket))
+        updated = False
+
+        for device in packet.table:
+            dist = packet.latency + packet.table[device][0]
+
+            if(device not in self.rout_table):
+                self.rout_table[device] = (dist, packet.link)
+                updated = True
+            else:
+                mindist = self.rout_table[device][0]
+                if(dist < mindist):
+                    self.rout_table[device] = (dist, packet.link)
+                    updated = True
+
+        return updated
+
+    def floodNeighbors(self):
+        '''Returns array of tuples (packet, link) to send'''
+
+        # send current table to all neighbors
+
+        res = []
+
+        for link in self.links:
+            otherDev = link.otherDevice(self)
+            routPacket = RoutingPacket(self, otherDev, link, constants.ROUTING_SIZE,
+                                       self.rout_table, packetID = None, curr_loc = None)
+            
+            res.append((routPacket, link))
+
+        return res
+
+    def transferTo(self, packet):
         """ Returns the link that the packet will be forwarded to.
 
         :param packet: packet that will be transferred
@@ -161,7 +201,7 @@ class Router(Device):
         prevLink = packet.curr
         prevLink.decrRate(packet)
 
-        nextLink = self.table[packet.dest]
+        nextLink = self.rout_table[packet.dest][1]
         return nextLink
 
 class Host(Device):
@@ -171,36 +211,35 @@ class Host(Device):
         """
         return self.links[0]
 
-
     def receive(self, packet):
         """ Host receives packet.
 
         Will receive a packet and do two things:
             1) If the packet is an ACK, the host will just print that it got it.
             2) If it's data, then the packet has arrived at destination.
-            3) Return the packet.
+            3) Return the packet ????
 
         :param packet: packet that will be received
         :type packet: Packet
         """
 
-        print "Host " + self.deviceID + " received " + packet.type
+        print "Host " + self.deviceID + " received " + packet.data_type + "packet"
 
-        if packet.type == "ACK":
-            # do nothing
+        if(packet.data_type == "ACK"):
             # decrease the current link rate
-
             link = packet.curr
             link.decrRate(packet)
-
             print "Packet " + packet.packetID + " acknowledged by Host " + str(self.deviceID)
 
-        elif packet.type == "DATA":
+        elif(packet.data_type == "DATA"):
             # send an acknowledgment packet
             link = packet.curr
             link.decrRate(packet)
             print "Packet " + packet.packetID + " received by Host" + str(self.deviceID)
 
+        #elif(packet.data_type == "ROUT"):
+            # stuff
+            
 
 class Flow:
 
@@ -262,6 +301,14 @@ class Flow:
         # How much successfully sent.
         self.data_acknowledged = 0
 
+    def __str__(self):
+        s = "Flow ID is: " + str(self.flowID)
+        s += "\nSource is: " + str(self.src)
+        s += "\nDestination is: " + str(self.dest)
+        s += "\nData amount in bytes is: " + str(self.data_amt)
+        s += "\nFlow start time in ms is: " + str(self.flow_start)
+        return s
+
     def initializePackets(self):
         """ We will create all the packets and put them into
             an array.
@@ -271,7 +318,7 @@ class Flow:
 
         while(self.current_amt < self.data_amt):
             packetID = self.flowID + "token" + str(index)
-            packet = Packet(packetID, index, self.src, self.dest, constants.DATA_SIZE, "DATA", None)
+            packet = DataPacket(index, self.src, self.dest, "DATA", constants.DATA_SIZE, packetID, None)
             self.packets.append(packet)
             self.acksAcknowledged.append(False)
             self.current_amt = self.current_amt + constants.DATA_SIZE
@@ -318,15 +365,10 @@ class Flow:
         """ This will produce an acknowledgment packet with same ID, heading the reverse
         direction
         """
-        packet.data_size = constants.ACK_SIZE
-        packet.type = "ACK"
-        temp = packet.dest
-        packet.dest = packet.src
-        packet.src = temp
+        newPacket = DataPacket(packet.index, packet.dest, packet.src, "ACK", constants.ACK_SIZE, packet.packetID, None)
+        return newPacket
 
-        return packet
-
-    # TODO: Gotta refactor this.
+    # TODO: refactor
     def receiveAcknowledgement(self, packet):
         """ This will call TCPReno to update the window size depending on
             the ACK ID...
@@ -432,7 +474,6 @@ class Flow:
         return self.window_size
 
 
-
 class Link:
 
     ###############################################################
@@ -470,17 +511,25 @@ class Link:
         self.rate = rate
         self.delay = delay
         self.device1 = device1
-        self.device1.attachLink(self)
         self.device2 = device2
-        self.device2.attachLink(self)
-
-        # this is in BYTES
-        self.current_rate = 0
-
+        self.current_rate = 0 #BYTES
         self.linkBuffer = bufferQueue(buffer_size * constants.KB_TO_B)
 
         self.dev1todev2 = None
 
+        self.device1.attachLink(self)
+        self.device2.attachLink(self)
+
+
+    def __str__(self):
+        s = "Link ID is: " + str(self.linkID)
+        s += "\nConnects devices: " + str(self.device1.deviceID) + " " + \
+            str(self.device2.deviceID)
+        s += "\nLink rate: " + str(self.rate)
+        s += "\nLink delay: " +  str(self.delay)
+        s += "\nLink buffer size: " +  str(self.linkBuffer.maxSize)
+        s += "\n"
+        return s
 
     def otherDevice(self, device):
         """Returns the other device
@@ -577,11 +626,29 @@ class Link:
                 (constants.MB_TO_KB * constants.KB_TO_B / constants.B_to_b) /
                 (self.delay / constants.s_to_ms))
 
+class Packet(object):
+    def __init__(self, src, dest, data_type, data_size, packetID, curr_loc):
+        self.src = src
+        self.dest = dest
+        self.data_type = data_type # ROUT, ACK, DATA
+        self.data_size = data_size
+        self.packetID = packetID
+        self.curr = curr_loc
+
+    def updateLoc(self, newLoc):
+        """ Updates the location of the packet.
+
+        :param newLoc: New location of the packet.
+        :type newLoc: Device, Link
+        """
+        self.curr = newLoc
 
 
-class Packet:
+class DataPacket(Packet):
+    # Captures both acknowledgement packets and actual data packets
+    # Differentiated from routing packets
 
-    def __init__(self, packetID, index, src, dest, data_size, data_type, curr_loc):
+    def __init__(self, index, src, dest, data_type, data_size, packetID, curr_loc):
         """ Instatiates a Packet.
 
         :param packetID: ID of the packet.
@@ -599,52 +666,18 @@ class Packet:
         :param data_size: data size (in bytes)
         :type data_size: int
 
-        :param data_type: type of packet, either ACK, DATA, ROUTING
-        :type data_type: str
-
         :param curr_loc: Link where the packet is.
         :type curr_loc: Link
         """
-        self.packetID = packetID
+        super(DataPacket, self).__init__(src, dest, data_type, data_size, packetID, curr_loc)
         self.index = index
-        self.src = src
-        self.dest = dest
-        self.data_size = data_size
-        self.type = data_type
-        self.curr = curr_loc
-
-
-        # Just for information, if the data_type is ACK, then it will be storing
-        # the information for the next packet it expects to receive. Thus, when
-        # a host receives an ACK, it sends the packet with that packet ID.
-
-    def updateLoc(self, newLoc):
-        """ Updates the location of the packet.
-
-        :param newLoc: New location of the packet.
-        :type newLoc: Device, Link
-        """
-        self.curr = newLoc
-
 
 class RoutingPacket(Packet):
 
-    ####################################################################
-    ####################################################################
-    ############ TODO: Does routing packet need ID? ####################
-    ####################################################################
-    ####################################################################
+    def __init__(self, src, dest, link, data_size, table, packetID, curr_loc):
+        super(RoutingPacket, self).__init__(src, dest, "ROUT", constants.ROUTING_SIZE, packetID, curr_loc)
+        self.latency = link.delay
+        self.table = table
 
-    def __init__(self, curr_loc, router, rout_to = None, distance = 0):
-        #self.packetID = packetID
-        self.curr = curr_loc
-
-        self.router = router
-        self.rout_to = rout_to
-        self.distance = distance
-
-        self.data_size = constants.ROUTING_SIZE
-        self.data_type = "ROUTING"
-
-
-
+        # RoutingPackets only travel across one link before "dying"
+        self.link = link
