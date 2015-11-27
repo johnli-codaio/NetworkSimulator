@@ -133,13 +133,14 @@ class Router(Device):
         #   - Device
         #       - (latency, nextLink)
         self.rout_table = {}
+        self.initializeNeighborsTable()
 
     def initializeNeighborsTable(self):
         """Initializes table to include neighbors.
         """
         for link in self.links:
             otherDev = link.otherDevice(self)
-            self.distTable[otherDev] = (link.delay, link)
+            self.rout_table[otherDev] = (link.delay, link)
 
     def handleRoutingPacket(self, packet):
         #assert(isinstance(packet, RoutingPacket))
@@ -169,10 +170,10 @@ class Router(Device):
             otherDev = link.otherDevice(self)
             routPacket = RoutingPacket(self, otherDev, link, constants.ROUTING_SIZE,
                                        self.rout_table, packetID = None, curr_loc = None)
-            ##################################################
-            # TODO:                                    #######
-            # send packets out, handled by simulation? #######
-            ##################################################
+            #####################################################
+            #### TODO:                                    #######
+            #### send packets out, handled by simulation? #######
+            #####################################################
 
     def transferTo(self, packet):
         """ Returns the link that the packet will be forwarded to.
