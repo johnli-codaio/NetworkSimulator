@@ -52,12 +52,6 @@ def main():
         print "Router ", router_name, "has data: ", parsed_data['routers'][router_name]
         router = classes.Router(str(router_name))
         devices[str(router_name)] = router
-        #just added this, see if it works
-        router.find_neighbors()
-        print "asdfasdf"
-        for router in router.neighbors:
-            print "asdf"
-            print router
     print "Hosts and routers instantiated. ", "\n\n"
 
     print "Iterating over links and adding to hosts/routers:"
@@ -85,9 +79,19 @@ def main():
         flows[str(flow_name)] = flow
     print "Flows instantiated: ", "\n\n"
 
-    print "Creating network..."
     network = classes.Network(devices, links, flows)
+    simulator = simulation.Simulator(network)
+    
+    # gen routing table
+    print "generating routing table"
+    
+    simulator.genRoutTable()
+    print simulator.q.empty()
+    while not simulator.q.empty():
+        print "processing one event"
+        simulator.processEvent()
 
+    print "------------NETWORK------------"
     print "----------DEVICE DETAILS----------"
     for device_name in devices:
         print devices[device_name]
@@ -102,10 +106,7 @@ def main():
 
     print "----------STARTING SIMULATION------------"
 
-    simulator = simulation.Simulator(network)
-
     # Have flows create sending events...
-
     for flow_name in flows:
         flow = flows[flow_name]
 
@@ -114,7 +115,6 @@ def main():
 
         newGenEvent = simulation.Event(None, None, "INITIALIZEFLOW", timer, flow)
         simulator.insertEvent(newGenEvent)
-
 
     while not simulator.q.empty():
         print "QUEUE SIZE: " + str(simulator.q.qsize())
@@ -127,7 +127,7 @@ def main():
 
     print "Simulation done!"
 
-    simulator.done()
+    simulator.stopLogging()
 
     # log the metrics
     if args.metrics:

@@ -65,7 +65,7 @@ class Network:
         entire network.
 
         :param devices: List of devices that will be part of the network
-        :type devices: List<Device>
+        :type devices: Dictionary<Device>
 
         :param links: List of links that will be part of the network.
         :type links: List<Link>
@@ -135,6 +135,18 @@ class Router(Device):
         self.rout_table = {}
         self.initializeNeighborsTable()
 
+    def __str__(self):
+        s = super(Router, self).__str__()
+        s += "Routing table: \n"
+        for device in self.rout_table:
+
+            (latency, nextLink) = self.rout_table[device]
+            s += "Device " + str(device.deviceID) + " has distance " + \
+                str(latency) + " with nextLink " + \
+                (str(nextLink.linkID) if nextLink != None else 'N/A')
+            s += "\n"
+        return s
+
     def initializeNeighborsTable(self):
         """Initializes table to include neighbors.
         """
@@ -142,11 +154,15 @@ class Router(Device):
             otherDev = link.otherDevice(self)
             self.rout_table[otherDev] = (link.delay, link)
 
+        self.rout_table[self] = (0, None)
+
     def handleRoutingPacket(self, packet):
+        '''Updates routing table if appropriate. Returns whether table was updated.'''
+
         #assert(isinstance(packet, RoutingPacket))
         updated = False
 
-        for device in packet.data_table:
+        for device in packet.table:
             dist = packet.latency + packet.table[device][0]
 
             if(device not in self.rout_table):
@@ -154,26 +170,27 @@ class Router(Device):
                 updated = True
             else:
                 mindist = self.rout_table[device][0]
-                minNextLink = self.rout_table[device][1]
-
                 if(dist < mindist):
                     self.rout_table[device] = (dist, packet.link)
                     updated = True
 
-        if(updated):
-            self.floorNeighbors()
+        return updated
 
     def floodNeighbors(self):
+        '''Returns array of tuples (packet, link) to send'''
+
         # send current table to all neighbors
+
+        res = []
 
         for link in self.links:
             otherDev = link.otherDevice(self)
             routPacket = RoutingPacket(self, otherDev, link, constants.ROUTING_SIZE,
                                        self.rout_table, packetID = None, curr_loc = None)
-            #####################################################
-            #### TODO:                                    #######
-            #### send packets out, handled by simulation? #######
-            #####################################################
+            
+            res.append((routPacket, link))
+
+        return res
 
     def transferTo(self, packet):
         """ Returns the link that the packet will be forwarded to.
@@ -184,7 +201,7 @@ class Router(Device):
         prevLink = packet.curr
         prevLink.decrRate(packet)
 
-        nextLink = self.table[packet.dest]
+        nextLink = self.rout_table[packet.dest][1]
         return nextLink
 
 class Host(Device):
@@ -659,7 +676,7 @@ class RoutingPacket(Packet):
 
     def __init__(self, src, dest, link, data_size, table, packetID, curr_loc):
         super(RoutingPacket, self).__init__(src, dest, "ROUT", constants.ROUTING_SIZE, packetID, curr_loc)
-        self.latency = latency
+        self.latency = link.delay
         self.table = table
 
         # RoutingPackets only travel across one link before "dying"
