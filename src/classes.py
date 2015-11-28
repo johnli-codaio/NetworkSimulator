@@ -332,7 +332,7 @@ class Flow:
         return packet
 
     # TODO: Gotta refactor this.
-    def receiveAcknowledgement(self, packet, currentTime):
+    def receiveAcknowledgement(self, packet, currentTime, tcp_type):
         """ This will call TCPReno to update the window size depending on
             the ACK ID...
 
@@ -354,8 +354,7 @@ class Flow:
         print str(packet.index)
 
         actualRTT = currentTime - packet.start_time
-        theoRTT = packet.total_delay
-        
+
         if self.packets[self.window_lower].packetID == packet.packetID:
             self.data_acknowledged = self.data_acknowledged + constants.DATA_SIZE
             self.acksAcknowledged[packet.index] = True
@@ -369,13 +368,23 @@ class Flow:
                         self.window_lower = self.window_lower + 1
             self.error_counter = 0
             self.resending = False
-            self.TCPReno(True)
+            if tcp_type == 0:
+                self.TCPReno(True)
+            elif tcp_type == 1:
+                self.TCPFast(actualRTT, 8)
+            else:
+                raise Exception("Invalid tcp_type input")
 
         elif self.resending == True:
             if self.acksAcknowledged[packet.index] == False:
                 self.acksAcknowledged[packet.index] = True
                 self.data_acknowledged = self.data_acknowledged + constants.DATA_SIZE
-                self.TCPReno(True)
+                if tcp_type == 0:
+                    self.TCPReno(True)
+                elif tcp_type == 1:
+                    self.TCPFast(actualRTT, 8)
+                else:
+                    raise Exception("Invalid tcp_type input")
 
         else:
             self.error_counter = self.error_counter + 1
@@ -386,7 +395,12 @@ class Flow:
 
             if(self.error_counter == 3):
                 #self.threshIndex = self.packets_index
-                self.TCPReno(False)
+                if tcp_type == 0:
+                    self.TCPReno(False)
+                elif tcp_type == 1:
+                    self.TCPFast(actualRTT, 8)
+                else:
+                    raise Exception("Invalid tcp_type input")
                 print "DROPPED PACKET " + self.packets[self.window_lower].packetID + \
                     "... GOBACKN.\n"
                 self.resending = True
@@ -435,7 +449,7 @@ class Flow:
         print "Window size: " + str(self.window_size)
         print "Window Upper: " + str(self.window_upper)
 
-    def TCPFast(self, actualRTT, theoRTT, alpha):
+    def TCPFast(self, actualRTT, alpha):
         """ The actualRTT is calculated by subtracting event.time
             by the start time of the packet. The theoretical RTT of the
             packet is denoted in the "packet.total_delay" attribute.
@@ -450,13 +464,18 @@ class Flow:
             :param alpha : A constant we add to window.
             :type alpha : int
         """
-
-        newWindowSize = (theoRTT/actualRTT) * self.window_size + alpha
+        #print "theoRTT"
+        #print self.theoRTT
+        #print "actualRTT" 
+        #print actualRTT
+        newWindowSize = (self.theoRTT/actualRTT) * self.window_size + alpha
         self.window_size = newWindowSize
 
         self.window_upper = floor(newWindowSize) + self.window_lower
         if(self.window_upper > len(self.packets) - 1):
-            self.window_upper = str(self.window_upper)
+            self.window_upper = len(self.packets) - 1
+            #i think the below line was a typo?
+            #self.window_upper = str(self.window_upper)
 
         print "Window size: " + str(self.window_size)
         print "Window Upper: " + str(self.window_upper)

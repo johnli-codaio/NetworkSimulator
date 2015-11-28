@@ -233,7 +233,7 @@ class Simulator:
                     # If the packet is dropped (more than three errors in the error counter)
                     # then this bool is true. Else, it's false.
 
-                    isDropped = event.flow.receiveAcknowledgement(event.packet, event.time)
+                    isDropped = event.flow.receiveAcknowledgement(event.packet, event.time, tcp_type)
                     print "HOST EXPECT: " + str(event.flow.window_lower) + \
                           " TIME: " + str(event.time)
                     #  ^ This will update the packet index that it will be
@@ -346,9 +346,10 @@ class Simulator:
                 if tcp_type == 0:
                     event.flow.TCPReno(False)
                 
-
+                # IMPORTANT: TODO: TODO: How do we call TCPFast if a packet is dropped?? I don't think we can.
                 elif tcp_type == 1:
-                    event.flow.TCPFast(False)
+                    pass
+                    #do nothing
                 
                 else:
                     raise Exception('Wrong input for tcp_type!!')
