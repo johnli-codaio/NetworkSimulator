@@ -221,11 +221,15 @@ class Simulator:
                     ####### TODO: Acknowledgement got ######
                     ########################################
 
+                    # If an acknowledgment is received, we check it through
+                    # the receiveAcknowledgment method.
                     host = event.handler
                     host.receive(event.packet)
 
+                    # If the packet is dropped (more than three errors in the error counter)
+                    # then this bool is true. Else, it's false.
 
-                    isDropped = event.flow.receiveAcknowledgement(event.packet)
+                    isDropped = event.flow.receiveAcknowledgement(event.packet, event.time)
                     print "HOST EXPECT: " + str(event.flow.window_lower) + \
                           " TIME: " + str(event.time)
                     #  ^ This will update the packet index that it will be
@@ -237,6 +241,9 @@ class Simulator:
                     #######################################
 
                     
+                    # If the packet was dropped, we will do SELECTIVE RESEND (Fast retransmit)
+                    # and only resend the dropped packet. Otherwise, we send packets based on the
+                    # updated window parameters (done in TCPReno).
                     if isDropped == False:
 
                         increment = 1
@@ -281,6 +288,9 @@ class Simulator:
             if(newPacket == None):
                 return
 
+            # Setting the "sent time" for the packet.
+            newPacket.start_time = event.time
+
             print "Packet to be sent: " + newPacket.packetID
             host = newPacket.src
             link = host.getLink()
@@ -290,10 +300,16 @@ class Simulator:
                     event.time, event.flow)
             self.insertEvent(newEvent)
 
+        # In the case of dropped packets, this will start. 
+        # We are only resending the dropped packet.
         elif event.type == "RESEND":
             newPacket = event.flow.packets[event.flow.window_lower]
 
-            # Resetting this packet to the original attributes
+            # Resetting this packet to the original attributes;
+            # They may have been changed on its trip before
+            # it was dropped.
+            newPacket.start_time = event.time
+            newPacket.total_delay = 0
             newPacket.data_size = constants.DATA_SIZE 
             newPacket.type = "DATA"
             newPacket.curr = None
@@ -308,7 +324,11 @@ class Simulator:
                     event.time, event.flow)
             self.insertEvent(newEvent)
 
-
+        # This is the last resort option to detect dropped packets.
+        # If an acknowledgment hasn't been received for a long time
+        # then we will resend that packet only.
+        # This event will be put into the queue every time a data
+        # packet is selected to be sent.
         elif event.type == "TIMEOUT":
             packetIdx = event.handler
             print "TIMEOUT FOR: " + str(packetIdx)
@@ -316,8 +336,19 @@ class Simulator:
             isAcked = event.flow.checkIfAcked(packetIdx)
 
             if isAcked == False:
+                # A packet is dropped. We do the appropriate TCP window size
+                # update.
+
+                event.flow.TCPReno(False)
+
+                # Selecting the packet that has been timed out.
                 newPacket = event.flow.packets[packetIdx]
-                # Resetting this packet to the original attributes
+
+                # Resetting this packet to the original attributes;
+                # These attributes might have been altered before it
+                # was dropped.
+                newPacket.start_time = event.time
+                newPacket.total_delay = 0
                 newPacket.data_size = constants.DATA_SIZE 
                 newPacket.type = "DATA"
                 newPacket.curr = None

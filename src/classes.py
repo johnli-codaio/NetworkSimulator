@@ -121,6 +121,7 @@ class Device:
 
         link.putIntoBuffer(packet)
         packet.curr = link
+        packet.total_delay = packet.total_delay + link.delay
 
 class Router(Device):
 
@@ -327,7 +328,7 @@ class Flow:
         return packet
 
     # TODO: Gotta refactor this.
-    def receiveAcknowledgement(self, packet):
+    def receiveAcknowledgement(self, packet, currentTime):
         """ This will call TCPReno to update the window size depending on
             the ACK ID...
 
@@ -348,6 +349,9 @@ class Flow:
 
         print str(packet.index)
 
+        actualRTT = currentTime - packet.start_time
+        theoRTT = packet.total_delay
+        
         if self.packets[self.window_lower].packetID == packet.packetID:
             self.data_acknowledged = self.data_acknowledged + constants.DATA_SIZE
             self.acksAcknowledged[packet.index] = True
@@ -426,6 +430,30 @@ class Flow:
 
         print "Window size: " + str(self.window_size)
         print "Window Upper: " + str(self.window_upper)
+
+    def TCPFast(self, actualRTT, theoRTT, alpha):
+        """ The actualRTT is calculated by subtracting event.time
+            by the start time of the packet. The theoretical RTT of the
+            packet is denoted in the "packet.total_delay" attribute.
+
+            :param actualRTT : Total time it took for packet leave host and be
+                               acknowledged.
+            :type actualRTT : double
+
+            :param theoRTT : Total theoretical time for packet.
+            :type theoRTT : double
+
+            :param alpha : A constant we add to window.
+            :type alpha : int
+        """
+
+        newWindowSize = (actualRTT / theoRTT) * self.window_size + alpha
+        self.window_size = newWindowSize
+
+        self.window_upper = floor(newWindowSize) + self.window_lower
+        if(self.window_upper > len(self.packets) - 1):
+            self.window_upper = str(self.window_upper)
+
 
     def getWindowSize(self):
         #TODO
@@ -612,6 +640,8 @@ class Packet:
         self.data_size = data_size
         self.type = data_type
         self.curr = curr_loc
+        self.start_time = 0
+        self.total_delay = 0
 
 
         # Just for information, if the data_type is ACK, then it will be storing
