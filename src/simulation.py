@@ -323,6 +323,7 @@ class Simulator:
             isAcked = event.flow.checkIfAcked(packetIdx)
 
             if isAcked == False:
+                event.flow.TCPReno(False)
                 newPacket = event.flow.packets[packetIdx]
                 # Resetting this packet to the original attributes
                 newPacket.data_size = constants.DATA_SIZE 
