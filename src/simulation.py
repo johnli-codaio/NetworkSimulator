@@ -115,8 +115,12 @@ class Simulator:
         self.windowLog.close()
         self.delayLog.close()
 
-    def processEvent(self):
-        """Pops and processes event from queue."""
+    def processEvent(self, tcp_type):
+        """Pops and processes event from queue.
+
+        :param tcp_type: This tells us which tcp to use, 0 for Reno, 1 for fast.
+        :type tcp_type: Integer
+        """
 
         if(self.q.empty()):
             print "No events in queue."
@@ -339,7 +343,15 @@ class Simulator:
                 # A packet is dropped. We do the appropriate TCP window size
                 # update.
 
-                event.flow.TCPReno(False)
+                if tcp_type == 0:
+                    event.flow.TCPReno(False)
+                
+
+                elif tcp_type == 1:
+                    event.flow.TCPFast(False)
+                
+                else:
+                    raise Exception('Wrong input for tcp_type!!')
 
                 # Selecting the packet that has been timed out.
                 newPacket = event.flow.packets[packetIdx]

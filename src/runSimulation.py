@@ -13,6 +13,11 @@ def main():
     #                     help = 'Store JSON file name')
     # options for parsing a JSON file
     parser = argparse.ArgumentParser(description = 'Run simulation on JSON file.')
+
+    #option for tcp reno or tcp fast
+    parser.add_argument("tcp_type", help="use 0 for TCP Reno, use 1 for TCP FAST",
+                    type=int)
+
     parser.add_argument('--json', '-j', action = 'store', dest = 'json_file_name',
                         help = 'Store JSON file name')
 
@@ -124,7 +129,7 @@ def main():
 
     while not simulator.q.empty():
         print "QUEUE SIZE: " + str(simulator.q.qsize())
-        simulator.processEvent()
+        simulator.processEvent(args.tcp_type)
 
     for flow_name in flows:
         flow = flows[flow_name]
