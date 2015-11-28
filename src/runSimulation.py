@@ -79,7 +79,7 @@ def main():
 
         flow = classes.Flow(str(flow_name), devices[flow_data['flow_src']],
                             devices[flow_data['flow_dest']],
-                            flow_data['data_amt'], flow_data['flow_start'])
+                            flow_data['data_amt'], flow_data['flow_start'], flow_data['theoRTT'])
         flows[str(flow_name)] = flow
     print "Flows instantiated: ", "\n\n"
 
