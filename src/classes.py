@@ -371,7 +371,7 @@ class Flow:
             if tcp_type == 0:
                 self.TCPReno(True)
             elif tcp_type == 1:
-                self.TCPFast(actualRTT, 25)
+                self.TCPFast(actualRTT, 8)
             else:
                 raise Exception("Invalid tcp_type input")
 
@@ -382,7 +382,7 @@ class Flow:
                 if tcp_type == 0:
                     self.TCPReno(True)
                 elif tcp_type == 1:
-                    self.TCPFast(actualRTT, 25)
+                    self.TCPFast(actualRTT, 8)
                 else:
                     raise Exception("Invalid tcp_type input")
 
@@ -398,7 +398,7 @@ class Flow:
                 if tcp_type == 0:
                     self.TCPReno(False)
                 elif tcp_type == 1:
-                    self.TCPFast(actualRTT, 25)
+                    self.TCPFast(actualRTT, 8)
                 else:
                     raise Exception("Invalid tcp_type input")
                 print "DROPPED PACKET " + self.packets[self.window_lower].packetID + \
@@ -464,10 +464,8 @@ class Flow:
             :param alpha : A constant we add to window.
             :type alpha : int
         """
-        print "theoRTT"
-        print self.theoRTT
-        print "actualRTT" 
-        print actualRTT
+        print "theoRTT: " + str(self.theoRTT)
+        print "actualRTT: " + str(actualRTT)
         newWindowSize = (self.theoRTT/actualRTT) * self.window_size + alpha
         self.window_size = newWindowSize
 
