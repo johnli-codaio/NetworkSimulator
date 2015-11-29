@@ -65,13 +65,13 @@ class Network:
         entire network.
 
         :param devices: List of devices that will be part of the network
-        :type devices: Dictionary<Device>
+        :type devices: Dict<DeviceID, Device>
 
         :param links: List of links that will be part of the network.
-        :type links: List<Link>
+        :type links: Dict<LinkID, Link>
 
         :param flows: List of flows that will be part of network.
-        :type flows: List<Flow>
+        :type flows: Dict<FlowID, Flow>
         """
         self.devices = devices
         self.links = links
@@ -117,7 +117,7 @@ class Device(object):
         packet.curr = link
 
     def __str__(self):
-        s = "Device is: " + "HOST" if isinstance(self, Host) else "ROUTER"
+        s = "Device is: " + ("HOST" if isinstance(self, Host) else "ROUTER")
         s += "\nName is: " + str(self.deviceID)
         s += "\nLinks: " + str([l.linkID for l in self.links])
         s += "\n"
@@ -182,14 +182,12 @@ class Router(Device):
         # send current table to all neighbors
 
         res = []
-
         for link in self.links:
             otherDev = link.otherDevice(self)
             routPacket = RoutingPacket(self, otherDev, link, constants.ROUTING_SIZE,
                                        self.rout_table, packetID = None, curr_loc = None)
             
             res.append((routPacket, link))
-
         return res
 
     def transferTo(self, packet):
@@ -236,18 +234,9 @@ class Host(Device):
             link = packet.curr
             link.decrRate(packet)
             print "Packet " + packet.packetID + " received by Host" + str(self.deviceID)
-
-        #elif(packet.data_type == "ROUT"):
-            # stuff
-            
+        # if packet is ROUTING, do nothing
 
 class Flow:
-
-
-    # Should be responsible for
-    # - Generating all packets
-    # - Dealing with congestion control
-    # -
 
     def __init__(self, flowID, src, dest, data_amt, flow_start):
         """ Instantiates a Flow
@@ -476,10 +465,6 @@ class Flow:
 
 class Link:
 
-    ###############################################################
-    ## TODO: Write what members each Link has, and its functions ##
-    ###############################################################
-
     def __init__(self, linkID, rate, delay, buffer_size, device1, device2):
         """ Instantiates a Link
 
@@ -545,7 +530,8 @@ class Link:
 
     def rateFullWith(self, packet):
         """Returns True if packet cannot be sent, False otherwise.
-        :param packet: the packet that is about to be sent out
+
+        :param packet: packet potentially to be sent out
         :type packet: Packet
         """
         return (self.rate <= self.currentRateMbps(packet))
@@ -559,6 +545,7 @@ class Link:
         :type device: Device
 
         """
+        # TODO: possibly refactor to not use try/except...
         try:
             packet = self.linkBuffer.peek()
             if(not self.rateFullWith(packet)):
