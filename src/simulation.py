@@ -115,7 +115,7 @@ class Simulator:
         self.windowLog.close()
         self.delayLog.close()
 
-    def processEvent(self, tcp_type):
+    def processEvent(self, tcp_type, last_RTT):
         """Pops and processes event from queue.
 
         :param tcp_type: This tells us which tcp to use, 0 for Reno, 1 for fast.
@@ -141,6 +141,22 @@ class Simulator:
                 event.flow.window_counter = event.flow.window_counter + 1
                 self.insertEvent(newEvent)
                 increment = increment + 1
+
+            # TCP Fast initialization event
+            if tcp_type == 1:
+                newEvent2 = Event(None, None, "UPDATEWINDOW", event.time + 20, event.flow)
+                self.insertEvent(newEvent2)
+
+
+        elif event.type == "UPDATEWINDOW":
+            tcpFast(last_RTT, 8)
+            newEvent2 = Event(None, None, "UPDATEWINDOW", event.time + 20, event.flow)
+            #could be an infinite loop here?
+            # maybe instead do:
+            #if self.p.size() == 1:
+            if !self.p.empty():
+                self.insertEvent(newEvent2)
+
 
         elif event.type == "PUT":
             # Tries to put packet into link buffer
