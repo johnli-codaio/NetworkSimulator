@@ -149,12 +149,25 @@ class Simulator:
 
         
         elif event.type == "UPDATEWINDOW":
-            event.flow.TCPFast(40, 0)
+            #if no new packets were receieved between now and last 
+            #updatewindow, we have to make our RTT higher
+            #(before, it was left as the last rtt received, which was deceiving)
+            if event.flow.received_packet == False:
+                #TODO: TODO: TODO: figure out the appropriate value
+                event.flow.actualRTT = event.time - event.flow.last_received_packet_start_time
+              
+
+            event.flow.TCPFast(20, 0)
             print "tcp fast happened here"
             newEvent2 = Event(None, None, "UPDATEWINDOW", event.time + 20, event.flow)
-            #could be an infinite loop here?
-            # maybe instead do:
-            #if self.p.size() == 1:
+            #reset the max RTT
+
+            event.flow.actualRTT = event.flow.theoRTT
+
+            #reset the received packet
+            event.flow.received_packet = False
+
+            # Add next updatewindow to queue
             if not self.q.empty():
                 self.insertEvent(newEvent2)
 
@@ -372,7 +385,7 @@ class Simulator:
                 # IMPORTANT: TODO: TODO: How do we call TCPFast if a packet is dropped?? I don't think we can.
                 elif tcp_type == 1:
                     #use 1 for bypass, just called to update window bounds accordingly
-                    event.flow.TCPFast(40, 1)
+                    event.flow.TCPFast(0, 1)
                 
                 else:
                     raise Exception('Wrong input for tcp_type!!')

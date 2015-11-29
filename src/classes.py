@@ -267,6 +267,12 @@ class Flow:
         # How much successfully sent.
         self.data_acknowledged = 0
 
+        #whether it has received a packet or not in the last fast-tcp cycle
+        self.received_packet = False
+
+        # keeps track so that we can more accurately measure the RTT of non-returned packets
+        self.last_received_packet_start_time = 0
+
     def initializePackets(self):
         """ We will create all the packets and put them into
             an array.
@@ -353,9 +359,24 @@ class Flow:
 
         print str(packet.index)
 
-        self.actualRTT = currentTime - packet.start_time
+        print "currentTime: " + str(currentTime) 
+        print "packet.start_time: " + str(packet.start_time)
+        print "self.actual-RTT: " + str(self.actualRTT)
+
+        if currentTime - packet.start_time > self.actualRTT:
+            self.actualRTT = currentTime - packet.start_time
+
+        #check if actualRTT is valid
+        if self.actualRTT != 0 and self.actualRTT < self.theoRTT:
+            raise Exception("Calculated RTT is less than theoretical RTT")
+
 
         if self.packets[self.window_lower].packetID == packet.packetID:
+            # Change variable to show a packet was received in TCPFast Cycle!
+            self.received_packet = True
+            self.last_received_packet_start_time = packet.start_time
+            ##############################################################
+
             self.data_acknowledged = self.data_acknowledged + constants.DATA_SIZE
             self.acksAcknowledged[packet.index] = True
 
@@ -380,6 +401,10 @@ class Flow:
                 raise Exception("Invalid tcp_type input")
 
         elif self.resending == True:
+            # TODO: TODO:
+            # NOTE: I think there's something buggy here, since 
+            # if we enter this loop as part of TCP-fast, something weird happens
+            
             if self.acksAcknowledged[packet.index] == False:
                 self.acksAcknowledged[packet.index] = True
                 self.data_acknowledged = self.data_acknowledged + constants.DATA_SIZE
@@ -627,8 +652,8 @@ class Link:
         """Gets the link rate, in Mbps, if a packet were added.
         Used for logging. If the packet argument
         isn't specified, then it just returns the current rate.
-        :param packet : Packet to be sent using this link
-        :type packet : Packet
+        :param packet: Packet to be sent using this link
+        :type packet: Packet
         """
         if packet:
             return (float(self.current_rate + packet.data_size) /
@@ -667,6 +692,12 @@ class Packet:
 
         :param curr_loc: Link where the packet is.
         :type curr_loc: Link
+
+        :param start_time: 
+        :type start_time:
+
+        :param total_delay:
+        :type total_delay:
         """
         self.packetID = packetID
         self.index = index
