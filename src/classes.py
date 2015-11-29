@@ -363,6 +363,11 @@ class Flow:
         print "packet.start_time: " + str(packet.start_time)
         print "self.actual-RTT: " + str(self.actualRTT)
 
+        ##### IMPORTANT NOTE #####
+        ### The way TCP-Fast is currently implemented, we 
+        # use the highest rtt in the 20-ms period as the RTT, not the
+        # last rtt. I'm not sure if this is correct.
+        # TODO: TODO: Check with TAs
         if currentTime - packet.start_time > self.actualRTT:
             self.actualRTT = currentTime - packet.start_time
 
