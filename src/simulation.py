@@ -149,7 +149,7 @@ class Simulator:
 
         
         elif event.type == "UPDATEWINDOW":
-            event.flow.TCPFast(20, 0)
+            event.flow.TCPFast(40, 0)
             print "tcp fast happened here"
             newEvent2 = Event(None, None, "UPDATEWINDOW", event.time + 20, event.flow)
             #could be an infinite loop here?
@@ -263,7 +263,7 @@ class Simulator:
                     
                     # If the packet was dropped, we will do SELECTIVE RESEND (Fast retransmit)
                     # and only resend the dropped packet. Otherwise, we send packets based on the
-                    # updated window parameters (done in TCPReno).
+                    # updated window parameters (done in TCP Reno).
                     if isDropped == False:
 
                         if self.first_time == 0:
@@ -372,7 +372,7 @@ class Simulator:
                 # IMPORTANT: TODO: TODO: How do we call TCPFast if a packet is dropped?? I don't think we can.
                 elif tcp_type == 1:
                     #use 1 for bypass, just called to update window bounds accordingly
-                    event.flow.TCPFast(20, 1)
+                    event.flow.TCPFast(40, 1)
                 
                 else:
                     raise Exception('Wrong input for tcp_type!!')

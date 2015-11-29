@@ -25,8 +25,6 @@ def main():
     parser.add_argument('--m', dest = 'metrics',
             action = 'store_true', help = 'Print graphs for metrics')
 
-    # TODO: options for method of congestion control?
-    #
 
     # TODO: options for verbose? for debugging purposes
 

@@ -479,7 +479,7 @@ class Flow:
             newWindowSize = (self.theoRTT/self.actualRTT) * self.window_size + alpha
             self.window_size = newWindowSize
 
-        self.window_upper = floor(self.window_size) + self.window_lower #TODO: Should the -1 be here or no??
+        self.window_upper = floor(self.window_size) + self.window_lower - 1 #TODO: Should the -1 be here or no??
 
         if(self.window_upper > len(self.packets) - 1):
             self.window_upper = len(self.packets) - 1
