@@ -98,9 +98,8 @@ class Simulator:
 
         self.counter = 0
 
-
-        #keep track of latest RTT
-        self.last_RTT = 0
+        #keeps track of the first time a packet is acknowledged
+        self.first_time = 0
 
     def insertEvent(self, event):
         """ This will insert an event into the Priority Queue.
@@ -134,32 +133,30 @@ class Simulator:
 
         print "\n"
         print "Popped event type:", event.type, "at", event.time, "ms"
+
+
         if event.type == "INITIALIZEFLOW":
 
             event.flow.initializePackets()
 
             increment = 1
+            print "event.flow.window_upper: " + str(event.flow.window_upper)
             while(event.flow.window_counter <= floor(event.flow.window_upper)):
                 newEvent = Event(None, None, "SELECTPACK", event.time + increment * constants.EPSILON_DELAY, event.flow)
                 event.flow.window_counter = event.flow.window_counter + 1
                 self.insertEvent(newEvent)
                 increment = increment + 1
 
-            # TCP Fast initialization event
-            if tcp_type == 1:
-                newEvent2 = Event(None, None, "UPDATEWINDOW", event.time + 20, event.flow)
-                self.insertEvent(newEvent2)
-
-
+        
         elif event.type == "UPDATEWINDOW":
-            tcpFast(8)
+            event.flow.TCPFast(20)
+            print "tcp fast happened here"
             newEvent2 = Event(None, None, "UPDATEWINDOW", event.time + 20, event.flow)
             #could be an infinite loop here?
             # maybe instead do:
             #if self.p.size() == 1:
-            if not self.p.empty():
+            if not self.q.empty():
                 self.insertEvent(newEvent2)
-
 
         elif event.type == "PUT":
             # Tries to put packet into link buffer
@@ -269,9 +266,16 @@ class Simulator:
                     # updated window parameters (done in TCPReno).
                     if isDropped == False:
 
+                        if self.first_time == 0:
+                            # TCP Fast initialization event, which should happen only the first time a packet is acknowledged
+                            if tcp_type == 1:
+                                newEvent2 = Event(None, None, "UPDATEWINDOW", event.time + 20, event.flow)
+                                self.insertEvent(newEvent2)
+                            self.first_time = 1
+
                         increment = 1
-                        print str(event.flow.packets_index)
-                        print str(event.flow.window_upper)
+                        print "event.flow.packets_index: " + str(event.flow.packets_index)
+                        print "event.flow.window_upper: " + str(event.flow.window_upper)
                         while(event.flow.window_counter <= event.flow.window_upper):
                             print str(event.flow.packets_index)
                             newEvent = Event(None, None, "SELECTPACK", event.time + increment * constants.EPSILON_DELAY, event.flow)
@@ -367,8 +371,11 @@ class Simulator:
                 
                 # IMPORTANT: TODO: TODO: How do we call TCPFast if a packet is dropped?? I don't think we can.
                 elif tcp_type == 1:
-                    pass
-                    #do nothing
+                    #still have to update window upper and lower bounds, despite not doing TCP here.
+                    self.window_upper = floor(self.window_size) + self.window_lower - 1
+
+                    if(self.window_upper > len(self.packets) - 1):
+                        self.window_upper = len(self.packets) - 1
                 
                 else:
                     raise Exception('Wrong input for tcp_type!!')

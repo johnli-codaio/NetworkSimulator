@@ -371,7 +371,11 @@ class Flow:
             if tcp_type == 0:
                 self.TCPReno(True)
             elif tcp_type == 1:
-                pass
+                #still have to update window bounds
+                self.window_upper = floor(self.window_size) + self.window_lower - 1
+
+                if(self.window_upper > len(self.packets) - 1):
+                    self.window_upper = len(self.packets) - 1
             else:
                 raise Exception("Invalid tcp_type input")
 
@@ -382,7 +386,11 @@ class Flow:
                 if tcp_type == 0:
                     self.TCPReno(True)
                 elif tcp_type == 1:
-                    pass
+                    #still have to update window bounds
+                    self.window_upper = floor(self.window_size) + self.window_lower - 1
+
+                    if(self.window_upper > len(self.packets) - 1):
+                        self.window_upper = len(self.packets) - 1
                 else:
                     raise Exception("Invalid tcp_type input")
 
@@ -398,9 +406,14 @@ class Flow:
                 if tcp_type == 0:
                     self.TCPReno(False)
                 elif tcp_type == 1:
-                    pass
+                    self.window_upper = floor(self.window_size) + self.window_lower - 1
+
+                    if(self.window_upper > len(self.packets) - 1):
+                        self.window_upper = len(self.packets) - 1
+
                 else:
                     raise Exception("Invalid tcp_type input")
+
                 print "DROPPED PACKET " + self.packets[self.window_lower].packetID + \
                     "... GOBACKN.\n"
                 self.resending = True
