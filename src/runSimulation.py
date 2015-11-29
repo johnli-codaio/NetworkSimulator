@@ -129,7 +129,7 @@ def main():
 
     while not simulator.q.empty():
         print "QUEUE SIZE: " + str(simulator.q.qsize())
-        simulator.processEvent(args.tcp_type, TODO)
+        simulator.processEvent(args.tcp_type)
 
     for flow_name in flows:
         flow = flows[flow_name]

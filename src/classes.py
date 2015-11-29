@@ -248,7 +248,7 @@ class Flow:
         self.current_amt = 0
         self.flow_start = flow_start * constants.s_to_ms
         self.theoRTT = theoRTT
-
+        self.actualRTT = 0
 
         self.window_size = 1
 
@@ -353,7 +353,7 @@ class Flow:
 
         print str(packet.index)
 
-        actualRTT = currentTime - packet.start_time
+        self.actualRTT = currentTime - packet.start_time
 
         if self.packets[self.window_lower].packetID == packet.packetID:
             self.data_acknowledged = self.data_acknowledged + constants.DATA_SIZE
@@ -371,7 +371,7 @@ class Flow:
             if tcp_type == 0:
                 self.TCPReno(True)
             elif tcp_type == 1:
-                self.TCPFast(actualRTT, 8)
+                pass
             else:
                 raise Exception("Invalid tcp_type input")
 
@@ -382,7 +382,7 @@ class Flow:
                 if tcp_type == 0:
                     self.TCPReno(True)
                 elif tcp_type == 1:
-                    self.TCPFast(actualRTT, 8)
+                    pass
                 else:
                     raise Exception("Invalid tcp_type input")
 
@@ -398,7 +398,7 @@ class Flow:
                 if tcp_type == 0:
                     self.TCPReno(False)
                 elif tcp_type == 1:
-                    self.TCPFast(actualRTT, 8)
+                    pass
                 else:
                     raise Exception("Invalid tcp_type input")
                 print "DROPPED PACKET " + self.packets[self.window_lower].packetID + \
@@ -449,7 +449,7 @@ class Flow:
         print "Window size: " + str(self.window_size)
         print "Window Upper: " + str(self.window_upper)
 
-    def TCPFast(self, actualRTT, alpha):
+    def TCPFast(self, alpha):
         """ The actualRTT is calculated by subtracting event.time
             by the start time of the packet. The theoretical RTT of the
             packet is denoted in the "packet.total_delay" attribute.
@@ -465,8 +465,8 @@ class Flow:
             :type alpha : int
         """
         print "theoRTT: " + str(self.theoRTT)
-        print "actualRTT: " + str(actualRTT)
-        newWindowSize = (self.theoRTT/actualRTT) * self.window_size + alpha
+        print "actualRTT: " + str(self.actualRTT)
+        newWindowSize = (self.theoRTT/self.actualRTT) * self.window_size + alpha
         self.window_size = newWindowSize
 
         self.window_upper = floor(newWindowSize) + self.window_lower

@@ -4,7 +4,7 @@ import time
 import constants
 from classes import *
 
-
+# TODO: Need to update simulation's self.last_RTT value
 
 class Event:
     """Events are enqueued into the Simulator priority queue by their time. Events
@@ -19,7 +19,6 @@ class Event:
         :param packet: The packet associated with the event.
         :type packet: Packet/None (None for GENERATE...)
 
-        :param EventHandler: Object associated with event request.
         :type EventHandler: Device, Link, or None
 
         :param EventType: The type of event that will be sent.
@@ -99,6 +98,10 @@ class Simulator:
 
         self.counter = 0
 
+
+        #keep track of latest RTT
+        self.last_RTT = 0
+
     def insertEvent(self, event):
         """ This will insert an event into the Priority Queue.
 
@@ -115,7 +118,7 @@ class Simulator:
         self.windowLog.close()
         self.delayLog.close()
 
-    def processEvent(self, tcp_type, last_RTT):
+    def processEvent(self, tcp_type):
         """Pops and processes event from queue.
 
         :param tcp_type: This tells us which tcp to use, 0 for Reno, 1 for fast.
@@ -149,12 +152,12 @@ class Simulator:
 
 
         elif event.type == "UPDATEWINDOW":
-            tcpFast(last_RTT, 8)
+            tcpFast(8)
             newEvent2 = Event(None, None, "UPDATEWINDOW", event.time + 20, event.flow)
             #could be an infinite loop here?
             # maybe instead do:
             #if self.p.size() == 1:
-            if !self.p.empty():
+            if not self.p.empty():
                 self.insertEvent(newEvent2)
 
 
