@@ -462,27 +462,25 @@ class Flow:
         print "Window size: " + str(self.window_size)
         print "Window Upper: " + str(self.window_upper)
 
-    def TCPFast(self, alpha):
+    def TCPFast(self, alpha, timeout):
         """ The actualRTT is calculated by subtracting event.time
             by the start time of the packet. The theoretical RTT of the
             packet is denoted in the "packet.total_delay" attribute.
 
-            :param actualRTT : Total time it took for packet leave host and be
-                               acknowledged.
-            :type actualRTT : double
-
-            :param theoRTT : Total theoretical time for packet.
-            :type theoRTT : double
-
             :param alpha : A constant we add to window.
             :type alpha : int
-        """
-        print "theoRTT: " + str(self.theoRTT)
-        print "actualRTT: " + str(self.actualRTT)
-        newWindowSize = (self.theoRTT/self.actualRTT) * self.window_size + alpha
-        self.window_size = newWindowSize
 
-        self.window_upper = floor(newWindowSize) + self.window_lower
+            :param timeout : A constant we use to indicate if we bypass, 0 for no bypass, 1 for bypass
+            :type timeout : int
+        """
+        if timeout == 0:
+            print "theoRTT: " + str(self.theoRTT)
+            print "actualRTT: " + str(self.actualRTT)
+            newWindowSize = (self.theoRTT/self.actualRTT) * self.window_size + alpha
+            self.window_size = newWindowSize
+
+        self.window_upper = floor(self.window_size) + self.window_lower #TODO: Should the -1 be here or no??
+
         if(self.window_upper > len(self.packets) - 1):
             self.window_upper = len(self.packets) - 1
             #i think the below line was a typo?

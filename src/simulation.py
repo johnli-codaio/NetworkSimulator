@@ -149,7 +149,7 @@ class Simulator:
 
         
         elif event.type == "UPDATEWINDOW":
-            event.flow.TCPFast(20)
+            event.flow.TCPFast(20, 0)
             print "tcp fast happened here"
             newEvent2 = Event(None, None, "UPDATEWINDOW", event.time + 20, event.flow)
             #could be an infinite loop here?
@@ -371,11 +371,8 @@ class Simulator:
                 
                 # IMPORTANT: TODO: TODO: How do we call TCPFast if a packet is dropped?? I don't think we can.
                 elif tcp_type == 1:
-                    #still have to update window upper and lower bounds, despite not doing TCP here.
-                    self.window_upper = floor(self.window_size) + self.window_lower - 1
-
-                    if(self.window_upper > len(self.packets) - 1):
-                        self.window_upper = len(self.packets) - 1
+                    #use 1 for bypass, just called to update window bounds accordingly
+                    event.flow.TCPFast(20, 1)
                 
                 else:
                     raise Exception('Wrong input for tcp_type!!')
