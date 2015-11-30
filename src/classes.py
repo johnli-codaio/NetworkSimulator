@@ -373,7 +373,11 @@ class Flow:
         """ This will produce an acknowledgment packet with same ID, heading the reverse
         direction
         """
+        start_time = packet.start_time
+        total_delay = packet.total_delay
         newPacket = DataPacket(packet.index, packet.dest, packet.src, "ACK", constants.ACK_SIZE, packet.packetID, None)
+        newPacket.start_time = start_time
+        newPacket.total_delay = packet.total_delay
         return newPacket
 
         return packet
