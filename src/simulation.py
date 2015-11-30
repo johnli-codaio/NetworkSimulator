@@ -225,6 +225,7 @@ class Simulator:
                 self.insertEvent(newEvent)
 
         elif event.type == "RECEIVE":
+            print "receive received"
             # Processes a host/router action that would receive things.
             assert(isinstance(event.handler, Device))
 
@@ -253,6 +254,7 @@ class Simulator:
 
             # Host receives packet
             elif isinstance(event.handler, Host):
+                print "is host"
                 if(event.packet.data_type == "DATA"):
                     host = event.handler
                     host.receive(event.packet)
