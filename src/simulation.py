@@ -155,6 +155,7 @@ class Simulator:
             #updatewindow, we have to make our RTT higher
             #(before, it was left as the last rtt received, which was deceiving)
             if event.flow.received_packet == False:
+                print "butt last_receieved_packet: " + str(event.flow.last_received_packet_start_time)
                 #TODO: TODO: TODO: figure out the appropriate value
                 event.flow.actualRTT = event.time - event.flow.last_received_packet_start_time
 
