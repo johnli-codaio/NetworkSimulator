@@ -6,22 +6,22 @@ class Metrics:
     def __init__(self, log):
         # file for logging
         # the current link rate
-        self.linkRateLog = open('linkRateLog.txt', 'w')
+        self.linkRateLog = open('linkRateLog.log', 'w')
 
         # the current buffer occupancy
-        self.bufferLog = open('bufferLog.txt', 'w')
+        self.bufferLog = open('bufferLog.log', 'w')
 
         # the current packet loss
-        self.packetLog = open('packetLog.txt', 'w')
+        self.packetLog = open('packetLog.log', 'w')
 
         # the current flow rate
-        self.flowRateLog = open('flowRateLog.txt', 'w')
+        self.flowRateLog = open('flowRateLog.log', 'w')
 
         # the current window size
-        self.windowLog = open('windowLog.txt', 'w')
+        self.windowLog = open('windowLog.log', 'w')
 
         # the current packet delay
-        self.delayLog = open('delayLog.txt', 'w')
+        self.delayLog = open('delayLog.log', 'w')
 
         self.metrics = [self.linkRateLog, self.bufferLog,
                 self.packetLog, self.flowRateLog, self.windowLog,
