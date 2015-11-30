@@ -424,6 +424,7 @@ class Flow:
         if self.packets[self.window_lower].packetID == packet.packetID:
             # Change variable to show a packet was received in TCPFast Cycle!
             self.received_packet = True
+            print "correct ack packet receieved"
             self.last_received_packet_start_time = packet.start_time
             ##############################################################
 
