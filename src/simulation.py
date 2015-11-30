@@ -49,6 +49,10 @@ class Event:
         :param other: The other event we're comparing with.
         :type other: Event
         """
+
+        if(isinstance(self.packet, RoutingPacket)):
+            return cmp(self.time, other.time)
+
         if self.time != other.time:
             return cmp(self.time, other.time)
         else:
@@ -80,7 +84,7 @@ class Simulator:
         self.q = Queue.PriorityQueue()
         self.network = network
 
-        # file for logging
+        # files for logging
         # the current link rate
         self.linkRateLog = open('linkRateLog.txt', 'w')
 
@@ -123,21 +127,15 @@ class Simulator:
     def processEvent(self):
         """Pops and processes event from queue.
 
-        """
-
         if(self.q.empty()):
             print "No events in queue."
             return
 
         event = self.q.get()
-        print self.tcp_type
-        if self.tcp_type == 'FAST':
-            print 'hello'
 
 
         print "\n"
         print "Popped event type:", event.type, "at", event.time, "ms"
-
 
         if event.type == "INITIALIZEFLOW":
 
@@ -178,13 +176,12 @@ class Simulator:
         elif event.type == "PUT":
             # Tries to put packet into link buffer
             # This happens whenever a device receives a packet.
-
             assert(isinstance(event.handler[0], Link))
             assert(isinstance(event.handler[1], Device))
             link = event.handler[0]
             device = event.handler[1]
 
-            print event.packet.type, event.packet.packetID
+            print event.type.data_type, event.packet.packetID
 
             # is the buffer full? you can put a packet in
             if not link.linkBuffer.bufferFullWith(event.packet):
@@ -210,14 +207,10 @@ class Simulator:
 
             packet = link.sendPacket(device)
             if packet:
-                if(device == link.device1):
-                    newEvent = Event(packet, link.device2, "RECEIVE", event.time +
-                                     link.delay, event.flow)
-                    self.insertEvent(newEvent)
-                else:
-                    newEvent = Event(packet, link.device1, "RECEIVE", event.time +
-                                     link.delay, event.flow)
-                    self.insertEvent(newEvent)
+                otherDev = link.otherDevice(device)
+                newEvent = Event(packet, otherDev, "RECEIVE", 
+                                 event.time + link.delay, event.flow)
+                self.insertEvent(newEvent)
 
                 # log the link rate. Log these in seconds, and in Mbps
                 self.linkRateLog.write(str(event.time / constants.s_to_ms)
@@ -234,49 +227,52 @@ class Simulator:
             # Processes a host/router action that would receive things.
             assert(isinstance(event.handler, Device))
 
-            # Router.
+            # Router receives packet
             if isinstance(event.handler, Router):
                 router = event.handler
-                newLink = router.transfer(event.packet)
+            
+                if(isinstance(event.packet, RoutingPacket)):
+                    updated = router.handleRoutingPacket(event.packet)
+                    if(updated):
+                        # flood neighbors
+                        newPackets = router.floodNeighbors()
 
-                newEvent = Event(event.packet, (newLink, router), "PUT",
-                        event.time, event.flow)
-                self.insertEvent(newEvent)
+                        for pack, link in newPackets:
+                            newEvent = Event(pack, (link, router),
+                                             "PUT", event.time + constants.EPSILON_DELAY,
+                                             flow = None)
+                            self.insertEvent(newEvent)
 
-            # Host
+                elif(isinstance(event.packet, DataPacket)):
+                    newLink = router.transferTo(event.packet)
 
+                    newEvent = Event(event.packet, (newLink, router), "PUT",
+                            event.time + constants.EPSILON_DELAY, event.flow)
+                    self.insertEvent(newEvent)
+
+            # Host receives packet
             elif isinstance(event.handler, Host):
-                if(event.packet.type == "DATA"):
+                if(event.packet.data_type == "DATA"):
                     host = event.handler
                     host.receive(event.packet)
 
                     newEvent = Event(event.packet, None, "GENERATEACK",
                             event.time + constants.EPSILON_DELAY, event.flow)
                     self.insertEvent(newEvent)
-                else:
-                    ########################################
-                    ####### TODO: Acknowledgement got ######
-                    ########################################
-
-                    # If an acknowledgment is received, we check it through
-                    # the receiveAcknowledgment method.
+                elif(event.packet.data_type == "ACK"):
                     host = event.handler
                     host.receive(event.packet)
 
-                    # If the packet is dropped (more than three errors in the error counter)
-                    # then this bool is true. Else, it's false.
-
-                    isDropped = event.flow.receiveAcknowledgement(event.packet, event.time, self.tcp_type)
+                    isDropped = event.flow.receiveAcknowledgement(event.packet. event.time, self.tcp_type)
                     print "HOST EXPECT: " + str(event.flow.window_lower) + \
                           " TIME: " + str(event.time)
                     #  ^ This will update the packet index that it will be
                     #    sending from. Thus, constantly be monitoring
 
                     # IF SO,
-                    #######################################
-                    ##### Push in new GENERATEPACKS... ####
-                    #######################################
-
+                    ####################################### ????
+                    ##### Push in new GENERATEPACKS... #### ???? is this done?
+                    ####################################### ????
                     
                     # If the packet was dropped, we will do SELECTIVE RESEND (Fast retransmit)
                     # and only resend the dropped packet. Otherwise, we send packets based on the
@@ -410,3 +406,21 @@ class Simulator:
 
                 newEvent = Event(newPacket, (link, host), "PUT", event.time , event.flow)
                 self.insertEvent(newEvent)
+
+
+    def genRoutTable(self):
+        print "Generating routing tables"
+
+        print self.network.devices
+        for device in self.network.devices:
+            device = self.network.devices[device]
+            if(isinstance(device, Router)):
+                device.initializeNeighborsTable()
+                
+                # Tell device to send routing table.
+                routingPackets = device.floodNeighbors()
+
+                for pack, link in routingPackets:
+                    newEvent = Event(pack, (link, device), "PUT", 0, flow = None)
+                    self.insertEvent(newEvent)
+
