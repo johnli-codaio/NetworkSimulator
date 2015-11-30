@@ -218,7 +218,7 @@ class Metrics:
 
     def packetDelay(self, fig):
         try:
-            time, packetDelay = np.loadtxt('packetLog.log', delimiter=' ',
+            time, packetDelay = np.loadtxt('delayLog.log', delimiter=' ',
                     usecols = (0, 1), unpack = True)
         except ValueError as e:
             print str(e) + " for packet delay"

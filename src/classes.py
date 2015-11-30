@@ -556,7 +556,6 @@ class Flow:
 
 
     def getWindowSize(self):
-        #TODO
         return self.window_size
 
 
