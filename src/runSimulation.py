@@ -14,12 +14,19 @@ def main():
     # options for parsing a JSON file
     parser = argparse.ArgumentParser(description = 'Run simulation on JSON file.')
 
-    #option for tcp reno or tcp fast
-    parser.add_argument("tcp_type", help="use 0 for TCP Reno, use 1 for TCP FAST",
-                    type=int)
 
     parser.add_argument('--json', '-j', action = 'store', dest = 'json_file_name',
                         help = 'Store JSON file name')
+
+    #option for tcp reno or tcp fast
+    tcp_type = parser.add_mutually_exclusive_group(required = True)
+    tcp_type.add_argument('-Reno', dest = 'tcp_type',
+            action = 'store_const', const = 'Reno',
+            help = 'Uses the TCP-Reno congestion control algorithm')
+
+    tcp_type.add_argument("-FAST", dest = 'tcp_type',
+            action = 'store_const', const = 'FAST',
+            help = 'Uses the TCP-FAST congestion control algorithm')
 
     # options for graphing metrics
     parser.add_argument('--m', dest = 'metrics',
@@ -111,7 +118,7 @@ def main():
 
     print "----------STARTING SIMULATION------------"
 
-    simulator = simulation.Simulator(network)
+    simulator = simulation.Simulator(network, args.tcp_type)
 
     # Have flows create sending events...
 
@@ -127,7 +134,7 @@ def main():
 
     while not simulator.q.empty():
         print "QUEUE SIZE: " + str(simulator.q.qsize())
-        simulator.processEvent(args.tcp_type)
+        simulator.processEvent()
 
     for flow_name in flows:
         flow = flows[flow_name]

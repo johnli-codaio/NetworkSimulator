@@ -67,12 +67,15 @@ class Event:
 
 class Simulator:
     # TODO
-    def __init__(self, network):
+    def __init__(self, network, TCP_type):
         """ This will initialize the simulation with a Priority Queue
         that sorts based on time.
 
         :param network: Network system parsed from json
         :type network : Network
+
+        :param TCP_type: Which TCP congestion control to use.
+        :type TCP_type : str
         """
         self.q = Queue.PriorityQueue()
         self.network = network
@@ -96,7 +99,7 @@ class Simulator:
         # the current packet delay
         self.delayLog = open('delayLog.txt', 'w')
 
-        self.counter = 0
+        self.tcp_type = TCP_type
 
         #keeps track of the first time a packet is acknowledged
         self.first_time = 0
@@ -117,11 +120,9 @@ class Simulator:
         self.windowLog.close()
         self.delayLog.close()
 
-    def processEvent(self, tcp_type):
+    def processEvent(self):
         """Pops and processes event from queue.
 
-        :param tcp_type: This tells us which tcp to use, 0 for Reno, 1 for fast.
-        :type tcp_type: Integer
         """
 
         if(self.q.empty()):
@@ -129,6 +130,9 @@ class Simulator:
             return
 
         event = self.q.get()
+        print self.tcp_type
+        if self.tcp_type == 'FAST':
+            print 'hello'
 
 
         print "\n"
@@ -262,7 +266,7 @@ class Simulator:
                     # If the packet is dropped (more than three errors in the error counter)
                     # then this bool is true. Else, it's false.
 
-                    isDropped = event.flow.receiveAcknowledgement(event.packet, event.time, tcp_type)
+                    isDropped = event.flow.receiveAcknowledgement(event.packet, event.time, self.tcp_type)
                     print "HOST EXPECT: " + str(event.flow.window_lower) + \
                           " TIME: " + str(event.time)
                     #  ^ This will update the packet index that it will be
@@ -281,7 +285,7 @@ class Simulator:
 
                         if self.first_time == 0:
                             # TCP Fast initialization event, which should happen only the first time a packet is acknowledged
-                            if tcp_type == 1:
+                            if self.tcp_type == 'FAST':
                                 newEvent2 = Event(None, None, "UPDATEWINDOW", event.time + 20, event.flow)
                                 self.insertEvent(newEvent2)
                             self.first_time = 1
@@ -379,17 +383,14 @@ class Simulator:
                 # A packet is dropped. We do the appropriate TCP window size
                 # update.
 
-                if tcp_type == 0:
+                if self.tcp_type == 'Reno':
                     event.flow.TCPReno(False)
                 
                 # IMPORTANT: TODO: TODO: How do we call TCPFast if a packet is dropped?? I don't think we can.
-                elif tcp_type == 1:
+                elif self.tcp_type == 'FAST':
                     #use 1 for bypass, just called to update window bounds accordingly
                     event.flow.TCPFast(0, 1)
                 
-                else:
-                    raise Exception('Wrong input for tcp_type!!')
-
                 # Selecting the packet that has been timed out.
                 newPacket = event.flow.packets[packetIdx]
 
