@@ -125,7 +125,7 @@ class Simulator:
         self.delayLog.close()
 
     def processEvent(self):
-        """Pops and processes event from queue.
+        """Pops and processes event from queue."""
 
         if(self.q.empty()):
             print "No events in queue."
@@ -149,15 +149,15 @@ class Simulator:
                 self.insertEvent(newEvent)
                 increment = increment + 1
 
-        
+
         elif event.type == "UPDATEWINDOW":
-            #if no new packets were receieved between now and last 
+            #if no new packets were receieved between now and last
             #updatewindow, we have to make our RTT higher
             #(before, it was left as the last rtt received, which was deceiving)
             if event.flow.received_packet == False:
                 #TODO: TODO: TODO: figure out the appropriate value
                 event.flow.actualRTT = event.time - event.flow.last_received_packet_start_time
-              
+
 
             event.flow.TCPFast(20, 0)
             print "tcp fast happened here"
@@ -181,7 +181,7 @@ class Simulator:
             link = event.handler[0]
             device = event.handler[1]
 
-            print event.type.data_type, event.packet.packetID
+            print event.packet.data_type, event.packet.packetID
 
             # is the buffer full? you can put a packet in
             if not link.linkBuffer.bufferFullWith(event.packet):
@@ -208,7 +208,7 @@ class Simulator:
             packet = link.sendPacket(device)
             if packet:
                 otherDev = link.otherDevice(device)
-                newEvent = Event(packet, otherDev, "RECEIVE", 
+                newEvent = Event(packet, otherDev, "RECEIVE",
                                  event.time + link.delay, event.flow)
                 self.insertEvent(newEvent)
 
@@ -230,7 +230,7 @@ class Simulator:
             # Router receives packet
             if isinstance(event.handler, Router):
                 router = event.handler
-            
+
                 if(isinstance(event.packet, RoutingPacket)):
                     updated = router.handleRoutingPacket(event.packet)
                     if(updated):
@@ -263,7 +263,7 @@ class Simulator:
                     host = event.handler
                     host.receive(event.packet)
 
-                    isDropped = event.flow.receiveAcknowledgement(event.packet. event.time, self.tcp_type)
+                    isDropped = event.flow.receiveAcknowledgement(event.packet, event.time, self.tcp_type)
                     print "HOST EXPECT: " + str(event.flow.window_lower) + \
                           " TIME: " + str(event.time)
                     #  ^ This will update the packet index that it will be
@@ -273,7 +273,7 @@ class Simulator:
                     ####################################### ????
                     ##### Push in new GENERATEPACKS... #### ???? is this done?
                     ####################################### ????
-                    
+
                     # If the packet was dropped, we will do SELECTIVE RESEND (Fast retransmit)
                     # and only resend the dropped packet. Otherwise, we send packets based on the
                     # updated window parameters (done in TCP Reno).
@@ -340,7 +340,7 @@ class Simulator:
                     event.time, event.flow)
             self.insertEvent(newEvent)
 
-        # In the case of dropped packets, this will start. 
+        # In the case of dropped packets, this will start.
         # We are only resending the dropped packet.
         elif event.type == "RESEND":
             newPacket = event.flow.packets[event.flow.window_lower]
@@ -350,7 +350,7 @@ class Simulator:
             # it was dropped.
             newPacket.start_time = event.time
             newPacket.total_delay = 0
-            newPacket.data_size = constants.DATA_SIZE 
+            newPacket.data_size = constants.DATA_SIZE
             newPacket.type = "DATA"
             newPacket.curr = None
             newPacket.src = event.flow.src
@@ -381,12 +381,12 @@ class Simulator:
 
                 if self.tcp_type == 'Reno':
                     event.flow.TCPReno(False)
-                
+
                 # IMPORTANT: TODO: TODO: How do we call TCPFast if a packet is dropped?? I don't think we can.
                 elif self.tcp_type == 'FAST':
                     #use 1 for bypass, just called to update window bounds accordingly
                     event.flow.TCPFast(0, 1)
-                
+
                 # Selecting the packet that has been timed out.
                 newPacket = event.flow.packets[packetIdx]
 
@@ -395,7 +395,7 @@ class Simulator:
                 # was dropped.
                 newPacket.start_time = event.time
                 newPacket.total_delay = 0
-                newPacket.data_size = constants.DATA_SIZE 
+                newPacket.data_size = constants.DATA_SIZE
                 newPacket.type = "DATA"
                 newPacket.curr = None
                 newPacket.src = event.flow.src
@@ -416,7 +416,7 @@ class Simulator:
             device = self.network.devices[device]
             if(isinstance(device, Router)):
                 device.initializeNeighborsTable()
-                
+
                 # Tell device to send routing table.
                 routingPackets = device.floodNeighbors()
 

@@ -247,7 +247,7 @@ class Host(Device):
 
 class Flow:
 
-    def __init__(self, flowID, src, dest, data_amt, flow_start):
+    def __init__(self, flowID, src, dest, data_amt, flow_start, theoRTT):
         """ Instantiates a Flow
 
         :param flowID: unique ID of flow
@@ -720,7 +720,7 @@ class Packet(object):
         self.data_size = data_size
         self.packetID = packetID
         self.curr = curr_loc
-		self.start_time = 0
+	self.start_time = 0
         self.total_delay = 0
 
     def updateLoc(self, newLoc):
