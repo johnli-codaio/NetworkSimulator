@@ -2,6 +2,10 @@
 # Trying not to use magic numbers
 QUEUE_DELAY = 1
 
+# Instead of logging every event, just log once in a discrete time interval.
+# Currently set to 20ms.
+LOG_TIME_INTERVAL = 0.02
+
 # EPSILON_DELAY: a small delay, so that the priority queue can sort events
 # properly. This delay is used for the time it takes to generate a
 # data packet and putting/sending into buffers

@@ -1,7 +1,6 @@
 import argparse
 import json
 import pprint
-import metrics
 import classes
 import constants
 import simulation
@@ -17,8 +16,31 @@ def main():
                         help = 'Store JSON file name')
 
     # options for graphing metrics
-    parser.add_argument('--m', dest = 'metrics',
+    metrics = parser.add_argument_group()
+    metrics.add_argument('--m', dest = 'metrics',
             action = 'store_true', help = 'Print graphs for metrics')
+
+    metricType = metrics.add_mutually_exclusive_group()
+
+    metricType.add_argument('--more', dest = 'log',
+            action = 'store_const', const = 'more',
+            help = 'Prints a timetrace from collecting\
+            all data. See constants.py for more info.\
+            Requires the --m argument.')
+
+    metricType.add_argument('--less', dest = 'log',
+            action = 'store_const', const = 'less',
+            help = 'Prints a timetrace from collecting\
+            a single datum per discrete time interval. See constants.py for more info.\
+            Requires the --m argument.')
+
+    metricType.add_argument('--avg', dest = 'log',
+            action = 'store_const', const = 'avg',
+            help = 'Prints an approximate (average) timetrace\
+            by collecting data over a discrete time interval. See constants.py\
+            for more info. Requires the --m argument.')
+
+
 
     # TODO: options for method of congestion control?
     #
@@ -26,6 +48,12 @@ def main():
     # TODO: options for verbose? for debugging purposes
 
     args = parser.parse_args()
+    if not args.log is None and not args.metrics:
+        print "--m argument is required."
+        return
+    elif args.log is None and args.metrics:
+        print "One of --m's subargments required."
+        return
 
     f = open(args.json_file_name)
 
@@ -108,7 +136,8 @@ def main():
 
     print "----------STARTING SIMULATION------------"
 
-    simulator = simulation.Simulator(network)
+
+    simulator = simulation.Simulator(network, args.log)
 
     # Have flows create sending events...
 
@@ -132,14 +161,7 @@ def main():
         print "DATA MADE: " + str(flow.data_amt)
 
     print "Simulation done!"
-
     simulator.done()
-
-    # log the metrics
-    if args.metrics:
-        m = metrics.Metrics()
-        m.run()
-
 
 
 if __name__ == "__main__":

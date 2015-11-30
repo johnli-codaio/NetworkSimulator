@@ -2,6 +2,7 @@ import Queue
 import datetime
 import time
 import constants
+import metrics
 from classes import *
 
 
@@ -28,10 +29,10 @@ class Event:
         :param EventTime: The time of the particular event, in milliseconds.
         :type EventTime: int
 
-        EventType               EventHandler        Packet
-        PUT                     (Link, Device)
+        EventType               EventHandler        Packet Type
+        PUT                     (Link, Device)      DATA, ACK
         SEND                    (Link, Device)      None
-        RECEIVE                 Device
+        RECEIVE                 Device              DATA, ACK
         GENERATEACK             None                None
         GENERATEPACK            None                None
 
@@ -45,7 +46,12 @@ class Event:
         self.flow = flow
 
     def __cmp__(self, other):
-        """Ordering by time.
+        """Orders events by (in order of importance):
+        1) The event's time.
+        2) Which event contains a packet. The event without a packet is
+            processed first, since these events are almost instantaneous.
+        3) Which event's packetID is smaller. Smaller packetIDs
+            were generated first, so process them first.
 
         :param other: The other event we're comparing with.
         :type other: Event
@@ -68,36 +74,35 @@ class Event:
 
 class Simulator:
     # TODO
-    def __init__(self, network):
+    def __init__(self, network, log):
         """ This will initialize the simulation with a Priority Queue
         that sorts based on time.
 
         :param network: Network system parsed from json
         :type network : Network
+
+        :param log: Data can be logged in different frequencies.
+            if 'less': data is to be logged once per
+            LOG_TIME_INTERVAL (roughly average).
+            if 'avg': data is to be collected over LOG_TIME_INTERVAL,
+            and then averaged for that time interval
+            if 'more': data is to be logged whenever relevant
+        :type log: str
         """
         self.q = Queue.PriorityQueue()
         self.network = network
 
-        # file for logging
-        # the current link rate
-        self.linkRateLog = open('linkRateLog.txt', 'w')
-
-        # the current buffer occupancy
-        self.bufferLog = open('bufferLog.txt', 'w')
-
-        # the current packet loss
-        self.packetLog = open('packetLog.txt', 'w')
-
-        # the current flow rate
-        self.flowRateLog = open('flowRateLog.txt', 'w')
-
-        # the current window size
-        self.windowLog = open('windowLog.txt', 'w')
-
-        # the current packet delay
-        self.delayLog = open('delayLog.txt', 'w')
-
-        self.counter = 0
+        if log:
+            self.metrics = metrics.Metrics(log)
+            # these constants are just indices
+            # for the respective time intervals
+            # of the data we want to log
+            self.LOG_LINKRATE = 0
+            self.LOG_BUFFERSIZE = 1
+            self.LOG_PACKETLOSS = 2
+            self.LOG_FLOWRATE = 3
+            self.LOG_WINDOWSIZE = 4
+            self.LOG_PACKETDELAY = 5
 
     def insertEvent(self, event):
         """ This will insert an event into the Priority Queue.
@@ -108,12 +113,14 @@ class Simulator:
         self.q.put(event)
 
     def done(self):
-        self.linkRateLog.close()
-        self.bufferLog.close()
-        self.packetLog.close()
-        self.flowRateLog.close()
-        self.windowLog.close()
-        self.delayLog.close()
+        """ Called when the simulation is finished. If metrics
+        were recorded, this closes
+        the files that log data for the useful metrics (e.g. link rate),
+        so the file ends with EOF.
+
+        """
+        if self.metrics:
+            self.metrics.done()
 
     def processEvent(self):
         """Pops and processes event from queue."""
@@ -152,6 +159,12 @@ class Simulator:
             # is the buffer full? you can put a packet in
             if not link.linkBuffer.bufferFullWith(event.packet):
                 device.sendToLink(link, event.packet)
+
+                if self.metrics:
+                    # log the size of the buffer. log in the number of packets, and in seconds
+                    self.metrics.logMetric(event.time / constants.s_to_ms,
+                            link.linkBuffer.occupancy / constants.DATA_SIZE, self.LOG_BUFFERSIZE)
+
                 newEvent = Event(None, (link, device), "SEND", event.time, event.flow)
                 self.insertEvent(newEvent)
             else: # packet dropped!!
@@ -183,8 +196,9 @@ class Simulator:
                     self.insertEvent(newEvent)
 
                 # log the link rate. Log these in seconds, and in Mbps
-                self.linkRateLog.write(str(event.time / constants.s_to_ms)
-                        + " " + str(link.currentRateMbps(None)) + "\n")
+                if self.metrics:
+                    self.metrics.logMetric(event.time / constants.s_to_ms, 
+                            link.currentRateMbps(None), self.LOG_LINKRATE)
 
             else:
                 print "LINK FULL: Packet " + link.linkBuffer.peek().packetID + \
@@ -207,7 +221,6 @@ class Simulator:
                 self.insertEvent(newEvent)
 
             # Host
-
             elif isinstance(event.handler, Host):
                 if(event.packet.type == "DATA"):
                     host = event.handler
@@ -226,6 +239,12 @@ class Simulator:
 
 
                     isDropped = event.flow.receiveAcknowledgement(event.packet)
+                    # log the current window size here, since the size
+                    # may be updated
+                    if self.metrics:
+                        self.metrics.logMetric(event.time / constants.s_to_ms, 
+                                event.flow.getWindowSize(), self.LOG_WINDOWSIZE)
+
                     print "HOST EXPECT: " + str(event.flow.window_lower) + \
                           " TIME: " + str(event.time)
                     #  ^ This will update the packet index that it will be
@@ -236,9 +255,8 @@ class Simulator:
                     ##### Push in new GENERATEPACKS... ####
                     #######################################
 
-                    
-                    if isDropped == False:
 
+                    if isDropped == False:
                         increment = 1
                         print str(event.flow.packets_index)
                         print str(event.flow.window_upper)
@@ -281,6 +299,10 @@ class Simulator:
             if(newPacket == None):
                 return
 
+            # logs when a new packet is created. This will be used
+            # for packet delay
+            newPacket.time = event.time
+
             print "Packet to be sent: " + newPacket.packetID
             host = newPacket.src
             link = host.getLink()
@@ -293,12 +315,14 @@ class Simulator:
         elif event.type == "RESEND":
             newPacket = event.flow.packets[event.flow.window_lower]
 
-            # Resetting this packet to the original attributes
-            newPacket.data_size = constants.DATA_SIZE 
+            # Resetting this packet to the original attributes, except
+            # the packet's time created.
+            newPacket.data_size = constants.DATA_SIZE
             newPacket.type = "DATA"
             newPacket.curr = None
             newPacket.src = event.flow.src
             newPacket.dest = event.flow.dest
+            newPacket.time = event.time
 
             host = newPacket.src
             link = host.getLink()
@@ -317,12 +341,14 @@ class Simulator:
 
             if isAcked == False:
                 newPacket = event.flow.packets[packetIdx]
-                # Resetting this packet to the original attributes
-                newPacket.data_size = constants.DATA_SIZE 
+                # Resetting this packet to the original attributes, except
+                # the packet's time created.
+                newPacket.data_size = constants.DATA_SIZE
                 newPacket.type = "DATA"
                 newPacket.curr = None
                 newPacket.src = event.flow.src
                 newPacket.dest = event.flow.dest
+                newPacket.time = event.time
 
                 host = newPacket.src
                 link = host.getLink()
