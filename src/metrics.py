@@ -104,8 +104,12 @@ class Metrics:
             + str(value) + "\n")
 
     def linkRate(self, fig):
-        time, linkRate = np.loadtxt('linkRateLog.txt', delimiter=' ',
-                usecols = (0, 1), unpack = True)
+        try:
+            time, linkRate = np.loadtxt('linkRateLog.log', delimiter=' ',
+                    usecols = (0, 1), unpack = True)
+        except ValueError as e:
+            print str(e) + " for link rate"
+            return
 
 
         ax1 = fig.add_subplot(311)
@@ -123,8 +127,12 @@ class Metrics:
         ax1.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
     def bufferOccupancy(self, fig):
-        time, buffer = np.loadtxt('bufferLog.txt', delimiter=' ',
-                usecols = (0, 1), unpack = True)
+        try:
+            time, buffer = np.loadtxt('bufferLog.log', delimiter=' ',
+                    usecols = (0, 1), unpack = True)
+        except ValueError as e:
+            print str(e) + " for buffer occupancy"
+            return
 
         ax2 = fig.add_subplot(312)
 
@@ -142,8 +150,12 @@ class Metrics:
 
 
     def packetLoss(self, fig):
-        time, packetLoss = np.loadtxt('packetLog.txt', delimiter=' ',
-                usecols = (0, 1), unpack = True)
+        try:
+            time, packetLoss = np.loadtxt('packetLog.log', delimiter=' ',
+                    usecols = (0, 1), unpack = True)
+        except ValueError as e:
+            print str(e) + " for packet loss"
+            return
 
         ax3 = fig.add_subplot(313)
 
@@ -160,8 +172,12 @@ class Metrics:
         ax3.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
     def flowRate(self, fig):
-        time, flowRate = np.loadtxt('flowRateLog.txt', delimiter=' ',
-                usecols = (0, 1), unpack = True)
+        try:
+            time, flowRate = np.loadtxt('flowRateLog.log', delimiter=' ',
+                    usecols = (0, 1), unpack = True)
+        except ValueError as e:
+            print str(e) + " for flow rate"
+            return
 
         ax4 = fig.add_subplot(311)
 
@@ -178,8 +194,12 @@ class Metrics:
         ax4.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
     def windowSize(self, fig):
-        time, windowSize = np.loadtxt('windowLog.txt', delimiter=' ',
-                usecols = (0, 1), unpack = True)
+        try:
+            time, windowSize = np.loadtxt('windowLog.log', delimiter=' ',
+                    usecols = (0, 1), unpack = True)
+        except ValueError as e:
+            print str(e) + " for window size"
+            return
 
         ax5 = fig.add_subplot(312)
 
@@ -197,8 +217,12 @@ class Metrics:
 
 
     def packetDelay(self, fig):
-        time, packetDelay = np.loadtxt('packetLog.txt', delimiter=' ',
-                usecols = (0, 1), unpack = True)
+        try:
+            time, packetDelay = np.loadtxt('packetLog.log', delimiter=' ',
+                    usecols = (0, 1), unpack = True)
+        except ValueError as e:
+            print str(e) + " for packet delay"
+            return
 
         ax6 = fig.add_subplot(313)
 
@@ -220,11 +244,15 @@ class Metrics:
         fig2 = plt.figure(figsize=(10, 6))
         self.linkRate(fig)
         self.bufferOccupancy(fig)
-        # self.packetLoss(fig)
-        # self.flowRate(fig2)
+        self.packetLoss(fig)
+        self.flowRate(fig2)
         self.windowSize(fig2)
-        # self.packetDelay(fig2)
+        self.packetDelay(fig2)
         fig.subplots_adjust(left = 0.08, right = 0.87, hspace = 0.78)
+        fig2.subplots_adjust(left = 0.08, right = 0.87, hspace = 0.78)
 
         plt.show()
 
+if __name__ == "__main__":
+    metric = Metrics('avg')
+    metric.run()

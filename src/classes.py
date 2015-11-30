@@ -653,10 +653,10 @@ class Link:
                 self.linkBuffer.get()
                 self.incrRate(packet)
                 if(device == self.device1):
-                    print "Sending a packet from device 1 to 2"
+                    # print "Sending a packet from device 1 to 2"
                     self.dev1todev2 = True
                 else:
-                    print "Sending a packet from device 2 to 1"
+                    # print "Sending a packet from device 2 to 1"
 
                     self.dev1todev2 = False
                 return packet

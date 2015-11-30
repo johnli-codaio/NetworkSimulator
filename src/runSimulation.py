@@ -52,6 +52,10 @@ def main():
             by collecting data over a discrete time interval. See constants.py\
             for more info. Requires the --m argument.')
 
+    parser.add_argument('--v', '-v', action = 'store_true', 
+            dest = 'verbose',
+            help = 'verbose: prints out information about events,\
+            event time, and number of elements in priority queue')
 
     # TODO: options for verbose? for debugging purposes
 
@@ -65,10 +69,11 @@ def main():
 
     f = open(args.json_file_name)
 
-    print "JSON DATA:"
     parsed_data = json.loads(f.read())
-    print "Parsed:"
-    pprint.pprint(parsed_data)
+    if args.verbose:
+        print "JSON DATA:"
+        print "Parsed:"
+        pprint.pprint(parsed_data)
 
     devices = {}
     links = {}
@@ -124,23 +129,25 @@ def main():
     simulator.genRoutTable()
     print simulator.q.empty()
     while not simulator.q.empty():
-        print "processing one event"
-        simulator.processEvent()
+        result = simulator.processEvent()
+        if args.verbose:
+            print "processing one event\n" + str(result)
 
-    print "------------NETWORK------------"
-    print "----------DEVICE DETAILS----------"
-    for device_name in devices:
-        print devices[device_name]
+    if args.verbose:
+        print "------------NETWORK------------"
+        print "----------DEVICE DETAILS----------"
+        for device_name in devices:
+            print devices[device_name]
 
-    print "----------LINK DETAILS----------"
-    for link_name in links:
-        print links[link_name]
+        print "----------LINK DETAILS----------"
+        for link_name in links:
+            print links[link_name]
 
-    print "----------FLOW DETAILS----------"
-    for flow_name in flows:
-        print flows[flow_name]
+        print "----------FLOW DETAILS----------"
+        for flow_name in flows:
+            print flows[flow_name]
 
-    print "----------STARTING SIMULATION------------"
+        print "----------STARTING SIMULATION------------"
 
     # Have flows create sending events...
     for flow_name in flows:
@@ -153,8 +160,9 @@ def main():
         simulator.insertEvent(newGenEvent)
 
     while not simulator.q.empty():
-        print "QUEUE SIZE: " + str(simulator.q.qsize())
-        simulator.processEvent()
+        result = simulator.processEvent()
+        if args.verbose:
+            print "QUEUE SIZE: " + str(simulator.q.qsize()) + "\n" + str(result)
 
     for flow_name in flows:
         flow = flows[flow_name]
