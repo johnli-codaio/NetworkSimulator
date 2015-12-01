@@ -209,8 +209,9 @@ class Simulator:
                 newEvent = Event(None, (link, device), "SEND", event.time, event.flow)
                 self.insertEvent(newEvent)
             else: # packet dropped!!
+                print "asdf"
                 result += "Packet " + str(event.packet.packetID) + " dropped\
-                        at time " + str(event.time) + "\n"
+                        at time " + str(event.time) + " at " + str(link) + "\n"
 
         elif event.type == "SEND":
             # Processes a link to send.
