@@ -78,23 +78,19 @@ class Event:
 
 class Simulator:
     # TODO
-    def __init__(self, network, log, TCP_type):
+    def __init__(self, network, TCP_type, metric):
         """ This will initialize the simulation with a Priority Queue
         that sorts based on time.
 
         :param network: Network system parsed from json
         :type network : Network
 
-        :param log: Data can be logged in different frequencies.
-            if 'less': data is to be logged once per
-            LOG_TIME_INTERVAL (roughly average).
-            if 'avg': data is to be collected over LOG_TIME_INTERVAL,
-            and then averaged for that time interval
-            if 'more': data is to be logged whenever relevant
-        :type log: str
-
         :param TCP_type: Which TCP congestion control to use.
         :type TCP_type : str
+
+        :param metric: The class responsible for logging all metrics.
+            Can be None, if no data is to be logged.
+        :type metric: Metrics
         """
         self.q = Queue.PriorityQueue()
         self.network = network
@@ -103,18 +99,17 @@ class Simulator:
         #keeps track of the first time a packet is acknowledged
         self.first_time = 0
 
-
-        if log:
-            self.metrics = metrics.Metrics(log)
-            # these constants are just indices
-            # for the respective time intervals
-            # of the data we want to log
-            self.LOG_LINKRATE = 0
-            self.LOG_BUFFERSIZE = 1
-            self.LOG_PACKETLOSS = 2
-            self.LOG_FLOWRATE = 3
-            self.LOG_WINDOWSIZE = 4
-            self.LOG_PACKETDELAY = 5
+        self.metrics = metric
+        print self.metrics
+        # these constants are just indices
+        # for the respective time intervals
+        # of the data we want to log
+        self.LOG_LINKRATE = 0
+        self.LOG_BUFFERSIZE = 1
+        self.LOG_PACKETLOSS = 2
+        self.LOG_FLOWRATE = 0
+        self.LOG_WINDOWSIZE = 1
+        self.LOG_PACKETDELAY = 2
 
     def insertEvent(self, event):
         """ This will insert an event into the Priority Queue.
@@ -201,14 +196,24 @@ class Simulator:
             if not link.linkBuffer.bufferFullWith(event.packet):
                 device.sendToLink(link, event.packet)
 
+                # log the size of the buffer. log in the number of packets, and in seconds
                 if self.metrics:
-                    # log the size of the buffer. log in the number of packets, and in seconds
                     self.metrics.logMetric(event.time / constants.s_to_ms,
-                            link.linkBuffer.occupancy / constants.DATA_SIZE, self.LOG_BUFFERSIZE)
+                            link.linkBuffer.occupancy / constants.DATA_SIZE,
+                            self.LOG_BUFFERSIZE, link.linkID)
+
+                # a packet hasn't been dropped, so log it
+                if self.metrics:
+                    self.metrics.logMetric(event.time / constants.s_to_ms,
+                            0, self.LOG_PACKETLOSS, link.linkID)
 
                 newEvent = Event(None, (link, device), "SEND", event.time, event.flow)
                 self.insertEvent(newEvent)
             else: # packet dropped!!
+                # log that a single packet has been dropped
+                if self.metrics:
+                    self.metrics.logMetric(event.time / constants.s_to_ms,
+                            1, self.LOG_PACKETLOSS, link.linkID)
                 result += "Packet " + str(event.packet.packetID) + " dropped\
                         at time " + str(event.time) + "\n"
 
@@ -236,7 +241,8 @@ class Simulator:
                 # log the link rate. Log these in seconds, and in Mbps
                 if self.metrics:
                     self.metrics.logMetric(event.time / constants.s_to_ms,
-                            link.currentRateMbps(None), self.LOG_LINKRATE)
+                            link.currentRateMbps(None),
+                            self.LOG_LINKRATE, link.linkID)
 
             else:
                 result += "LINK FULL: Packet " + link.linkBuffer.peek().packetID + \
@@ -290,7 +296,8 @@ class Simulator:
                     # may be updated
                     if self.metrics:
                         self.metrics.logMetric(event.time / constants.s_to_ms,
-                                event.flow.getWindowSize(), self.LOG_WINDOWSIZE)
+                                event.flow.getWindowSize(),
+                                self.LOG_WINDOWSIZE, event.flow.flowID)
 
 
                     result += "HOST EXPECT: " + str(event.flow.window_lower) + \
@@ -310,12 +317,9 @@ class Simulator:
                         # this is a packet delay, so log it
                         if self.metrics:
                             self.metrics.logMetric(event.time / constants.s_to_ms,
-                                    event.flow.actualRTT, self.LOG_PACKETDELAY)
+                                    event.flow.actualRTT,
+                                    self.LOG_PACKETDELAY, event.flow.flowID)
 
-                        # a packet hasn't been dropped, so log it
-                        if self.metrics:
-                            self.metrics.logMetric(event.time / constants.s_to_ms,
-                                    0, self.LOG_PACKETLOSS)
 
                         if self.first_time == 0:
                             # TCP Fast initialization event, which should happen only the first time a packet is acknowledged
@@ -337,10 +341,6 @@ class Simulator:
                             increment = increment + 1
 
                     else:
-                        # log that a single packet has been dropped
-                        if self.metrics:
-                            self.metrics.logMetric(event.time / constants.s_to_ms,
-                                    1, self.LOG_PACKETLOSS)
 
                         newEvent = Event(None, None, "RESEND", event.time + constants.EPSILON_DELAY, event.flow)
                         self.insertEvent(newEvent)
@@ -384,7 +384,7 @@ class Simulator:
             if self.metrics:
                 rate = link.currentRateMbps(None)
                 self.metrics.logMetric(event.time / constants.s_to_ms,
-                        rate, self.LOG_FLOWRATE)
+                        rate, self.LOG_FLOWRATE, event.flow.flowID)
 
             # Send the event to put this packet onto the link.
             newEvent = Event(newPacket, (link, host), "PUT",
