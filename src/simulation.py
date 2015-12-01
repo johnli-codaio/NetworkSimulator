@@ -212,10 +212,11 @@ class Simulator:
             else: # packet dropped!!
                 # log that a single packet has been dropped
                 if self.metrics:
+                    print "dropped"
                     self.metrics.logMetric(event.time / constants.s_to_ms,
                             1, self.LOG_PACKETLOSS, link.linkID)
                 result += "Packet " + str(event.packet.packetID) + " dropped\
-                        at time " + str(event.time) + "\n"
+                        at time " + str(event.time) + " by " + str(link) + "\n"
 
         elif event.type == "SEND":
             # Processes a link to send.
@@ -341,6 +342,7 @@ class Simulator:
                             increment = increment + 1
 
                     else:
+                        # print "Some packet dropped"
 
                         newEvent = Event(None, None, "RESEND", event.time + constants.EPSILON_DELAY, event.flow)
                         self.insertEvent(newEvent)

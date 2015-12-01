@@ -39,7 +39,7 @@ class Metrics:
         self.CURRENT_TIME_INTERVAL = [
                 [0, constants.LOG_TIME_INTERVAL, 0, 0],
                 [0, constants.LOG_TIME_INTERVAL, 0, 0],
-                [0, constants.LOG_TIME_INTERVAL, 0, 0],
+                [0, constants.LOG_TIME_INTERVAL, 0, 0]
         ]
 
         # container containing relevant for all the links/flows AS we log
@@ -48,12 +48,20 @@ class Metrics:
         # ACCUMULATED so far
         self.totalData = {}
         for link in links:
-            self.logData[str(link)] = self.CURRENT_TIME_INTERVAL
+            self.logData[str(link)] = [
+                [0, constants.LOG_TIME_INTERVAL, 0, 0],
+                [0, constants.LOG_TIME_INTERVAL, 0, 0],
+                [0, constants.LOG_TIME_INTERVAL, 0, 0]
+            ]
             self.totalData[str(link)] = [open(str(link) + '_linkRate.log', 'w'),
                     open(str(link) + '_bufferOccupancy.log', 'w'),
                     open(str(link) + '_packetLoss.log', 'w')]
         for flow in flows:
-            self.logData[str(flow)] = self.CURRENT_TIME_INTERVAL
+            self.logData[str(flow)] = [
+                [0, constants.LOG_TIME_INTERVAL, 0, 0],
+                [0, constants.LOG_TIME_INTERVAL, 0, 0],
+                [0, constants.LOG_TIME_INTERVAL, 0, 0]
+            ]
             self.totalData[str(flow)] = [open(str(flow) + '_flowRate.log', 'w'),
                     open(str(flow) + '_windowSize.log', 'w'),
                     open(str(flow) + '_packetDelay.log', 'w')]
@@ -81,12 +89,12 @@ class Metrics:
                 # if there were no previous events, don't log anything
                 count = metricType[type][3]
                 if count > 0:
-                    data = metricType[type][2] \
-                        / count
+                    data = metricType[type][2] / count
                     # if this is a packet loss, don't average it. Just
                     # return the total number of packets dropped during this period
-                    if 'L' in ID and type == 2:
-                        data = metricType[type][2]
+                    # if 'L' in ID and type == 2:
+                    #     print "dropped", time, value, type, ID
+                    #     pass
                     metricFileData[type].write(str(upperTimeInterval)
                         + " " + str(data) + "\n")
 
@@ -100,7 +108,7 @@ class Metrics:
                 # reset
                 metricType[type][2] = 0
                 metricType[type][3] = 0
-            # update the aggregate buffer link found so far
+            # update the aggregate found so far
             metricType[type][2] \
                 += value
             metricType[type][3] \
