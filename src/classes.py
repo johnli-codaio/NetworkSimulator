@@ -442,6 +442,7 @@ class Flow:
             self.resending = False
             if tcp_type == 'Reno':
                 self.TCPReno(True)
+                
             elif tcp_type == 'FAST': #still have to update window bounds
                 self.window_upper = floor(self.window_size) + self.window_lower - 1
 
@@ -530,7 +531,7 @@ class Flow:
         print "Window size: " + str(self.window_size)
         print "Window Upper: " + str(self.window_upper)
 
-    def TCPFast(self, alpha, timeout):
+    def TCPFast(self, alpha):
         """ The actualRTT is calculated by subtracting event.time
             by the start time of the packet. The theoretical RTT of the
             packet is denoted in the "packet.total_delay" attribute.
@@ -541,18 +542,16 @@ class Flow:
             :param timeout : A constant we use to indicate if we bypass, 0 for no bypass, 1 for bypass
             :type timeout : int
         """
-        if timeout == 0:
-            print "theoRTT: " + str(self.theoRTT)
-            print "actualRTT: " + str(self.actualRTT)
-            newWindowSize = (self.theoRTT/self.actualRTT) * self.window_size + alpha
-            self.window_size = newWindowSize
 
-        self.window_upper = floor(self.window_size) + self.window_lower - 1 #TODO: Should the -1 be here or no??
+        print "theoRTT: " + str(self.theoRTT)
+        print "actualRTT: " + str(self.actualRTT)
+        newWindowSize = (self.theoRTT/self.actualRTT) * self.window_size + alpha
+        self.window_size = newWindowSize
+
+        self.window_upper = floor(self.window_size) + self.window_lower - 1 
 
         if(self.window_upper > len(self.packets) - 1):
             self.window_upper = len(self.packets) - 1
-            #i think the below line was a typo?
-            #self.window_upper = str(self.window_upper)
 
         print "Window size: " + str(self.window_size)
         print "Window Upper: " + str(self.window_upper)

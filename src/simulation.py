@@ -156,11 +156,11 @@ class Simulator:
             #(before, it was left as the last rtt received, which was deceiving)
             if event.flow.received_packet == False:
                 print "butt last_receieved_packet: " + str(event.flow.last_received_packet_start_time)
-                #TODO: TODO: TODO: figure out the appropriate value
+                #figure out the appropriate value
                 event.flow.actualRTT = event.time - event.flow.last_received_packet_start_time
 
 
-            event.flow.TCPFast(20, 0)
+            event.flow.TCPFast(20)
             print "tcp fast happened here"
             newEvent2 = Event(None, None, "UPDATEWINDOW", event.time + 20, event.flow)
             #reset the max RTT
@@ -231,9 +231,11 @@ class Simulator:
 
             # Router receives packet
             if isinstance(event.handler, Router):
+                print "is not host"
                 router = event.handler
 
                 if(isinstance(event.packet, RoutingPacket)):
+                    print "is router"
                     updated = router.handleRoutingPacket(event.packet)
                     if(updated):
                         # flood neighbors
@@ -246,11 +248,14 @@ class Simulator:
                             self.insertEvent(newEvent)
 
                 elif(isinstance(event.packet, DataPacket)):
+                    print "is data"
                     newLink = router.transferTo(event.packet)
 
                     newEvent = Event(event.packet, (newLink, router), "PUT",
                             event.time + constants.EPSILON_DELAY, event.flow)
                     self.insertEvent(newEvent)
+
+                print "ok"  
 
             # Host receives packet
             elif isinstance(event.handler, Host):
@@ -386,9 +391,11 @@ class Simulator:
                     event.flow.TCPReno(False)
 
                 # IMPORTANT: TODO: TODO: How do we call TCPFast if a packet is dropped?? I don't think we can.
-                elif self.tcp_type == 'FAST':
-                    #use 1 for bypass, just called to update window bounds accordingly
-                    event.flow.TCPFast(0, 1)
+                elif self.tcp_type == 'FAST':                           
+                    self.window_upper = floor(self.window_size) + self.window_lower - 1
+
+                    if(self.window_upper > len(self.packets) - 1):
+                        self.window_upper = len(self.packets) - 1
 
                 # Selecting the packet that has been timed out.
                 newPacket = event.flow.packets[packetIdx]
