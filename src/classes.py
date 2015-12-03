@@ -171,6 +171,10 @@ class Router(Device):
         #assert(isinstance(packet, RoutingPacket))
         updated = False
 
+        # Decrease the link rate size.
+        link = packet.curr
+        link.decrRate(packet)
+
         for device in packet.table:
             dist = packet.latency + packet.table[device][0]
 
@@ -380,8 +384,6 @@ class Flow:
         newPacket.total_delay = packet.total_delay
         return newPacket
 
-        return packet
-
     # TODO: Gotta refactor this.
     def receiveAcknowledgement(self, packet, currentTime, tcp_type):
         """ This will call TCPReno to update the window size depending on
@@ -424,20 +426,26 @@ class Flow:
         if self.packets[self.window_lower].packetID == packet.packetID:
             # Change variable to show a packet was received in TCPFast Cycle!
             self.received_packet = True
-            print "correct ack packet receieved"
+            print "ACK Packet " + str(packet.packetID) + " acknowledged."
             self.last_received_packet_start_time = packet.start_time
             ##############################################################
 
             self.data_acknowledged = self.data_acknowledged + constants.DATA_SIZE
             self.acksAcknowledged[packet.index] = True
 
-            if self.window_lower != len(self.packets) - 1:
-                while self.acksAcknowledged[self.window_lower] == True:
+            print "Window Lower: " + str(self.window_lower)
+
+            while (self.acksAcknowledged[self.window_lower] == True) and \
+                  (self.window_lower != len(self.packets) - 1):
+
+                if(self.acksAcknowledged[self.window_lower] == True):
 
                     if self.window_lower == len(self.packets) - 1:
                         pass
                     else:
                         self.window_lower = self.window_lower + 1
+
+
             self.error_counter = 0
             self.resending = False
             if tcp_type == 'Reno':
@@ -455,16 +463,13 @@ class Flow:
             # if we enter this loop as part of TCP-fast, something weird happens
             
             if self.acksAcknowledged[packet.index] == False:
+                self.received_packet = True
+                print "ACK Packet " + str(packet.packetID) + " acknowledged."
+                self.last_received_packet_start_time = packet.start_time
                 self.acksAcknowledged[packet.index] = True
                 self.data_acknowledged = self.data_acknowledged + constants.DATA_SIZE
                 if tcp_type == 'Reno':
                     self.TCPReno(True)
-                elif tcp_type == 'FAST':
-                    #still have to update window bounds
-                    self.window_upper = floor(self.window_size) + self.window_lower - 1
-
-                    if(self.window_upper > len(self.packets) - 1):
-                        self.window_upper = len(self.packets) - 1
 
         else:
             self.error_counter = self.error_counter + 1
@@ -472,16 +477,14 @@ class Flow:
             if self.acksAcknowledged[packet.index] == False:
                 self.acksAcknowledged[packet.index] = True
                 self.data_acknowledged = self.data_acknowledged + constants.DATA_SIZE
+                self.received_packet = True
+                print "ACK Packet " + str(packet.packetID) + " acknowledged."
+                self.last_received_packet_start_time = packet.start_time
 
             if(self.error_counter == 3):
                 #self.threshIndex = self.packets_index
                 if tcp_type == 'Reno':
                     self.TCPReno(False)
-                elif tcp_type == 'FAST':
-                    self.window_upper = floor(self.window_size) + self.window_lower - 1
-
-                    if(self.window_upper > len(self.packets) - 1):
-                        self.window_upper = len(self.packets) - 1
 
                 print "DROPPED PACKET " + self.packets[self.window_lower].packetID + \
                     "... GOBACKN.\n"
@@ -603,8 +606,6 @@ class Link:
         self.current_rate = 0 #BYTES
         self.linkBuffer = bufferQueue(buffer_size * constants.KB_TO_B)
 
-        self.dev1todev2 = None
-
         self.device1.attachLink(self)
         self.device2.attachLink(self)
 
@@ -648,27 +649,13 @@ class Link:
         :type device: Device
 
         """
-        # TODO: possibly refactor to not use try/except...
-        try:
-            packet = self.linkBuffer.peek()
-            if(not self.rateFullWith(packet)):
-                self.linkBuffer.get()
-                self.incrRate(packet)
-                if(device == self.device1):
-                    print "Sending a packet from device 1 to 2"
-                    self.dev1todev2 = True
-                else:
-                    print "Sending a packet from device 2 to 1"
-
-                    self.dev1todev2 = False
-                return packet
-                # possibly need to update packet location?
-            else:
-                # if isinstance(packet, Packet):
-                #     print "Packet ", packet.packetID, " not sent"
-                return None
-        except BufferError as e:
-            print e
+        packet = self.linkBuffer.peek()
+        if(not self.rateFullWith(packet)):
+            self.linkBuffer.get()
+            self.incrRate(packet)
+            return packet
+        else:
+            return None
 
     def putIntoBuffer(self, packet):
         """Puts packet into buffer.
@@ -724,7 +711,7 @@ class Packet(object):
         self.data_size = data_size
         self.packetID = packetID
         self.curr = curr_loc
-	self.start_time = 0
+        self.start_time = 0
         self.total_delay = 0
 
     def updateLoc(self, newLoc):
