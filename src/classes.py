@@ -122,7 +122,15 @@ class Device(object):
         :type packet: Packet
         """
         link.putIntoBuffer(packet)
-        packet.curr = link
+        packet.currLink = link
+
+        packet.currDev = self
+
+        if(link.device1 == packet.currDev):
+            packet.nextDev = link.device2
+        else:
+            packet.nextDev = link.device1
+
         packet.total_delay = packet.total_delay + link.delay
 
     def __str__(self):
@@ -172,7 +180,7 @@ class Router(Device):
         updated = False
 
         # Decrease the link rate size.
-        link = packet.curr
+        link = packet.currLink
         link.decrRate(packet)
 
         for device in packet.table:
@@ -209,7 +217,7 @@ class Router(Device):
         :param packet: packet that will be transferred
         :type packet: Packet
         """
-        prevLink = packet.curr
+        prevLink = packet.currLink
         prevLink.decrRate(packet)
 
         nextLink = self.rout_table[packet.dest][1]
@@ -238,13 +246,13 @@ class Host(Device):
 
         if(packet.data_type == "ACK"):
             # decrease the current link rate
-            link = packet.curr
+            link = packet.currLink
             link.decrRate(packet)
             print "Packet " + packet.packetID + " acknowledged by Host " + str(self.deviceID)
 
         elif(packet.data_type == "DATA"):
             # send an acknowledgment packet
-            link = packet.curr
+            link = packet.currLink
             link.decrRate(packet)
             print "Packet " + packet.packetID + " received by Host" + str(self.deviceID)
         # if packet is ROUTING, do nothing
@@ -526,6 +534,8 @@ class Flow:
         # Else, we will halve the window size, and reset the index of the packet.
         else:
             self.window_size = self.window_size / 2
+            if(self.window_size < 1):
+                self.window_size = 1
             self.window_upper = floor(self.window_size) + self.window_lower - 1
 
             if(self.window_upper > len(self.packets) - 1):
@@ -640,7 +650,7 @@ class Link:
         """
         return (self.rate <= self.currentRateMbps(packet))
 
-    def sendPacket(self, device):
+    def sendPacket(self):
         """Sends next packet in buffer queue corresponding to device along link.
         Returns packet if success, else None.
         Should only fail when there the link is at its maximum capacity.
@@ -664,6 +674,7 @@ class Link:
         :type packet : Packet
         """
 
+        print "Link " + str(self.linkID) + " with buffer size " + str(self.linkBuffer.occupancy)
         if(packet.data_size + self.linkBuffer.occupancy >
            self.linkBuffer.maxSize):
             print "Packet dropped"
@@ -710,7 +721,9 @@ class Packet(object):
         self.data_type = data_type # ROUT, ACK, DATA
         self.data_size = data_size
         self.packetID = packetID
-        self.curr = curr_loc
+        self.currLink = curr_loc
+        self.currDev = None
+        self.nextDev = None
         self.start_time = 0
         self.total_delay = 0
 
@@ -720,7 +733,7 @@ class Packet(object):
         :param newLoc: New location of the packet.
         :type newLoc: Device, Link
         """
-        self.curr = newLoc
+        self.currLink = newLoc
 
 
 class DataPacket(Packet):
