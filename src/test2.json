@@ -1,0 +1,81 @@
+{
+    "hosts": {"S1": {"links": "s1"},
+              "S2": {"links": "s2"},
+              "S3": {"links": "s3"},
+              "T1": {"links": "t1"},
+              "T2": {"links": "t2"},
+              "T3": {"links": "t3"}
+             },
+
+    "routers": {"R1": {"links": ["L1", "s1", "s2"]},
+                "R2": {"links": ["L1", "L2", "t2"]},
+                "R3": {"links": ["L2", "L3", "s3"]},
+                "R4": {"links": ["L3", "t1", "t3"]}
+               },
+
+    "links": {"L1": {"devices": ["R1", "R2"], 
+                     "link_rate": 10,
+                     "link_delay": 10,
+                     "link_buffer": 128
+                    },
+              "L2": {"devices": ["R2", "R3"],
+                     "link_rate": 10,
+                     "link_delay": 10,
+                     "link_buffer": 128
+                    },
+              "L3": {"devices": ["R3", "R4"],
+                     "link_rate": 10,
+                     "link_delay": 10,
+                     "link_buffer": 128
+                    },
+              "s1": {"devices": ["S1", "R1"],
+                     "link_rate": 12.5,
+                     "link_delay": 10,
+                     "link_buffer": 128
+                    },
+              "s2": {"devices": ["S2", "R1"],
+                     "link_rate": 12.5,
+                     "link_delay": 10,
+                     "link_buffer": 128
+                    },
+              "s3": {"devices": ["S3", "R3"],
+                     "link_rate": 12.5,
+                     "link_delay": 10,
+                     "link_buffer": 128
+                    },
+              "t1": {"devices": ["T1", "R4"],
+                     "link_rate": 12.5,
+                     "link_delay": 10,
+                     "link_buffer": 128
+                    },
+              "t2": {"devices": ["T2", "R2"],
+                     "link_rate": 12.5,
+                     "link_delay": 10,
+                     "link_buffer": 128
+                    },
+              "t3": {"devices": ["T3", "R4"],
+                     "link_rate": 12.5,
+                     "link_delay": 10,
+                     "link_buffer": 128
+                    }
+             },
+    "flows": {"F1": {"flow_src": "S1",
+                     "flow_dest": "T1",
+                     "data_amt": 35,
+                     "flow_start": 0.5,
+                     "theoRTT": 110 // WHAT IS THEORTT
+                    },
+              "F2": {"flow_src": "S2",
+                     "flow_dest": "T2",
+                     "data_amt": 15,
+                     "flow_start": 10,
+                     "theoRTT": 70 // WHAT IS THEORTT
+                    },
+              "F3": {"flow_src": "S3",
+                     "flow_dest": "T3",
+                     "data_amt": 30,
+                     "flow_start": 20,
+                     "theoRTT": 70 // WHAT IS THEORTT
+                    }
+             }
+}
