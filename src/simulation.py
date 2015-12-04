@@ -457,6 +457,7 @@ class Simulator:
 
                 if self.tcp_type == 'Reno':
                     event.flow.TCPReno(False)
+                    event.flow.timeOut()
 
                 # Selecting the packet that has been timed out.
                 newPacket = event.flow.packets[packetIdx]
