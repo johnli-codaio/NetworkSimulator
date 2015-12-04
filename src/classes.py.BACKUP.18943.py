@@ -307,8 +307,7 @@ class Flow:
         self.window_lower = 0
         self.window_counter = 0
         self.error_counter = 0
-        self.slow = True
-        self.slowThresh = 1000000
+
         self.resending = False
 
         # How much successfully sent.
@@ -522,20 +521,8 @@ class Flow:
             increases or decreases.
         """
 
-        if(self.slowThresh > self.window_size):
-            self.slow = True
-        else:
-            self.slow = False
-
         # If true, we increment window size slightly.
-        if boolean == True and self.slow == True:
-            self.window_size = self.window_size + 1
-            self.window_upper = floor(self.window_size) + self.window_lower - 1
-
-            if(self.window_upper > len(self.packets) - 1):
-                self.window_upper = len(self.packets) - 1
-
-        elif boolean == True and self.slow == False:
+        if boolean == True:
             self.window_size = self.window_size + float(1) / float(self.window_size)
             self.window_upper = floor(self.window_size) + self.window_lower - 1
 
@@ -543,25 +530,11 @@ class Flow:
                 self.window_upper = len(self.packets) - 1
 
         # Else, we will halve the window size, and reset the index of the packet.
-        elif boolean == False and self.slow == False:
-            self.window_size = self.window_size / 2
-            if(self.window_size < 2):
-                self.window_size = 2
-            self.window_upper = floor(self.window_size) + self.window_lower - 1
-
-            if(self.window_upper > len(self.packets) - 1):
-                self.window_upper = len(self.packets) - 1
-
         else:
             self.window_size = self.window_size / 2
-
-            if(self.window_size < 2):
-                self.window_size = 2
-
-            self.slowThresh = self.window_size
+            if(self.window_size < 1):
+                self.window_size = 1
             self.window_upper = floor(self.window_size) + self.window_lower - 1
-
-            self.slow = True
 
             if(self.window_upper > len(self.packets) - 1):
                 self.window_upper = len(self.packets) - 1
@@ -598,9 +571,6 @@ class Flow:
     def getWindowSize(self):
         return self.window_size
 
-    def timeOut(self):
-        self.window_size = 1
-        self.slowThresh = 1000000
 
 class Link:
 
@@ -686,6 +656,29 @@ class Link:
         :type device: Device
 
         """
+<<<<<<< HEAD
+        # TODO: possibly refactor to not use try/except...
+        try:
+            packet = self.linkBuffer.peek()
+            if(not self.rateFullWith(packet)):
+                self.linkBuffer.get()
+                self.incrRate(packet)
+                if(device == self.device1):
+                    # print "Sending a packet from device 1 to 2"
+                    self.dev1todev2 = True
+                else:
+                    # print "Sending a packet from device 2 to 1"
+
+                    self.dev1todev2 = False
+                return packet
+                # possibly need to update packet location?
+            else:
+                # if isinstance(packet, Packet):
+                #     print "Packet ", packet.packetID, " not sent"
+                return None
+        except BufferError as e:
+            print e
+=======
         packet = self.linkBuffer.peek()
         if(not self.rateFullWith(packet)):
             self.linkBuffer.get()
@@ -693,6 +686,7 @@ class Link:
             return packet
         else:
             return None
+>>>>>>> 4ba29dcb57dd5cce8748e0231570a9a6b7a57017
 
     def putIntoBuffer(self, packet):
         """Puts packet into buffer.

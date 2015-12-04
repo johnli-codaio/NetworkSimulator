@@ -122,15 +122,7 @@ class Device(object):
         :type packet: Packet
         """
         link.putIntoBuffer(packet)
-        packet.currLink = link
-
-        packet.currDev = self
-
-        if(link.device1 == packet.currDev):
-            packet.nextDev = link.device2
-        else:
-            packet.nextDev = link.device1
-
+        packet.curr = link
         packet.total_delay = packet.total_delay + link.delay
 
     def __str__(self):
@@ -179,10 +171,6 @@ class Router(Device):
         #assert(isinstance(packet, RoutingPacket))
         updated = False
 
-        # Decrease the link rate size.
-        link = packet.currLink
-        link.decrRate(packet)
-
         for device in packet.table:
             dist = packet.latency + packet.table[device][0]
 
@@ -217,7 +205,7 @@ class Router(Device):
         :param packet: packet that will be transferred
         :type packet: Packet
         """
-        prevLink = packet.currLink
+        prevLink = packet.curr
         prevLink.decrRate(packet)
 
         nextLink = self.rout_table[packet.dest][1]
@@ -246,13 +234,13 @@ class Host(Device):
 
         if(packet.data_type == "ACK"):
             # decrease the current link rate
-            link = packet.currLink
+            link = packet.curr
             link.decrRate(packet)
             print "Packet " + packet.packetID + " acknowledged by Host " + str(self.deviceID)
 
         elif(packet.data_type == "DATA"):
             # send an acknowledgment packet
-            link = packet.currLink
+            link = packet.curr
             link.decrRate(packet)
             print "Packet " + packet.packetID + " received by Host" + str(self.deviceID)
         # if packet is ROUTING, do nothing
@@ -307,8 +295,7 @@ class Flow:
         self.window_lower = 0
         self.window_counter = 0
         self.error_counter = 0
-        self.slow = True
-        self.slowThresh = 1000000
+
         self.resending = False
 
         # How much successfully sent.
@@ -391,6 +378,8 @@ class Flow:
         newPacket.total_delay = packet.total_delay
         return newPacket
 
+        return packet
+
     # TODO: Gotta refactor this.
     def receiveAcknowledgement(self, packet, currentTime, tcp_type):
         """ This will call TCPReno to update the window size depending on
@@ -433,31 +422,23 @@ class Flow:
         if self.packets[self.window_lower].packetID == packet.packetID:
             # Change variable to show a packet was received in TCPFast Cycle!
             self.received_packet = True
-            print "ACK Packet " + str(packet.packetID) + " acknowledged."
             self.last_received_packet_start_time = packet.start_time
             ##############################################################
 
             self.data_acknowledged = self.data_acknowledged + constants.DATA_SIZE
             self.acksAcknowledged[packet.index] = True
 
-            print "Window Lower: " + str(self.window_lower)
-
-            while (self.acksAcknowledged[self.window_lower] == True) and \
-                  (self.window_lower != len(self.packets) - 1):
-
-                if(self.acksAcknowledged[self.window_lower] == True):
+            if self.window_lower != len(self.packets) - 1:
+                while self.acksAcknowledged[self.window_lower] == True:
 
                     if self.window_lower == len(self.packets) - 1:
                         pass
                     else:
                         self.window_lower = self.window_lower + 1
-
-
             self.error_counter = 0
             self.resending = False
             if tcp_type == 'Reno':
                 self.TCPReno(True)
-                
             elif tcp_type == 'FAST': #still have to update window bounds
                 self.window_upper = floor(self.window_size) + self.window_lower - 1
 
@@ -470,13 +451,16 @@ class Flow:
             # if we enter this loop as part of TCP-fast, something weird happens
             
             if self.acksAcknowledged[packet.index] == False:
-                self.received_packet = True
-                print "ACK Packet " + str(packet.packetID) + " acknowledged."
-                self.last_received_packet_start_time = packet.start_time
                 self.acksAcknowledged[packet.index] = True
                 self.data_acknowledged = self.data_acknowledged + constants.DATA_SIZE
                 if tcp_type == 'Reno':
                     self.TCPReno(True)
+                elif tcp_type == 'FAST':
+                    #still have to update window bounds
+                    self.window_upper = floor(self.window_size) + self.window_lower - 1
+
+                    if(self.window_upper > len(self.packets) - 1):
+                        self.window_upper = len(self.packets) - 1
 
         else:
             self.error_counter = self.error_counter + 1
@@ -484,14 +468,16 @@ class Flow:
             if self.acksAcknowledged[packet.index] == False:
                 self.acksAcknowledged[packet.index] = True
                 self.data_acknowledged = self.data_acknowledged + constants.DATA_SIZE
-                self.received_packet = True
-                print "ACK Packet " + str(packet.packetID) + " acknowledged."
-                self.last_received_packet_start_time = packet.start_time
 
             if(self.error_counter == 3):
                 #self.threshIndex = self.packets_index
                 if tcp_type == 'Reno':
                     self.TCPReno(False)
+                elif tcp_type == 'FAST':
+                    self.window_upper = floor(self.window_size) + self.window_lower - 1
+
+                    if(self.window_upper > len(self.packets) - 1):
+                        self.window_upper = len(self.packets) - 1
 
                 print "DROPPED PACKET " + self.packets[self.window_lower].packetID + \
                     "... GOBACKN.\n"
@@ -522,20 +508,8 @@ class Flow:
             increases or decreases.
         """
 
-        if(self.slowThresh > self.window_size):
-            self.slow = True
-        else:
-            self.slow = False
-
         # If true, we increment window size slightly.
-        if boolean == True and self.slow == True:
-            self.window_size = self.window_size + 1
-            self.window_upper = floor(self.window_size) + self.window_lower - 1
-
-            if(self.window_upper > len(self.packets) - 1):
-                self.window_upper = len(self.packets) - 1
-
-        elif boolean == True and self.slow == False:
+        if boolean == True:
             self.window_size = self.window_size + float(1) / float(self.window_size)
             self.window_upper = floor(self.window_size) + self.window_lower - 1
 
@@ -543,25 +517,9 @@ class Flow:
                 self.window_upper = len(self.packets) - 1
 
         # Else, we will halve the window size, and reset the index of the packet.
-        elif boolean == False and self.slow == False:
-            self.window_size = self.window_size / 2
-            if(self.window_size < 2):
-                self.window_size = 2
-            self.window_upper = floor(self.window_size) + self.window_lower - 1
-
-            if(self.window_upper > len(self.packets) - 1):
-                self.window_upper = len(self.packets) - 1
-
         else:
             self.window_size = self.window_size / 2
-
-            if(self.window_size < 2):
-                self.window_size = 2
-
-            self.slowThresh = self.window_size
             self.window_upper = floor(self.window_size) + self.window_lower - 1
-
-            self.slow = True
 
             if(self.window_upper > len(self.packets) - 1):
                 self.window_upper = len(self.packets) - 1
@@ -569,7 +527,7 @@ class Flow:
         print "Window size: " + str(self.window_size)
         print "Window Upper: " + str(self.window_upper)
 
-    def TCPFast(self, alpha):
+    def TCPFast(self, alpha, timeout):
         """ The actualRTT is calculated by subtracting event.time
             by the start time of the packet. The theoretical RTT of the
             packet is denoted in the "packet.total_delay" attribute.
@@ -580,16 +538,18 @@ class Flow:
             :param timeout : A constant we use to indicate if we bypass, 0 for no bypass, 1 for bypass
             :type timeout : int
         """
+        if timeout == 0:
+            print "theoRTT: " + str(self.theoRTT)
+            print "actualRTT: " + str(self.actualRTT)
+            newWindowSize = (self.theoRTT/self.actualRTT) * self.window_size + alpha
+            self.window_size = newWindowSize
 
-        print "theoRTT: " + str(self.theoRTT)
-        print "actualRTT: " + str(self.actualRTT)
-        newWindowSize = (self.theoRTT/self.actualRTT) * self.window_size + alpha
-        self.window_size = newWindowSize
-
-        self.window_upper = floor(self.window_size) + self.window_lower - 1 
+        self.window_upper = floor(self.window_size) + self.window_lower - 1 #TODO: Should the -1 be here or no??
 
         if(self.window_upper > len(self.packets) - 1):
             self.window_upper = len(self.packets) - 1
+            #i think the below line was a typo?
+            #self.window_upper = str(self.window_upper)
 
         print "Window size: " + str(self.window_size)
         print "Window Upper: " + str(self.window_upper)
@@ -598,9 +558,6 @@ class Flow:
     def getWindowSize(self):
         return self.window_size
 
-    def timeOut(self):
-        self.window_size = 1
-        self.slowThresh = 1000000
 
 class Link:
 
@@ -643,6 +600,8 @@ class Link:
         self.current_rate = 0 #BYTES
         self.linkBuffer = bufferQueue(buffer_size * constants.KB_TO_B)
 
+        self.dev1todev2 = None
+
         self.device1.attachLink(self)
         self.device2.attachLink(self)
 
@@ -677,7 +636,7 @@ class Link:
         """
         return (self.rate <= self.currentRateMbps(packet))
 
-    def sendPacket(self):
+    def sendPacket(self, device):
         """Sends next packet in buffer queue corresponding to device along link.
         Returns packet if success, else None.
         Should only fail when there the link is at its maximum capacity.
@@ -686,13 +645,27 @@ class Link:
         :type device: Device
 
         """
-        packet = self.linkBuffer.peek()
-        if(not self.rateFullWith(packet)):
-            self.linkBuffer.get()
-            self.incrRate(packet)
-            return packet
-        else:
-            return None
+        # TODO: possibly refactor to not use try/except...
+        try:
+            packet = self.linkBuffer.peek()
+            if(not self.rateFullWith(packet)):
+                self.linkBuffer.get()
+                self.incrRate(packet)
+                if(device == self.device1):
+                    # print "Sending a packet from device 1 to 2"
+                    self.dev1todev2 = True
+                else:
+                    # print "Sending a packet from device 2 to 1"
+
+                    self.dev1todev2 = False
+                return packet
+                # possibly need to update packet location?
+            else:
+                # if isinstance(packet, Packet):
+                #     print "Packet ", packet.packetID, " not sent"
+                return None
+        except BufferError as e:
+            print e
 
     def putIntoBuffer(self, packet):
         """Puts packet into buffer.
@@ -701,7 +674,6 @@ class Link:
         :type packet : Packet
         """
 
-        print "Link " + str(self.linkID) + " with buffer size " + str(self.linkBuffer.occupancy)
         if(packet.data_size + self.linkBuffer.occupancy >
            self.linkBuffer.maxSize):
             print "Packet dropped"
@@ -748,10 +720,8 @@ class Packet(object):
         self.data_type = data_type # ROUT, ACK, DATA
         self.data_size = data_size
         self.packetID = packetID
-        self.currLink = curr_loc
-        self.currDev = None
-        self.nextDev = None
-        self.start_time = 0
+        self.curr = curr_loc
+	self.start_time = 0
         self.total_delay = 0
 
     def updateLoc(self, newLoc):
@@ -760,7 +730,7 @@ class Packet(object):
         :param newLoc: New location of the packet.
         :type newLoc: Device, Link
         """
-        self.currLink = newLoc
+        self.curr = newLoc
 
 
 class DataPacket(Packet):
