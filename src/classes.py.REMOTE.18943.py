@@ -40,7 +40,7 @@ class bufferQueue:
         return packet
 
     def currentSize(self):
-        """ Returns the current size of the buffer in terms of bytes
+        """ Returns the current size of the buffer in terms of memory
         """
         return self.occupancy
 
@@ -277,6 +277,9 @@ class Flow:
         :param flow_start: Time flow begins (in ms)
         :type flow_start: float
 
+        :param inTransit: List of packet ID's in transit at the moment.
+        :type inTransit: List<int>
+
         :param window_size: Window size in packets
         :type window_size: int
 
@@ -290,7 +293,6 @@ class Flow:
         self.src = src
         self.dest = dest
         self.data_amt = data_amt * constants.MB_TO_KB * constants.KB_TO_B
-        self.flow_start = flow_start * constants.s_to_ms
         self.current_amt = 0
         self.flow_start = flow_start * constants.s_to_ms
         self.theoRTT = theoRTT
@@ -352,7 +354,7 @@ class Flow:
 
     def selectDataPacket(self):
         """ When we call SELECTPACK events, we
-            just send in the next packet that can be sent in the
+            just send in the next packet that can be sent in the 
             array. (This is tracked by packets_index).
         """
 
@@ -362,7 +364,7 @@ class Flow:
 
         else:
             ## TODO: Refactor so that we're just taking packets out of an array.
-            ## We want to create all the packets before hand.
+            ## We want to create all the packets before hand. 
             ## So, we'll probably need a new event like "Initialize" or something
             ## To initialize the flow packet.
             packet = self.packets[self.packets_index]
@@ -401,7 +403,7 @@ class Flow:
 
         # Updates the expected ack packet id.
 
-        # If the ACK ID matches the host's expected ACK ID, then
+        # If the ACK ID matches the host's expected ACK ID, then 
         # we increment the hosts expected ACK ID by one.
         print "Host expects: " + self.packets[self.window_lower].packetID
         print "Host received: " + packet.packetID
@@ -501,23 +503,23 @@ class Flow:
 
         print "Window counter: " + str(self.window_counter)
         return False
-
+            
     # Congestion Control:
-    # IDEA: We have an array of all the packets. We also will store
-    #       several congestion control variables:
+    # IDEA: We have an array of all the packets. We also will store 
+    #       several congestion control variables: 
     #           packet index
-    #           ackPacket index.
+    #           ackPacket index. 
     #
-    #       The ackPacket index will only change if a host receives a
+    #       The ackPacket index will only change if a host receives a 
     #       correct ackPacket in order. The packet counter will change
     #       after a packet is sent.
-    #
+    #       
     #       We will be detecting lost packets (controlled by the host)
     #       by comparing the ackPacket id to the expected ack packet id.
     #       Then, we will update things accordingly.
 
     def TCPReno(self, boolean):
-        """ The boolean that will determine if window size
+        """ The boolean that will determine if window size 
             increases or decreases.
         """
 
@@ -569,6 +571,7 @@ class Flow:
 
 
     def getWindowSize(self):
+        #TODO
         return self.window_size
 
 
@@ -744,7 +747,7 @@ class DataPacket(Packet):
         :type packetID: string
 
         :param index: The packet (in #) that was sent by flow.
-        :type index: int
+        :type index: int 
 
         :param src: Source (device) of packet
         :type src: Device
@@ -760,11 +763,6 @@ class DataPacket(Packet):
 
         :param curr_loc: Link where the packet is.
         :type curr_loc: Link
-
-        :param time: time when the packet is created.
-        We refer to 'creation time' as when the packet is selected
-        from a list of initialized packets, i.e., the result of selectDataPacket().
-        :type time: float
         """
         super(DataPacket, self).__init__(src, dest, data_type, data_size, packetID, curr_loc)
         self.index = index
