@@ -157,7 +157,7 @@ def main():
     simulator = simulation.Simulator(network, args.tcp_type, met)
 
     # gen routing table
-    print "generating routing table"
+    print "Static routing:"
 
     simulator.staticRouting()
     while not simulator.q.empty():
@@ -190,6 +190,9 @@ def main():
 
         newGenEvent = simulation.Event(None, None, "INITIALIZEFLOW", timer, flow)
         simulator.insertEvent(newGenEvent)
+
+    newDynamicRoutingEvent = simulation.Event(None, None, "REROUT", constants.REROUT_TIME, None)
+    simulator.insertEvent(newDynamicRoutingEvent)
 
     while not simulator.q.empty():
         result = simulator.processEvent()

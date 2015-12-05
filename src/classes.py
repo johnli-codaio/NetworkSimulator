@@ -81,6 +81,13 @@ class Network:
         self.links = links
         self.flows = flows
 
+    def allFlowsComplete(self):
+        for flowID in self.flows:
+            flow = self.flows[flowID]
+            if(not flow.flowComplete()):
+                return False
+        return True
+
 
 class Device(object):
 
@@ -176,9 +183,12 @@ class Router(Device):
         self.rout_table[self] = (0, None)
 
     def initializeRerout(self):
-        for device in self.table:
-            nextLink = self.table[device][1]
-            self.table[device] = (constants.ROUTING_INF, nextLink)
+        for device in self.rout_table:
+            if device == self:
+                self.rout_table[device] = (0, None)
+
+            nextLink = self.rout_table[device][1]
+            self.rout_table[device] = (constants.ROUTING_INF, nextLink)
 
     def handleRoutingPacket(self, packet, current_time = None):
         '''Updates routing table if appropriate. Returns if router should send table to neighbors.'''
@@ -190,22 +200,27 @@ class Router(Device):
         link = packet.currLink
         link.decrRate(packet)
 
+        comingFrom = packet.link.otherDevice(self)
+
         for device in packet.table:
-            if(packet.current_time):
-                latency = current_time - packet.current_time
-            else:
-                latency = packet.latency
-
-            dist = latency + packet.table[device][0]
-
-            if(device not in self.rout_table):
-                self.rout_table[device] = (dist, packet.link)
+            if(device == comingFrom and packet.timestamp):
+                self.rout_table[device] = (current_time - packet.timestamp, packet.link)
                 updated = True
+
             else:
-                mindist = self.rout_table[device][0]
-                if(dist < mindist):
+                if(packet.timestamp):
+                    dist = current_time - packet.timestamp + packet.table[device][0]
+                else:
+                    dist = packet.latency + packet.table[device][0]
+
+                if(device not in self.rout_table):
                     self.rout_table[device] = (dist, packet.link)
                     updated = True
+                else:
+                    mindist = self.rout_table[device][0]
+                    if(dist < mindist):
+                        self.rout_table[device] = (dist, packet.link)
+                        updated = True
 
         # Router sends table to adjacent neighbors if recently updated or just updated
         temp = self.routing_table_recently_updated
@@ -218,8 +233,10 @@ class Router(Device):
         # send current table to all neighbors
 
         res = []
-        for link in self.links:
+        for link in self.links:            
             otherDev = link.otherDevice(self)
+            if(isinstance(otherDev, Host)):
+                continue
 
             if(dynamic):
                 routPacket = RoutingPacket(self, otherDev, link, constants.ROUTING_SIZE, 
@@ -365,7 +382,7 @@ class Flow:
 
         while(self.current_amt < self.data_amt):
             packetID = self.flowID + "token" + str(index)
-            packet = DataPacket(index, self.src, self.dest, "DATA", constants.DATA_SIZE, packetID, None)
+            packet = DataPacket(index, self.src, self.dest, "DATA", constants.DATA_SIZE, packetID, None, flow = self)
             self.packets.append(packet)
             self.acksAcknowledged.append(False)
             self.current_amt = self.current_amt + constants.DATA_SIZE
@@ -414,7 +431,8 @@ class Flow:
         """
         start_time = packet.start_time
         total_delay = packet.total_delay
-        newPacket = DataPacket(packet.index, packet.dest, packet.src, "ACK", constants.ACK_SIZE, packet.packetID, None)
+        newPacket = DataPacket(packet.index, packet.dest, packet.src, "ACK", constants.ACK_SIZE, 
+                               packet.packetID, None, flow = self)
         newPacket.start_time = start_time
         newPacket.total_delay = packet.total_delay
         return newPacket
@@ -685,6 +703,12 @@ class Link:
         s += "\n"
         return s
 
+
+    def calcExpectedLatency(self):
+        return self.delay + (self.linkBuffer.currentSize + self.current)
+
+
+
     def otherDevice(self, device):
         """Returns the other device
 
@@ -769,6 +793,7 @@ class Link:
                 (constants.MB_TO_KB * constants.KB_TO_B / constants.B_to_b) /
                 (self.delay / constants.s_to_ms))
 
+
 class Packet(object):
     def __init__(self, src, dest, data_type, data_size, packetID, curr_loc):
         self.src = src
@@ -781,6 +806,8 @@ class Packet(object):
         self.nextDev = None
         self.start_time = 0
         self.total_delay = 0
+
+        self.flow = None
 
     def updateLoc(self, newLoc):
         """ Updates the location of the packet.
@@ -795,7 +822,7 @@ class DataPacket(Packet):
     # Captures both acknowledgement packets and actual data packets
     # Differentiated from routing packets
 
-    def __init__(self, index, src, dest, data_type, data_size, packetID, curr_loc):
+    def __init__(self, index, src, dest, data_type, data_size, packetID, curr_loc, flow):
         """ Instatiates a Packet.
 
         :param packetID: ID of the packet.
@@ -826,12 +853,16 @@ class DataPacket(Packet):
         """
         super(DataPacket, self).__init__(src, dest, data_type, data_size, packetID, curr_loc)
         self.index = index
+        self.flow = flow
 
 class RoutingPacket(Packet):
 
-    def __init__(self, src, dest, link, data_size, table, packetID, curr_loc, timestamp = None):
+    def __init__(self, src, dest, link, data_size, table, packetID, curr_loc, timestamp = None, latency = None):
         super(RoutingPacket, self).__init__(src, dest, "ROUT", constants.ROUTING_SIZE, packetID, curr_loc)
-        self.latency = link.delay
+        if(latency):
+            self.latency = latency
+        else:
+            self.latency = link.delay
         self.table = table
         self.timestamp = timestamp
 

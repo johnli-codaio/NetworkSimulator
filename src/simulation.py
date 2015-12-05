@@ -57,22 +57,24 @@ class Event:
         :type other: Event
         """
 
-        if(isinstance(self.packet, RoutingPacket)):
-            return cmp(self.time, other.time)
+        return cmp(self.time, other.time)
 
-        if self.time != other.time:
-            return cmp(self.time, other.time)
-        else:
-            if self.packet is None and other.packet is None:
-                return 0
-            elif self.packet is None:
-                return -1
-            elif other.packet is None:
-                return 1
-            elif len(other.packet.packetID) != len(self.packet.packetID):
-                return cmp(len(self.packet.packetID), len(other.packet.packetID))
-            else:
-                return cmp(self.packet.packetID, other.packet.packetID)
+        # if(isinstance(self.packet, RoutingPacket)):
+        #     return cmp(self.time, other.time)
+
+        # if self.time != other.time:
+        #     return cmp(self.time, other.time)
+        # else:
+        #     if self.packet is None and other.packet is None:
+        #         return 0
+        #     elif self.packet is None:
+        #         return -1
+        #     elif other.packet is None:
+        #         return 1
+        #     elif len(other.packet.packetID) != len(self.packet.packetID):
+        #         return cmp(len(self.packet.packetID), len(other.packet.packetID))
+        #     else:
+        #         return cmp(self.packet.packetID, other.packet.packetID)
 
 
 
@@ -159,10 +161,32 @@ class Simulator:
                 increment = increment + 1
 
         elif event.type == "REROUT":
-            for device in self.network.devices:
+            result += "Initializing REROUT at time " + str(event.time) + "\n"
 
-                
+            result += "CURRENT TABLES: \n"
+            for deviceID in self.network.devices:
+                if(isinstance(self.network.devices[deviceID], Router)):
+                    result += str(self.network.devices[deviceID])
 
+            for deviceID in self.network.devices:
+                device = self.network.devices[deviceID]
+                if(isinstance(device, Router)):
+                    device.initializeRerout()
+
+                    # Find what routing packets to send
+                    routingPackets = device.floodNeighbors(dynamic = True, 
+                                        current_time = event.time + constants.EPSILON_DELAY)
+
+                    for (pack, link) in routingPackets:
+                        newEvent3 = Event(pack, (link, device), "PUT", 
+                                    event.time + constants.EPSILON_DELAY, 
+                                    flow = None)
+                        self.insertEvent(newEvent3)
+
+            if(not self.network.allFlowsComplete()):
+                newEvent2 = Event(None, None, "REROUT", 
+                    event.time + constants.REROUT_TIME, None)
+                self.insertEvent(newEvent2)
 
 
         elif event.type == "UPDATEWINDOW":
@@ -221,7 +245,7 @@ class Simulator:
                     self.metrics.logMetric(event.time / constants.s_to_ms,
                             0, self.LOG_PACKETLOSS, link.linkID)
 
-                newEvent = Event(None, link, "SEND", event.time, event.flow)
+                newEvent = Event(None, link, "SEND", event.time, flow = None)
                 self.insertEvent(newEvent)
             else: # packet dropped!!
                 # log that a single packet has been dropped
@@ -253,7 +277,7 @@ class Simulator:
                 print "Sending " + packet.data_type + str(packet.packetID) + " into link " + str(link.linkID) + \
                   " to Device " + str(otherDev.deviceID) + " with destination " + str(packet.dest.deviceID) + " at time " + str(event.time)
                 newEvent = Event(packet, otherDev, "RECEIVE",
-                                 event.time + link.delay, event.flow)
+                                 event.time + link.delay, packet.flow)
                 self.insertEvent(newEvent)
 
                 # log the link rate. Log these in seconds, and in Mbps
@@ -264,10 +288,10 @@ class Simulator:
 
             else:
 
-                result += "LINK " + str(link.linkID) + " FULL: Packet " + link.linkBuffer.peek().data_type + link.linkBuffer.peek().packetID + \
-                      " Window Size " + str(event.flow.window_size) + " from " + link.linkBuffer.peek().currDev.deviceID + " with destination " + str(link.linkBuffer.peek().dest.deviceID) + " at time " + str(event.time)
+                # result += "LINK " + str(link.linkID) + " FULL: Packet " + link.linkBuffer.peek().data_type + link.linkBuffer.peek().packetID + \
+                #       " Window Size " + str(event.flow.window_size) + " from " + link.linkBuffer.peek().currDev.deviceID + " with destination " + str(link.linkBuffer.peek().dest.deviceID) + " at time " + str(event.time)
                 newEvent = Event(None, link, "SEND",
-                        event.time + constants.QUEUE_DELAY, event.flow)
+                        event.time + constants.QUEUE_DELAY, flow = None)
                 self.insertEvent(newEvent)
 
         elif event.type == "RECEIVE":
@@ -279,12 +303,15 @@ class Simulator:
                 router = event.handler
 
                 if(isinstance(event.packet, RoutingPacket)):
-                    updated = router.handleRoutingPacket(event.packet)
-                    if(updated):
+                    print "Handling RoutingPacket at time ", str(event.time)
+                    print "Packet's timestamp is ", event.packet.timestamp
+
+                    _continue = router.handleRoutingPacket(event.packet, event.time)
+                    if(_continue):
                         # flood neighbors
                         newPackets = router.floodNeighbors()
 
-                        for pack, link in newPackets:
+                        for (pack, link) in newPackets:
                             newEvent = Event(pack, (link, router),
                                              "PUT", event.time,
                                              flow = None)
@@ -379,6 +406,8 @@ class Simulator:
             # Processes a flow to generate an ACK.
 
             # Generate the new Ack Packet
+            print event.packet.packetID
+
             ackPacket = event.flow.generateAckPacket(event.packet)
             host = ackPacket.src
             link = host.getLink()
@@ -491,20 +520,15 @@ class Simulator:
 
 
     def staticRouting(self):
-        result = ""
-        result += "Generating routing tables"
-
         for device in self.network.devices:
-            result += str(device)
             device = self.network.devices[device]
             if(isinstance(device, Router)):
                 device.initializeNeighborsTable()
 
-                # Tell device to send routing table.
+                # Find what routing packets to send
                 routingPackets = device.floodNeighbors()
 
                 for pack, link in routingPackets:
                     newEvent = Event(pack, (link, device), "PUT", 0, flow = None)
                     self.insertEvent(newEvent)
-        return result
 
