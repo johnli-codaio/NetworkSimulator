@@ -351,8 +351,10 @@ class Flow:
 
     def flowComplete(self):
         """ Returns True if flow is done sending, False otherwise """
-
-        return
+        for s in self.acksAcknowledged:
+            if s == False:
+                return False
+        return True
 
     def initializePackets(self):
         """ We will create all the packets and put them into
