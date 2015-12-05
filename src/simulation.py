@@ -158,6 +158,12 @@ class Simulator:
                 self.insertEvent(newEvent)
                 increment = increment + 1
 
+        elif event.type == "REROUT":
+            for device in self.network.devices:
+
+                
+
+
 
         elif event.type == "UPDATEWINDOW":
             #if no new packets were receieved between now and last
@@ -172,7 +178,6 @@ class Simulator:
             event.flow.TCPFast(20)
             result += "tcp fast happened here\n"
 
-            newEvent2 = Event(None, None, "UPDATEWINDOW", event.time + 20, event.flow)
             #reset the max RTT
 
             event.flow.actualRTT = event.flow.theoRTT
@@ -181,7 +186,8 @@ class Simulator:
             event.flow.received_packet = False
 
             # Add next updatewindow to queue
-            if not self.q.empty():
+            if not event.flow.flowComplete():
+                newEvent2 = Event(None, None, "UPDATEWINDOW", event.time + 20, event.flow)
                 self.insertEvent(newEvent2)
 
         elif event.type == "PUT":
@@ -484,7 +490,7 @@ class Simulator:
         return result
 
 
-    def genRoutTable(self):
+    def staticRouting(self):
         result = ""
         result += "Generating routing tables"
 
