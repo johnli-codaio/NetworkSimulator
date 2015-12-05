@@ -349,6 +349,11 @@ class Flow:
         s += "\nFlow start time in ms is: " + str(self.flow_start)
         return s
 
+    def flowComplete(self):
+        """ Returns True if flow is done sending, False otherwise """
+
+        return
+
     def initializePackets(self):
         """ We will create all the packets and put them into
             an array.
