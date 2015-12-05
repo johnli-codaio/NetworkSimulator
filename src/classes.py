@@ -152,6 +152,8 @@ class Router(Device):
         self.rout_table = {}
         self.initializeNeighborsTable()
 
+        self.routing_table_recently_updated = True
+
     def __str__(self):
         s = super(Router, self).__str__()
         s += "Routing table: \n"
@@ -173,8 +175,13 @@ class Router(Device):
 
         self.rout_table[self] = (0, None)
 
-    def handleRoutingPacket(self, packet):
-        '''Updates routing table if appropriate. Returns whether table was updated.'''
+    def initializeRerout(self):
+        for device in self.table:
+            nextLink = self.table[device][1]
+            self.table[device] = (constants.ROUTING_INF, nextLink)
+
+    def handleRoutingPacket(self, packet, current_time = None):
+        '''Updates routing table if appropriate. Returns if router should send table to neighbors.'''
 
         #assert(isinstance(packet, RoutingPacket))
         updated = False
@@ -184,7 +191,12 @@ class Router(Device):
         link.decrRate(packet)
 
         for device in packet.table:
-            dist = packet.latency + packet.table[device][0]
+            if(packet.current_time):
+                latency = current_time - packet.current_time
+            else:
+                latency = packet.latency
+
+            dist = latency + packet.table[device][0]
 
             if(device not in self.rout_table):
                 self.rout_table[device] = (dist, packet.link)
@@ -195,9 +207,12 @@ class Router(Device):
                     self.rout_table[device] = (dist, packet.link)
                     updated = True
 
-        return updated
+        # Router sends table to adjacent neighbors if recently updated or just updated
+        temp = self.routing_table_recently_updated
+        self.routing_table_recently_updated = updated
+        return temp or updated
 
-    def floodNeighbors(self):
+    def floodNeighbors(self, dynamic = False, current_time = None):
         '''Returns array of tuples (packet, link) to send'''
 
         # send current table to all neighbors
@@ -205,7 +220,13 @@ class Router(Device):
         res = []
         for link in self.links:
             otherDev = link.otherDevice(self)
-            routPacket = RoutingPacket(self, otherDev, link, constants.ROUTING_SIZE,
+
+            if(dynamic):
+                routPacket = RoutingPacket(self, otherDev, link, constants.ROUTING_SIZE, 
+                                        self.rout_table, packetID = None, curr_loc = None,
+                                        timestamp = current_time)
+            else:
+                routPacket = RoutingPacket(self, otherDev, link, constants.ROUTING_SIZE,
                                        self.rout_table, packetID = None, curr_loc = None)
             
             res.append((routPacket, link))
@@ -801,10 +822,11 @@ class DataPacket(Packet):
 
 class RoutingPacket(Packet):
 
-    def __init__(self, src, dest, link, data_size, table, packetID, curr_loc):
+    def __init__(self, src, dest, link, data_size, table, packetID, curr_loc, timestamp = None):
         super(RoutingPacket, self).__init__(src, dest, "ROUT", constants.ROUTING_SIZE, packetID, curr_loc)
         self.latency = link.delay
         self.table = table
+        self.timestamp = timestamp
 
         # RoutingPackets only travel across one link before "dying"
         self.link = link

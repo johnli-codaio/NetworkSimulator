@@ -31,3 +31,6 @@ s_to_ms = float(1000)
 DATA_SIZE = 1024
 ACK_SIZE = 64
 ROUTING_SIZE = 8
+
+# For use when calculating routing tables. Equivalent to 100s delay 
+ROUTING_INF = 100000
