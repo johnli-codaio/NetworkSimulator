@@ -682,11 +682,11 @@ class Link:
         """
 
         self.linkID = linkID
-        self.rate = rate
+        self.maxRate = rate
         self.delay = delay
         self.device1 = device1
         self.device2 = device2
-        self.current_rate = 0 #BYTES
+        self.current_byte_size = 0 #BYTES
         self.linkBuffer = bufferQueue(buffer_size * constants.KB_TO_B)
 
         self.device1.attachLink(self)
@@ -705,7 +705,7 @@ class Link:
 
 
     def calcExpectedLatency(self):
-        return self.delay + (self.linkBuffer.currentSize + self.current)
+        return self.delay + (self.linkBuffer.currentSize * constants.QUEUE_DELAY)
 
 
 
@@ -727,7 +727,7 @@ class Link:
         :param packet: packet potentially to be sent out
         :type packet: Packet
         """
-        return (self.rate <= self.currentRateMbps(packet))
+        return (self.maxRate <= self.currentRateMbps(packet))
 
     def sendPacket(self):
         """Sends next packet in buffer queue corresponding to device along link.
@@ -766,7 +766,7 @@ class Link:
 
         :param packet : uses the size of the passed in packet.
         :type packet : Packet"""
-        self.current_rate -= packet.data_size
+        self.current_bytes_size -= packet.data_size
 
     def incrRate(self, packet):
         """Increase current rate by packet size.
@@ -774,7 +774,7 @@ class Link:
         :param packet : uses the size of the passed in packet.
         :type packet : Packet
         """
-        self.current_rate += packet.data_size
+        self.current_bytes_size += packet.data_size
 
     def currentRateMbps(self, packet):
         """Gets the link rate, in Mbps, if a packet were added.
@@ -784,12 +784,12 @@ class Link:
         :type packet: Packet
         """
         if packet:
-            return (float(self.current_rate + packet.data_size) /
+            return (float(self.current_bytes_size + packet.data_size) /
                 (constants.MB_TO_KB * constants.KB_TO_B / constants.B_to_b) /
                 (self.delay / constants.s_to_ms))
 
         else:
-            return (float(self.current_rate) /
+            return (float(self.current_bytes_size) /
                 (constants.MB_TO_KB * constants.KB_TO_B / constants.B_to_b) /
                 (self.delay / constants.s_to_ms))
 
