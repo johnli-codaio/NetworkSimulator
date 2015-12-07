@@ -144,8 +144,8 @@ class Simulator:
         result = ""
 
         # print "\n"
-        result += ("Popped event type: "
-                + str(event.type) + " at " +  str(event.time) + " ms\n")
+        result += "Popped event type: " \
+                + str(event.type) + " at " +  str(event.time) + " ms\n"
 
         if event.type == "INITIALIZEFLOW":
 
@@ -243,14 +243,11 @@ class Simulator:
                 # a packet hasn't been dropped, so log it
                 if self.metrics:
                     self.metrics.logMetric(event.time / constants.s_to_ms,
-                            0, self.LOG_PACKETLOSS, link.linkID)
-
-                newEvent = Event(None, link, "SEND", event.time, flow = None)
+                newEvent = Event(None, link, "SEND", event.time, event.flow)
                 self.insertEvent(newEvent)
             else: # packet dropped!!
                 # log that a single packet has been dropped
                 if self.metrics:
-                    print "dropped"
                     self.metrics.logMetric(event.time / constants.s_to_ms,
                             1, self.LOG_PACKETLOSS, link.linkID)
                 result += "Packet " + str(event.packet.packetID) + " dropped\
@@ -269,34 +266,43 @@ class Simulator:
             # If we can't pop from the
             # link's buffer, then we call another send event 1 ms later.
 
-            packet = link.sendPacket()
+            # If there is an empty buffer...
+            if len(link.linkBuffer.packets) != 0:
+                packet = link.sendPacket()
+
+                if(packet != None):
+                    # propagation time.
+                    propagationTime = (float(packet.data_size * constants.B_to_b) / (constants.KB_TO_B * constants.MB_TO_KB)) / link.maxRate
+
+                    otherDev = packet.nextDev
+                    print "Sending " + packet.data_type + str(packet.packetID) + " into link " + str(link.linkID) + \
+                      " to Device " + str(otherDev.deviceID) + " with destination " + str(packet.dest.deviceID) + " at time " + str(event.time)
+                    newEvent = Event(packet, otherDev, "RECEIVE",
+                                     event.time + propagationTime + link.delay, event.flow)
+                    self.insertEvent(newEvent)
 
 
-            if packet:
-                otherDev = packet.nextDev
-                print "Sending " + packet.data_type + str(packet.packetID) + " into link " + str(link.linkID) + \
-                  " to Device " + str(otherDev.deviceID) + " with destination " + str(packet.dest.deviceID) + " at time " + str(event.time)
-                newEvent = Event(packet, otherDev, "RECEIVE",
-                                 event.time + link.delay, packet.flow)
-                self.insertEvent(newEvent)
+                    # log the link rate. Log these in seconds, and in Mbps
+                    if self.metrics:
+                        self.metrics.logMetric(event.time / constants.s_to_ms,
+                                link.currentRateMbps(None),
+                                self.LOG_LINKRATE, link.linkID)
 
-                # log the link rate. Log these in seconds, and in Mbps
-                if self.metrics:
-                    self.metrics.logMetric(event.time / constants.s_to_ms,
-                            link.currentRateMbps(None),
-                            self.LOG_LINKRATE, link.linkID)
+               # else:
 
-            else:
-
-                # result += "LINK " + str(link.linkID) + " FULL: Packet " + link.linkBuffer.peek().data_type + link.linkBuffer.peek().packetID + \
-                #       " Window Size " + str(event.flow.window_size) + " from " + link.linkBuffer.peek().currDev.deviceID + " with destination " + str(link.linkBuffer.peek().dest.deviceID) + " at time " + str(event.time)
-                newEvent = Event(None, link, "SEND",
-                        event.time + constants.QUEUE_DELAY, flow = None)
-                self.insertEvent(newEvent)
+                #    result += "LINK " + str(link.linkID) + " FULL: Packet " + link.linkBuffer.peek().data_type + link.linkBuffer.peek().packetID + \
+                 #         " Window Size " + str(event.flow.window_size) + " from " + link.linkBuffer.peek().currDev.deviceID + " with destination " + str(link.linkBuffer.peek().dest.deviceID) + " at time " + str(event.time)
+                 #   newEvent = Event(None, link, "SEND",
+                  #          event.time + constants.QUEUE_DELAY, event.flow)
+                  #  self.insertEvent(newEvent)
+            #  else:
+             #   result += "LINK " + str(link.linkID) + " BUFFER EMPTY:" + \
+              #            " Window Size " + str(event.flow.window_size) '''
 
         elif event.type == "RECEIVE":
             # Processes a host/router action that would receive things.
             assert(isinstance(event.handler, Device))
+            sendLink = event.packet.currLink
 
             # Router receives packet
             if isinstance(event.handler, Router):
@@ -369,7 +375,7 @@ class Simulator:
                         # this is a packet delay, so log it
                         if self.metrics:
                             self.metrics.logMetric(event.time / constants.s_to_ms,
-                                    event.flow.actualRTT,
+                                    event.time - event.packet.start_time,
                                     self.LOG_PACKETDELAY, event.flow.flowID)
 
 
@@ -400,6 +406,9 @@ class Simulator:
                         timeoutEvent = Event(None, event.flow.window_lower, "TIMEOUT", event.time + constants.TIME_DELAY + constants.EPSILON_DELAY, event.flow)
                         self.insertEvent(timeoutEvent)
 
+            # Inserting another send event...
+            newSendEvent = Event(None, sendLink, "SEND", event.time, event.flow)
+            self.insertEvent(newSendEvent)
 
 
         elif event.type == "GENERATEACK":
@@ -520,7 +529,11 @@ class Simulator:
 
 
     def staticRouting(self):
+        result = ""
+        result += "Generating routing tables"
+
         for device in self.network.devices:
+            result += str(device)
             device = self.network.devices[device]
             if(isinstance(device, Router)):
                 device.initializeNeighborsTable()
@@ -531,4 +544,5 @@ class Simulator:
                 for pack, link in routingPackets:
                     newEvent = Event(pack, (link, device), "PUT", 0, flow = None)
                     self.insertEvent(newEvent)
+        return result
 

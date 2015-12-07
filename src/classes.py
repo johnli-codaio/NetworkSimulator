@@ -697,7 +697,7 @@ class Link:
         s = "Link ID is: " + str(self.linkID)
         s += "\nConnects devices: " + str(self.device1.deviceID) + " " + \
             str(self.device2.deviceID)
-        s += "\nLink rate: " + str(self.rate)
+        s += "\nLink rate: " + str(self.maxRate)
         s += "\nLink delay: " +  str(self.delay)
         s += "\nLink buffer size: " +  str(self.linkBuffer.maxSize)
         s += "\n"
@@ -766,7 +766,7 @@ class Link:
 
         :param packet : uses the size of the passed in packet.
         :type packet : Packet"""
-        self.current_bytes_size -= packet.data_size
+        self.current_byte_size -= packet.data_size
 
     def incrRate(self, packet):
         """Increase current rate by packet size.
@@ -774,7 +774,7 @@ class Link:
         :param packet : uses the size of the passed in packet.
         :type packet : Packet
         """
-        self.current_bytes_size += packet.data_size
+        self.current_byte_size += packet.data_size
 
     def currentRateMbps(self, packet):
         """Gets the link rate, in Mbps, if a packet were added.
@@ -784,12 +784,12 @@ class Link:
         :type packet: Packet
         """
         if packet:
-            return (float(self.current_bytes_size + packet.data_size) /
+            return (float(self.current_byte_size + packet.data_size) /
                 (constants.MB_TO_KB * constants.KB_TO_B / constants.B_to_b) /
                 (self.delay / constants.s_to_ms))
 
         else:
-            return (float(self.current_bytes_size) /
+            return (float(self.current_byte_size) /
                 (constants.MB_TO_KB * constants.KB_TO_B / constants.B_to_b) /
                 (self.delay / constants.s_to_ms))
 
