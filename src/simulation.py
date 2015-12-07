@@ -220,7 +220,6 @@ class Simulator:
             else: # packet dropped!!
                 # log that a single packet has been dropped
                 if self.metrics:
-                    print "dropped"
                     self.metrics.logMetric(event.time / constants.s_to_ms,
                             1, self.LOG_PACKETLOSS, link.linkID)
                 result += "Packet " + str(event.packet.packetID) + " dropped\
@@ -345,7 +344,7 @@ class Simulator:
                         # this is a packet delay, so log it
                         if self.metrics:
                             self.metrics.logMetric(event.time / constants.s_to_ms,
-                                    event.flow.actualRTT,
+                                    event.time - event.packet.start_time,
                                     self.LOG_PACKETDELAY, event.flow.flowID)
 
 

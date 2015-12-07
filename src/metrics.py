@@ -89,12 +89,11 @@ class Metrics:
                 # if there were no previous events, don't log anything
                 count = metricType[type][3]
                 if count > 0:
-                    data = metricType[type][2] / count
                     # if this is a packet loss, don't average it. Just
                     # return the total number of packets dropped during this period
-                    # if 'L' in ID and type == 2:
-                    #     print "dropped", time, value, type, ID
-                    #     pass
+                    data = metricType[type][2]
+                    if not ('L' in ID and type == 2):
+                        data = metricType[type][2] / count
                     metricFileData[type].write(str(upperTimeInterval)
                         + " " + str(data) + "\n")
 
