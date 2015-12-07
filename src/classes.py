@@ -106,7 +106,7 @@ class Device(object):
         :type neighbors: Array of Routers.
         """
         self.deviceID = deviceID
-        
+
         self.links = []
         self.neighbors = []
 
@@ -233,19 +233,19 @@ class Router(Device):
         # send current table to all neighbors
 
         res = []
-        for link in self.links:            
+        for link in self.links:
             otherDev = link.otherDevice(self)
             if(isinstance(otherDev, Host)):
                 continue
 
             if(dynamic):
-                routPacket = RoutingPacket(self, otherDev, link, constants.ROUTING_SIZE, 
+                routPacket = RoutingPacket(self, otherDev, link, constants.ROUTING_SIZE,
                                         self.rout_table, packetID = None, curr_loc = None,
                                         timestamp = current_time)
             else:
                 routPacket = RoutingPacket(self, otherDev, link, constants.ROUTING_SIZE,
                                        self.rout_table, packetID = None, curr_loc = None)
-            
+
             res.append((routPacket, link))
         return res
 
@@ -431,7 +431,7 @@ class Flow:
         """
         start_time = packet.start_time
         total_delay = packet.total_delay
-        newPacket = DataPacket(packet.index, packet.dest, packet.src, "ACK", constants.ACK_SIZE, 
+        newPacket = DataPacket(packet.index, packet.dest, packet.src, "ACK", constants.ACK_SIZE,
                                packet.packetID, None, flow = self)
         newPacket.start_time = start_time
         newPacket.total_delay = packet.total_delay
@@ -459,12 +459,12 @@ class Flow:
 
         print str(packet.index)
 
-        print "currentTime: " + str(currentTime) 
+        print "currentTime: " + str(currentTime)
         print "packet.start_time: " + str(packet.start_time)
         print "self.actual-RTT: " + str(self.actualRTT)
 
         ##### IMPORTANT NOTE #####
-        ### The way TCP-Fast is currently implemented, we 
+        ### The way TCP-Fast is currently implemented, we
         # use the highest rtt in the 20-ms period as the RTT, not the
         # last rtt. I'm not sure if this is correct.
         # TODO: TODO: Check with TAs
@@ -503,7 +503,7 @@ class Flow:
             self.resending = False
             if tcp_type == 'Reno':
                 self.TCPReno(True)
-                
+
             elif tcp_type == 'FAST': #still have to update window bounds
                 self.window_upper = floor(self.window_size) + self.window_lower - 1
 
@@ -512,9 +512,9 @@ class Flow:
 
         elif self.resending == True:
             # TODO: TODO:
-            # NOTE: I think there's something buggy here, since 
+            # NOTE: I think there's something buggy here, since
             # if we enter this loop as part of TCP-fast, something weird happens
-            
+
             if self.acksAcknowledged[packet.index] == False:
                 self.received_packet = True
                 print "ACK Packet " + str(packet.packetID) + " acknowledged."
@@ -632,7 +632,7 @@ class Flow:
         newWindowSize = (self.theoRTT/self.actualRTT) * self.window_size + alpha
         self.window_size = newWindowSize
 
-        self.window_upper = floor(self.window_size) + self.window_lower - 1 
+        self.window_upper = floor(self.window_size) + self.window_lower - 1
 
         if(self.window_upper > len(self.packets) - 1):
             self.window_upper = len(self.packets) - 1
@@ -816,6 +816,9 @@ class Packet(object):
         :type newLoc: Device, Link
         """
         self.currLink = newLoc
+
+    def recallFlowID(self):
+        return str(self.packetID)[:2]
 
 
 class DataPacket(Packet):

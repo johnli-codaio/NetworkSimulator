@@ -57,24 +57,24 @@ class Event:
         :type other: Event
         """
 
-        return cmp(self.time, other.time)
+        # return cmp(self.time, other.time)
 
-        # if(isinstance(self.packet, RoutingPacket)):
-        #     return cmp(self.time, other.time)
+        if(isinstance(self.packet, RoutingPacket)):
+            return cmp(self.time, other.time)
 
-        # if self.time != other.time:
-        #     return cmp(self.time, other.time)
-        # else:
-        #     if self.packet is None and other.packet is None:
-        #         return 0
-        #     elif self.packet is None:
-        #         return -1
-        #     elif other.packet is None:
-        #         return 1
-        #     elif len(other.packet.packetID) != len(self.packet.packetID):
-        #         return cmp(len(self.packet.packetID), len(other.packet.packetID))
-        #     else:
-        #         return cmp(self.packet.packetID, other.packet.packetID)
+        if self.time != other.time:
+            return cmp(self.time, other.time)
+        else:
+            if self.packet is None and other.packet is None:
+                return 0
+            elif self.packet is None:
+                return -1
+            elif other.packet is None:
+                return 1
+            elif len(other.packet.packetID) != len(self.packet.packetID):
+                return cmp(len(self.packet.packetID), len(other.packet.packetID))
+            else:
+                return cmp(self.packet.packetID, other.packet.packetID)
 
 
 
@@ -174,17 +174,17 @@ class Simulator:
                     device.initializeRerout()
 
                     # Find what routing packets to send
-                    routingPackets = device.floodNeighbors(dynamic = True, 
+                    routingPackets = device.floodNeighbors(dynamic = True,
                                         current_time = event.time + constants.EPSILON_DELAY)
 
                     for (pack, link) in routingPackets:
-                        newEvent3 = Event(pack, (link, device), "PUT", 
-                                    event.time + constants.EPSILON_DELAY, 
+                        newEvent3 = Event(pack, (link, device), "PUT",
+                                    event.time + constants.EPSILON_DELAY,
                                     flow = None)
                         self.insertEvent(newEvent3)
 
             if(not self.network.allFlowsComplete()):
-                newEvent2 = Event(None, None, "REROUT", 
+                newEvent2 = Event(None, None, "REROUT",
                     event.time + constants.REROUT_TIME, None)
                 self.insertEvent(newEvent2)
 
@@ -221,12 +221,14 @@ class Simulator:
             assert(isinstance(event.handler[1], Device))
             link = event.handler[0]
             device = event.handler[1]
+            if event.flow is None:
+                print "acb",event.packet.data_type, event.time,event.packet.packetID
 
 
             result += str(event.packet.data_type) + " " + str(event.packet.packetID) + "\n"
 
             print "Putting " + event.packet.data_type + str(event.packet.packetID) + " into link " + str(link.linkID) + \
-                  " from Device " + str(device.deviceID) + " at time " + str(event.time)
+                  " from Device " + str(device.deviceID) + " at time " + str(event.time) + str(event.flow)
 
 
             # is the buffer full? you can put a packet in
@@ -243,6 +245,7 @@ class Simulator:
                 # a packet hasn't been dropped, so log it
                 if self.metrics:
                     self.metrics.logMetric(event.time / constants.s_to_ms,
+                            0, self.LOG_PACKETLOSS, link.linkID)
                 newEvent = Event(None, link, "SEND", event.time, event.flow)
                 self.insertEvent(newEvent)
             else: # packet dropped!!
@@ -269,14 +272,23 @@ class Simulator:
             # If there is an empty buffer...
             if len(link.linkBuffer.packets) != 0:
                 packet = link.sendPacket()
+                # it's possible that there's a mismatch between
+                # a sending event and the appropriate type of packet.
+                # so check the packet's ID to see if originally
+                # had a flow
 
                 if(packet != None):
+                    packetflowID = packet.recallFlowID()
+                    for flow_name in self.network.flows:
+                        if flow_name == packetflowID:
+                            event.flow = self.network.flows[flow_name]
+                    print event.flow, packet.packetID, packetflowID
                     # propagation time.
                     propagationTime = (float(packet.data_size * constants.B_to_b) / (constants.KB_TO_B * constants.MB_TO_KB)) / link.maxRate
 
                     otherDev = packet.nextDev
                     print "Sending " + packet.data_type + str(packet.packetID) + " into link " + str(link.linkID) + \
-                      " to Device " + str(otherDev.deviceID) + " with destination " + str(packet.dest.deviceID) + " at time " + str(event.time)
+                      " to Device " + str(otherDev.deviceID) + " with destination " + str(packet.dest.deviceID) + " at time " + str(event.time) + str(event.flow)
                     newEvent = Event(packet, otherDev, "RECEIVE",
                                      event.time + propagationTime + link.delay, event.flow)
                     self.insertEvent(newEvent)
@@ -325,7 +337,7 @@ class Simulator:
 
                 elif(isinstance(event.packet, DataPacket)):
 
-                    print "Receiving " + event.packet.data_type + str(event.packet.packetID) + " to Router " + str(router.deviceID) + " at time " + str(event.time)
+                    print "Receiving " + event.packet.data_type + str(event.packet.packetID) + " to Router " + str(router.deviceID) + " at time " + str(event.time) + str(event.flow)
 
                     newLink = router.transferTo(event.packet)
 
@@ -418,10 +430,13 @@ class Simulator:
             print event.packet.packetID
 
             ackPacket = event.flow.generateAckPacket(event.packet)
+            if event.flow is None:
+                print "generating:",str(event.flow)
             host = ackPacket.src
             link = host.getLink()
 
             # Send the event to put this packet onto the link.
+            print "about to put ", ackPacket.packetID, event.time, event.flow
             newEvent = Event(ackPacket, (link, host), "PUT",
                     event.time, event.flow)
             self.insertEvent(newEvent)
