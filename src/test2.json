@@ -63,19 +63,19 @@
                      "flow_dest": "T1",
                      "data_amt": 35,
                      "flow_start": 0.5,
-                     "theoRTT": 110
+                     "theoRTT": 100
                     },
               "F2": {"flow_src": "S2",
                      "flow_dest": "T2",
                      "data_amt": 15,
                      "flow_start": 10,
-                     "theoRTT": 70
+                     "theoRTT": 60
                     },
               "F3": {"flow_src": "S3",
                      "flow_dest": "T3",
                      "data_amt": 30,
                      "flow_start": 20,
-                     "theoRTT": 70
+                     "theoRTT": 60
                     }
              }
 }
