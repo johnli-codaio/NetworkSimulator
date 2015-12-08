@@ -374,6 +374,8 @@ class Flow:
         # keeps track so that we can more accurately measure the RTT of non-returned packets
         self.last_received_packet_start_time = 0
 
+        self.packet_delay = 0
+
     def __str__(self):
         s = "Flow ID is: " + str(self.flowID)
         s += "\nSource is: " + str(self.src)
@@ -708,6 +710,8 @@ class Link:
         self.device1.attachLink(self)
         self.device2.attachLink(self)
 
+        self.isDropped = False
+
 
     def __str__(self):
         s = "Link ID is: " + str(self.linkID)
@@ -719,6 +723,12 @@ class Link:
         s += "\n"
         return s
 
+    def droppedPacket(self):
+        if self.isDropped:
+            # revert the boolean back because we've already dropped a packet
+            self.isDropped = False
+            return 1
+        return 0
 
     def calcExpectedLatency(self):
         return self.delay + (self.linkBuffer.currentSize() * constants.QUEUE_DELAY)

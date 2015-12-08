@@ -131,6 +131,38 @@ class Simulator:
         if self.metrics:
             self.metrics.done()
 
+    def logData(self, time):
+        for link_name in self.network.links:
+            link = self.network.links[link_name]
+            # log the size of the buffer. log in the number of packets, and in seconds
+            self.metrics.logMetric(time / constants.s_to_ms,
+                    link.linkBuffer.occupancy / constants.DATA_SIZE,
+                    self.LOG_BUFFERSIZE, link.linkID)
+            # log that a single packet has been dropped
+            self.metrics.logMetric(time / constants.s_to_ms,
+                    link.droppedPacket(), self.LOG_PACKETLOSS, link.linkID)
+            # log the link rate. Log these in seconds, and in Mbps
+            self.metrics.logMetric(time / constants.s_to_ms,
+                    link.currentRateMbps(None),
+                    self.LOG_LINKRATE, link.linkID)
+        for flow_name in self.network.flows:
+            flow = self.network.flows[flow_name]
+            # log the current window size here, since the size
+            # may be updated
+            self.metrics.logMetric(time / constants.s_to_ms,
+                    flow.getWindowSize(),
+                    self.LOG_WINDOWSIZE, flow.flowID)
+            # this is a packet delay, so log it
+            self.metrics.logMetric(time / constants.s_to_ms,
+                    flow.packet_delay,
+                    self.LOG_PACKETDELAY, flow.flowID)
+            # I think flow rate is really just the rate of the link
+            # that is attached to the source of the flow. So
+            # log the flow rate here.
+            rate = flow.src.getLink().currentRateMbps(None)
+            self.metrics.logMetric(time / constants.s_to_ms,
+                    rate, self.LOG_FLOWRATE, flow.flowID)
+
     def processEvent(self):
         """Pops and processes event from queue."""
 
@@ -220,9 +252,6 @@ class Simulator:
             assert(isinstance(event.handler[1], Device))
             link = event.handler[0]
             device = event.handler[1]
-            if event.flow is None:
-                print "acb",event.packet.data_type, event.time,event.packet.packetID
-
 
             result += str(event.packet.data_type) + " " + str(event.packet.packetID) + "\n"
 
@@ -234,24 +263,11 @@ class Simulator:
             if not link.linkBuffer.bufferFullWith(event.packet):
                 device.sendToLink(link, event.packet)
 
-
-                # log the size of the buffer. log in the number of packets, and in seconds
-                if self.metrics:
-                    self.metrics.logMetric(event.time / constants.s_to_ms,
-                            link.linkBuffer.occupancy / constants.DATA_SIZE,
-                            self.LOG_BUFFERSIZE, link.linkID)
-
-                # a packet hasn't been dropped, so log it
-                if self.metrics:
-                    self.metrics.logMetric(event.time / constants.s_to_ms,
-                            0, self.LOG_PACKETLOSS, link.linkID)
+                # a packet hasn't been dropped
                 newEvent = Event(None, link, "SEND", event.time, event.flow)
                 self.insertEvent(newEvent)
             else: # packet dropped!!
-                # log that a single packet has been dropped
-                if self.metrics:
-                    self.metrics.logMetric(event.time / constants.s_to_ms,
-                            1, self.LOG_PACKETLOSS, link.linkID)
+                link.isDropped = True
                 result += "Packet " + str(event.packet.packetID) + " dropped\
                         at time " + str(event.time) + " by " + str(link) + "\n"
 
@@ -293,11 +309,6 @@ class Simulator:
                     self.insertEvent(newEvent)
 
 
-                    # log the link rate. Log these in seconds, and in Mbps
-                    if self.metrics:
-                        self.metrics.logMetric(event.time / constants.s_to_ms,
-                                link.currentRateMbps(None),
-                                self.LOG_LINKRATE, link.linkID)
 
              #   else:
 
@@ -360,12 +371,7 @@ class Simulator:
                     host.receive(event.packet)
 
                     isDropped = event.flow.receiveAcknowledgement(event.packet, event.time, self.tcp_type)
-                    # log the current window size here, since the size
-                    # may be updated
-                    if self.metrics:
-                        self.metrics.logMetric(event.time / constants.s_to_ms,
-                                event.flow.getWindowSize(),
-                                self.LOG_WINDOWSIZE, event.flow.flowID)
+                    event.flow.packet_delay = event.time - event.packet.start_time
 
 
                     result += "HOST EXPECT: " + str(event.flow.window_lower) + \
@@ -382,11 +388,6 @@ class Simulator:
                     # and only resend the dropped packet. Otherwise, we send packets based on the
                     # updated window parameters (done in TCP Reno).
                     if isDropped == False:
-                        # this is a packet delay, so log it
-                        if self.metrics:
-                            self.metrics.logMetric(event.time / constants.s_to_ms,
-                                    event.time - event.packet.start_time,
-                                    self.LOG_PACKETDELAY, event.flow.flowID)
 
 
                         if self.first_time == 0:
@@ -455,14 +456,6 @@ class Simulator:
             result += "Packet to be sent: " + str(newPacket.data_type) + newPacket.packetID + " at time " + str(event.time)
             host = newPacket.src
             link = host.getLink()
-
-            # I think flow rate is really just the rate of the link
-            # that is attached to the source of the flow. So
-            # log the flow rate here.
-            if self.metrics:
-                rate = link.currentRateMbps(None)
-                self.metrics.logMetric(event.time / constants.s_to_ms,
-                        rate, self.LOG_FLOWRATE, event.flow.flowID)
 
             # Send the event to put this packet onto the link.
             newEvent = Event(newPacket, (link, host), "PUT",
@@ -538,6 +531,9 @@ class Simulator:
 
                 newEvent = Event(newPacket, (link, host), "PUT", event.time , event.flow)
                 self.insertEvent(newEvent)
+        # log all data, every time an event is done being processed.
+        if self.metrics:
+            self.logData(event.time)
         return result
 
 
