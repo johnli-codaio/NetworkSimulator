@@ -296,19 +296,15 @@ class Host(Device):
         :type packet: Packet
         """
 
-        print "Host " + self.deviceID + " received " + packet.data_type + "packet"
-
         if(packet.data_type == "ACK"):
             # decrease the current link rate
             link = packet.currLink
             link.decrRate(packet)
-            print "Packet " + packet.packetID + " acknowledged by Host " + str(self.deviceID)
 
         elif(packet.data_type == "DATA"):
             # send an acknowledgment packet
             link = packet.currLink
             link.decrRate(packet)
-            print "Packet " + packet.packetID + " received by Host" + str(self.deviceID)
         # if packet is ROUTING, do nothing
 
 class Flow:
@@ -428,7 +424,6 @@ class Flow:
         """
 
         if self.packets_index >= len(self.packets):
-            print "WE REACHED THE END: " + str(self.packets_index)
             return None
 
         else:
@@ -439,15 +434,6 @@ class Flow:
             packet = self.packets[self.packets_index]
             self.packets_index = self.packets_index + 1
             return packet
-
-    def printDataSent(self):
-        """ Prints how much data this flow has generated so far
-        """
-
-        print ("Flow " + str(self.flowID) + " has generated "
-                + str(float(self.current_amt) /
-                    (constants.MB_TO_KB * constants.KB_TO_B))
-                + " MB so far")
 
 
     def generateAckPacket(self, packet):
@@ -471,52 +457,32 @@ class Flow:
         :type packet: Packet
         """
 
-        # Updates the expected ack packet id.
-
-        # If the ACK ID matches the host's expected ACK ID, then
-        # we increment the hosts expected ACK ID by one.
-        print "Host expects: " + self.packets[self.window_lower].packetID
-        print "Host received: " + packet.packetID
-
-        print "HOST EXPECT: " + str(self.window_lower) + \
-              " PACKET INDEX: " + str(self.packets_index) + \
-              " ACK INDEX: " + str(packet.packetID)
-
-        print str(packet.index)
-
-        print "currentTime: " + str(currentTime)
-        print "packet.start_time: " + str(packet.start_time)
-        print "self.actual-RTT: " + str(self.actualRTT)
 
         ##### IMPORTANT NOTE #####
         ### The way TCP-Fast is currently implemented, we
         # use the highest rtt in the 20-ms period as the RTT, not the
-        # last rtt. I'm not sure if this is correct.
-        # TODO: TODO: Check with TAs
+        # last rtt.
         if currentTime - packet.start_time > self.actualRTT:
             self.actualRTT = currentTime - packet.start_time
             if self.actualRTT < self.minRTT:
-                #print "minRTT: " + str(self.flowID) + " " + str(self.minRTT)
-                print "old minRTT: " + str(self.flowID) + " " + str(self.minRTT)
                 self.minRTT = self.actualRTT
-                print "new minRTT: " + str(self.flowID) + " " + str(self.minRTT)
 
         #check if actualRTT is valid
         if self.actualRTT != 0 and self.actualRTT < self.theoRTT:
             raise Exception("Calculated RTT is less than theoretical RTT")
 
 
+        # If the ACK ID matches the host's expected ACK ID, then
+        # we increment the hosts expected ACK ID by one.
         if self.packets[self.window_lower].packetID == packet.packetID:
             # Change variable to show a packet was received in TCPFast Cycle!
             self.received_packet = True
-            print "ACK Packet " + str(packet.packetID) + " acknowledged."
             self.last_received_packet_start_time = packet.start_time
             ##############################################################
 
             self.data_acknowledged = self.data_acknowledged + constants.DATA_SIZE
             self.acksAcknowledged[packet.index] = True
 
-            print "Window Lower: " + str(self.window_lower)
 
             while (self.acksAcknowledged[self.window_lower] == True) and \
                   (self.window_lower != len(self.packets) - 1):
@@ -547,7 +513,6 @@ class Flow:
 
             if self.acksAcknowledged[packet.index] == False:
                 self.received_packet = True
-                print "ACK Packet " + str(packet.packetID) + " acknowledged."
                 self.last_received_packet_start_time = packet.start_time
                 self.acksAcknowledged[packet.index] = True
                 self.data_acknowledged = self.data_acknowledged + constants.DATA_SIZE
@@ -561,7 +526,6 @@ class Flow:
                 self.acksAcknowledged[packet.index] = True
                 self.data_acknowledged = self.data_acknowledged + constants.DATA_SIZE
                 self.received_packet = True
-                print "ACK Packet " + str(packet.packetID) + " acknowledged."
                 self.last_received_packet_start_time = packet.start_time
 
             if(self.error_counter == 3):
@@ -569,14 +533,11 @@ class Flow:
                 if tcp_type == 'Reno':
                     self.TCPReno(False)
 
-                print "DROPPED PACKET " + self.packets[self.window_lower].packetID + \
-                    "... GOBACKN.\n"
                 self.resending = True
                 self.error_counter = 0
                 return True
 
 
-        print "Window counter: " + str(self.window_counter)
         return False
 
     # Congestion Control:
@@ -642,8 +603,6 @@ class Flow:
             if(self.window_upper > len(self.packets) - 1):
                 self.window_upper = len(self.packets) - 1
 
-        print "Window size: " + str(self.flowID) + " " + str(self.window_size)
-        print "Window Upper: " + str(self.window_upper)
 
     def TCPFast(self, alpha):
         """ The actualRTT is calculated by subtracting event.time
@@ -657,19 +616,6 @@ class Flow:
             :type timeout : int
         """
 
-        print "theoRTT: " + str(self.theoRTT)
-        print "actualRTT: " + str(self.actualRTT)
-
-
-        if self.flowID == "F1":
-            print "TCPFast flow1"
-
-        if self.flowID == "F2":
-            print "TCPFast flow2"
-
-        if self.flowID == "F3":
-            print "TCPFast flow3"        
-
         newWindowSize = (self.minRTT/self.actualRTT) * self.window_size + alpha
         self.window_size = newWindowSize
 
@@ -677,10 +623,6 @@ class Flow:
 
         if(self.window_upper > len(self.packets) - 1):
             self.window_upper = len(self.packets) - 1
-
-        print "Window size: " + str(self.flowID) + " " + str(self.window_size)
-        print "Window Upper: " + str(self.window_upper)
-
 
     def getWindowSize(self):
         return self.window_size
@@ -802,12 +744,7 @@ class Link:
         :type packet : Packet
         """
 
-        print "Link " + str(self.linkID) + " with buffer size " + str(self.linkBuffer.occupancy)
-        if(packet.data_size + self.linkBuffer.occupancy >
-           self.linkBuffer.maxSize):
-            print "Packet dropped"
-        else:
-            self.linkBuffer.put(packet)
+        self.linkBuffer.put(packet)
 
 
     def decrRate(self, packet):

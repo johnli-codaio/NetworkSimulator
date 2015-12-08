@@ -136,7 +136,7 @@ def main():
                             devices[flow_data['flow_dest']],
                             flow_data['data_amt'], flow_data['flow_start'], flow_data['theoRTT'])
         flows[str(flow_name)] = flow
-    print "Flows instantiated: ", "\n\n"
+    print "Flows instantiated.", "\n\n"
 
     # verifying metric inputs from command line are correct
     if args.metrics:
@@ -148,7 +148,6 @@ def main():
             if linkID not in links.keys():
                 print "Bad linkID in argument list."
                 return
-    print "OK!"
 
     network = classes.Network(devices, links, flows)
     met = None
@@ -157,7 +156,9 @@ def main():
     simulator = simulation.Simulator(network, args.tcp_type, met)
 
     # gen routing table
-    print "Static routing:"
+    print "Running..."
+    if args.verbose:
+        print "Static routing:"
 
     simulator.staticRouting()
     while not simulator.q.empty():
