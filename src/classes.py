@@ -256,11 +256,11 @@ class Router(Device):
 
             if(dynamic):
                 routPacket = RoutingPacket(self, otherDev, link, constants.ROUTING_SIZE,
-                                        self.rout_table, packetID = None, curr_loc = None,
+                                        self.rout_table, str(self.deviceID) + " ROUT", curr_loc = None,
                                         latency = link.calcExpectedLatency())
             else:
                 routPacket = RoutingPacket(self, otherDev, link, constants.ROUTING_SIZE,
-                                       self.rout_table, packetID = None, curr_loc = None)
+                                       self.rout_table, str(self.deviceID) + " ROUT", curr_loc = None)
 
             res.append((routPacket, link))
         return res
