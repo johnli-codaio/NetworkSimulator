@@ -35,7 +35,7 @@ class Metrics:
         # give indices denoting the current time interval's
         # lower bound [0] and upper bound [1]
         # contains also the sum of values found so far [2],
-        # as well as the number of events that occurred in this time interval [3]
+        # the number of events that occurred in this time interval [3]
         self.CURRENT_TIME_INTERVAL = [
                 [0, constants.LOG_TIME_INTERVAL, 0, 0],
                 [0, constants.LOG_TIME_INTERVAL, 0, 0],
@@ -96,6 +96,7 @@ class Metrics:
                         data = metricType[type][2] / count
                     metricFileData[type].write(str(upperTimeInterval)
                         + " " + str(data) + "\n")
+
 
                 # update the upper/lower bounds
                 while time > upperTimeInterval:
