@@ -98,8 +98,7 @@ class Simulator:
         self.network = network
         self.tcp_type = TCP_type
 
-        #keeps track of the first time a packet is acknowledged
-        self.first_time = 0
+
 
         self.metrics = metric
         print self.metrics
@@ -225,7 +224,7 @@ class Simulator:
             #updatewindow, we have to make our RTT higher
             #(before, it was left as the last rtt received, which was deceiving)
             if event.flow.received_packet == False:
-                print "butt last_receieved_packet: " + str(event.flow.last_received_packet_start_time)
+                print "last_receieved_packet: " + str(event.flow.last_received_packet_start_time)
                 #figure out the appropriate value
                 event.flow.actualRTT = event.time - event.flow.last_received_packet_start_time
 
@@ -322,6 +321,7 @@ class Simulator:
              #             " Window Size " + str(event.flow.window_size) '''
 
         elif event.type == "RECEIVE":
+
             # Processes a host/router action that would receive things.
             assert(isinstance(event.handler, Device))
             sendLink = event.packet.currLink
@@ -357,6 +357,7 @@ class Simulator:
 
             # Host receives packet
             elif isinstance(event.handler, Host):
+                print "asdf: " + str(event.flow.flowID)
                 if(event.packet.data_type == "DATA"):
                     host = event.handler
                     host.receive(event.packet)
@@ -390,12 +391,12 @@ class Simulator:
                     if isDropped == False:
 
 
-                        if self.first_time == 0:
+                        if event.flow.first_time == 0:
                             # TCP Fast initialization event, which should happen only the first time a packet is acknowledged
                             if self.tcp_type == 'FAST':
-                                newEvent2 = Event(None, None, "UPDATEWINDOW", event.time + 20, event.flow)
+                                newEvent2 = Event(None, None, "UPDATEWINDOW", event.time + (2*event.flow.actualRTT), event.flow)
                                 self.insertEvent(newEvent2)
-                            self.first_time = 1
+                            event.flow.first_time = 1
 
                         increment = 1
                         result += "event.flow.packets_index: " + str(event.flow.packets_index) + "\n"

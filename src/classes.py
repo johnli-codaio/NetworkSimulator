@@ -339,6 +339,9 @@ class Flow:
 
         :param theoRTT: The theoretical round trip time of a packet in this flow.
         :type theoRTT: int
+
+        :param minRTT: The observed minimum rtt of a packet in this flow.
+        :type minRTT: float
         """
         self.flowID = flowID
         self.src = src
@@ -349,8 +352,12 @@ class Flow:
         self.flow_start = flow_start * constants.s_to_ms
         self.theoRTT = theoRTT
         self.actualRTT = 0
+        self.minRTT = 9999999999;
 
         self.window_size = 1
+
+        #keeps track of the first time a packet is acknowledged
+        self.first_time = 0
 
         # Congestion Control Variables
         self.packets = []
@@ -488,6 +495,11 @@ class Flow:
         # TODO: TODO: Check with TAs
         if currentTime - packet.start_time > self.actualRTT:
             self.actualRTT = currentTime - packet.start_time
+            if self.actualRTT < self.minRTT:
+                #print "minRTT: " + str(self.flowID) + " " + str(self.minRTT)
+                print "old minRTT: " + str(self.flowID) + " " + str(self.minRTT)
+                self.minRTT = self.actualRTT
+                print "new minRTT: " + str(self.flowID) + " " + str(self.minRTT)
 
         #check if actualRTT is valid
         if self.actualRTT != 0 and self.actualRTT < self.theoRTT:
@@ -630,7 +642,7 @@ class Flow:
             if(self.window_upper > len(self.packets) - 1):
                 self.window_upper = len(self.packets) - 1
 
-        print "Window size: " + str(self.window_size)
+        print "Window size: " + str(self.flowID) + " " + str(self.window_size)
         print "Window Upper: " + str(self.window_upper)
 
     def TCPFast(self, alpha):
@@ -647,7 +659,18 @@ class Flow:
 
         print "theoRTT: " + str(self.theoRTT)
         print "actualRTT: " + str(self.actualRTT)
-        newWindowSize = (self.theoRTT/self.actualRTT) * self.window_size + alpha
+
+
+        if self.flowID == "F1":
+            print "TCPFast flow1"
+
+        if self.flowID == "F2":
+            print "TCPFast flow2"
+
+        if self.flowID == "F3":
+            print "TCPFast flow3"        
+
+        newWindowSize = (self.minRTT/self.actualRTT) * self.window_size + alpha
         self.window_size = newWindowSize
 
         self.window_upper = floor(self.window_size) + self.window_lower - 1
@@ -655,7 +678,7 @@ class Flow:
         if(self.window_upper > len(self.packets) - 1):
             self.window_upper = len(self.packets) - 1
 
-        print "Window size: " + str(self.window_size)
+        print "Window size: " + str(self.flowID) + " " + str(self.window_size)
         print "Window Upper: " + str(self.window_upper)
 
 
