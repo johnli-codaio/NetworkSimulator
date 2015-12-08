@@ -190,7 +190,11 @@ class Router(Device):
             nextLink = self.rout_table[device][1]
             self.rout_table[device] = (constants.ROUTING_INF, nextLink)
 
-    def handleRoutingPacket(self, packet, current_time = None):
+        for link in self.links:
+            otherDev = link.otherDevice(self)
+            self.rout_table[otherDev] = (link.calcExpectedLatency(), link)
+
+    def handleRoutingPacket(self, packet):
         '''Updates routing table if appropriate. Returns if router should send table to neighbors.'''
 
         #assert(isinstance(packet, RoutingPacket))
@@ -200,38 +204,50 @@ class Router(Device):
         link = packet.currLink
         link.decrRate(packet)
 
-        comingFrom = packet.link.otherDevice(self)
+        # comingFrom = packet.link.otherDevice(self)
 
         for device in packet.table:
-            if(device == comingFrom and packet.timestamp):
-                self.rout_table[device] = (current_time - packet.timestamp, packet.link)
+            dist = packet.latency + packet.table[device][0]
+
+            if(device not in self.rout_table):
+                self.rout_table[device] = (dist, packet.link)
                 updated = True
-
             else:
-                if(packet.timestamp):
-                    dist = current_time - packet.timestamp + packet.table[device][0]
-                else:
-                    dist = packet.latency + packet.table[device][0]
-
-                if(device not in self.rout_table):
+                mindist = self.rout_table[device][0]
+                if(dist < mindist):
                     self.rout_table[device] = (dist, packet.link)
                     updated = True
-                else:
-                    mindist = self.rout_table[device][0]
-                    if(dist < mindist):
-                        self.rout_table[device] = (dist, packet.link)
-                        updated = True
+
+
+        # for device in packet.table:
+        #     if(device == comingFrom and packet.timestamp):
+        #         self.rout_table[device] = (current_time - packet.timestamp, packet.link)
+        #         updated = True
+
+        #     else:
+        #         if(packet.timestamp):
+        #             dist = current_time - packet.timestamp + packet.table[device][0]
+        #         else:
+        #             dist = packet.latency + packet.table[device][0]
+
+        #         if(device not in self.rout_table):
+        #             self.rout_table[device] = (dist, packet.link)
+        #             updated = True
+        #         else:
+        #             mindist = self.rout_table[device][0]
+        #             if(dist < mindist):
+        #                 self.rout_table[device] = (dist, packet.link)
+        #                 updated = True
 
         # Router sends table to adjacent neighbors if recently updated or just updated
         temp = self.routing_table_recently_updated
         self.routing_table_recently_updated = updated
         return temp or updated
 
-    def floodNeighbors(self, dynamic = False, current_time = None):
+    def floodNeighbors(self, dynamic = False):
         '''Returns array of tuples (packet, link) to send'''
 
         # send current table to all neighbors
-
         res = []
         for link in self.links:
             otherDev = link.otherDevice(self)
@@ -241,7 +257,7 @@ class Router(Device):
             if(dynamic):
                 routPacket = RoutingPacket(self, otherDev, link, constants.ROUTING_SIZE,
                                         self.rout_table, packetID = None, curr_loc = None,
-                                        timestamp = current_time)
+                                        latency = link.calcExpectedLatency())
             else:
                 routPacket = RoutingPacket(self, otherDev, link, constants.ROUTING_SIZE,
                                        self.rout_table, packetID = None, curr_loc = None)
@@ -705,7 +721,7 @@ class Link:
 
 
     def calcExpectedLatency(self):
-        return self.delay + (self.linkBuffer.currentSize * constants.QUEUE_DELAY)
+        return self.delay + (self.linkBuffer.currentSize() * constants.QUEUE_DELAY)
 
 
 
@@ -860,14 +876,13 @@ class DataPacket(Packet):
 
 class RoutingPacket(Packet):
 
-    def __init__(self, src, dest, link, data_size, table, packetID, curr_loc, timestamp = None, latency = None):
+    def __init__(self, src, dest, link, data_size, table, packetID, curr_loc, latency = None):
         super(RoutingPacket, self).__init__(src, dest, "ROUT", constants.ROUTING_SIZE, packetID, curr_loc)
         if(latency):
             self.latency = latency
         else:
             self.latency = link.delay
         self.table = table
-        self.timestamp = timestamp
 
         # RoutingPackets only travel across one link before "dying"
         self.link = link

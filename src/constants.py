@@ -35,5 +35,5 @@ ROUTING_SIZE = 8
 # For use when calculating routing tables. Equivalent to 100s delay 
 ROUTING_INF = 100000
 
-# How often we use dynamic routing. Every 4 seconds
-REROUT_TIME = 4000
+# How often we use dynamic routing. Every 5 seconds
+REROUT_TIME = 5000

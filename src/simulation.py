@@ -174,8 +174,7 @@ class Simulator:
                     device.initializeRerout()
 
                     # Find what routing packets to send
-                    routingPackets = device.floodNeighbors(dynamic = True,
-                                        current_time = event.time + constants.EPSILON_DELAY)
+                    routingPackets = device.floodNeighbors(dynamic = True)
 
                     for (pack, link) in routingPackets:
                         newEvent3 = Event(pack, (link, device), "PUT",
@@ -227,8 +226,8 @@ class Simulator:
 
             result += str(event.packet.data_type) + " " + str(event.packet.packetID) + "\n"
 
-            print "Putting " + event.packet.data_type + str(event.packet.packetID) + " into link " + str(link.linkID) + \
-                  " from Device " + str(device.deviceID) + " at time " + str(event.time) + str(event.flow)
+            # print "Putting " + event.packet.data_type + str(event.packet.packetID) + " into link " + str(link.linkID) + \
+            #       " from Device " + str(device.deviceID) + " at time " + str(event.time) + str(event.flow)
 
 
             # is the buffer full? you can put a packet in
@@ -300,16 +299,16 @@ class Simulator:
                                 link.currentRateMbps(None),
                                 self.LOG_LINKRATE, link.linkID)
 
-               # else:
+             #   else:
 
-                #    result += "LINK " + str(link.linkID) + " FULL: Packet " + link.linkBuffer.peek().data_type + link.linkBuffer.peek().packetID + \
-                 #         " Window Size " + str(event.flow.window_size) + " from " + link.linkBuffer.peek().currDev.deviceID + " with destination " + str(link.linkBuffer.peek().dest.deviceID) + " at time " + str(event.time)
-                 #   newEvent = Event(None, link, "SEND",
-                  #          event.time + constants.QUEUE_DELAY, event.flow)
-                  #  self.insertEvent(newEvent)
-            #  else:
+             #       result += "LINK " + str(link.linkID) + " FULL: Packet " + link.linkBuffer.peek().data_type + link.linkBuffer.peek().packetID + \
+             #             " Window Size " + str(event.flow.window_size) + " from " + link.linkBuffer.peek().currDev.deviceID + " with destination " + str(link.linkBuffer.peek().dest.deviceID) + " at time " + str(event.time)
+             #       newEvent = Event(None, link, "SEND",
+             #               event.time + constants.QUEUE_DELAY, event.flow)
+             #       self.insertEvent(newEvent)
+             # else:
              #   result += "LINK " + str(link.linkID) + " BUFFER EMPTY:" + \
-              #            " Window Size " + str(event.flow.window_size) '''
+             #             " Window Size " + str(event.flow.window_size) '''
 
         elif event.type == "RECEIVE":
             # Processes a host/router action that would receive things.
@@ -322,9 +321,8 @@ class Simulator:
 
                 if(isinstance(event.packet, RoutingPacket)):
                     print "Handling RoutingPacket at time ", str(event.time)
-                    print "Packet's timestamp is ", event.packet.timestamp
 
-                    _continue = router.handleRoutingPacket(event.packet, event.time)
+                    _continue = router.handleRoutingPacket(event.packet)
                     if(_continue):
                         # flood neighbors
                         newPackets = router.floodNeighbors()

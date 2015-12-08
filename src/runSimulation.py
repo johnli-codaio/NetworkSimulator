@@ -30,7 +30,7 @@ def main():
 
     # options for graphing metrics
     metrics = parser.add_argument_group()
-    metrics.add_argument('--m', dest = 'metrics',
+    metrics.add_argument('-m', dest = 'metrics',
             action = 'store_true', help = 'Print graphs for metrics.\
                     Requires the following subarguments:')
 
@@ -69,7 +69,7 @@ def main():
 
     # TODO: not finished
     # options for verbose? for debugging purposes
-    parser.add_argument('--v', '-v', action = 'store_true',
+    parser.add_argument('-v', action = 'store_true',
             dest = 'verbose',
             help = 'verbose: prints out information about events,\
             event time, and number of elements in priority queue')
