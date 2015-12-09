@@ -8,10 +8,6 @@ import metrics as m
 
 
 def main():
-    # parser = argparse.ArgumentParser(description = 'Run simulation on JSON file.')
-    # parser.add_argument('--json', '-j', action = 'store', dest = 'json_file_name',
-    #                     help = 'Store JSON file name')
-    # options for parsing a JSON file
     parser = argparse.ArgumentParser(description = 'Run simulation on JSON file.')
 
 
