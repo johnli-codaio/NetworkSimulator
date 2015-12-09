@@ -752,7 +752,8 @@ class Link:
 
         :param packet : uses the size of the passed in packet.
         :type packet : Packet"""
-        self.current_byte_size -= packet.data_size
+        if self.current_byte_size - packet.data_size >= 0:
+            self.current_byte_size -= packet.data_size
 
     def incrRate(self, packet):
         """Increase current rate by packet size.
