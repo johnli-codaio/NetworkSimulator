@@ -59,10 +59,6 @@ class bufferQueue:
 
 
 class Network:
-    #####################################################################
-    #### TODO: Look at runSimulation.py, make this Network basically ####
-    ####       contain all the links, flows, etc. in the same way    ####
-    #####################################################################
 
     def __init__(self, devices, links, flows):
         """ Takes in a list of devices, links, and flows, to make up the
@@ -90,10 +86,6 @@ class Network:
 
 
 class Device(object):
-
-    ###################################################################
-    ### TODO: Write what members each Device has, and its functions ###
-    ###################################################################
 
     def __init__(self, deviceID):
         """Instantiates the Device.
@@ -152,10 +144,9 @@ class Router(Device):
     def __init__(self, deviceID):
         super(Router, self).__init__(deviceID)
 
+        # rout_table is a dictionary:
+        # rout_table[device] = (distance to that device, link to rout packets to)
 
-        # Dictionary rout_table:
-        #   - Device
-        #       - (latency, nextLink)
         self.rout_table = {}
         self.initializeNeighborsTable()
 
@@ -197,14 +188,11 @@ class Router(Device):
     def handleRoutingPacket(self, packet):
         '''Updates routing table if appropriate. Returns if router should send table to neighbors.'''
 
-        #assert(isinstance(packet, RoutingPacket))
         updated = False
 
         # Decrease the link rate size.
         link = packet.currLink
         link.decrRate(packet)
-
-        # comingFrom = packet.link.otherDevice(self)
 
         for device in packet.table:
             dist = packet.latency + packet.table[device][0]
@@ -218,36 +206,19 @@ class Router(Device):
                     self.rout_table[device] = (dist, packet.link)
                     updated = True
 
-
-        # for device in packet.table:
-        #     if(device == comingFrom and packet.timestamp):
-        #         self.rout_table[device] = (current_time - packet.timestamp, packet.link)
-        #         updated = True
-
-        #     else:
-        #         if(packet.timestamp):
-        #             dist = current_time - packet.timestamp + packet.table[device][0]
-        #         else:
-        #             dist = packet.latency + packet.table[device][0]
-
-        #         if(device not in self.rout_table):
-        #             self.rout_table[device] = (dist, packet.link)
-        #             updated = True
-        #         else:
-        #             mindist = self.rout_table[device][0]
-        #             if(dist < mindist):
-        #                 self.rout_table[device] = (dist, packet.link)
-        #                 updated = True
-
         # Router sends table to adjacent neighbors if recently updated or just updated
         temp = self.routing_table_recently_updated
         self.routing_table_recently_updated = updated
         return temp or updated
 
     def floodNeighbors(self, dynamic = False):
-        '''Returns array of tuples (packet, link) to send'''
+        '''Returns array of tuples (packet, link) to send
 
-        # send current table to all neighbors
+        :param dynamic: True if using dynamic routing, false otherwise
+        :type dynamic: bool
+        '''
+
+        # Send current table to all neighbors
         res = []
         for link in self.links:
             otherDev = link.otherDevice(self)
@@ -297,14 +268,15 @@ class Host(Device):
         """
 
         if(packet.data_type == "ACK"):
-            # decrease the current link rate
+            # Decrease the current link rate
             link = packet.currLink
             link.decrRate(packet)
 
         elif(packet.data_type == "DATA"):
-            # send an acknowledgment packet
+            # Send an acknowledgment packet
             link = packet.currLink
             link.decrRate(packet)
+
         # if packet is ROUTING, do nothing
 
 class Flow:
@@ -371,10 +343,10 @@ class Flow:
         # How much successfully sent.
         self.data_acknowledged = 0
 
-        #whether it has received a packet or not in the last fast-tcp cycle
+        # Whether it has received a packet or not in the last fast-tcp cycle
         self.received_packet = False
 
-        # keeps track so that we can more accurately measure the RTT of non-returned packets
+        # Keeps track so that we can more accurately measure the RTT of non-returned packets
         self.last_received_packet_start_time = 0
 
         self.packet_delay = 0
@@ -427,10 +399,6 @@ class Flow:
             return None
 
         else:
-            ## TODO: Refactor so that we're just taking packets out of an array.
-            ## We want to create all the packets before hand.
-            ## So, we'll probably need a new event like "Initialize" or something
-            ## To initialize the flow packet.
             packet = self.packets[self.packets_index]
             self.packets_index = self.packets_index + 1
             return packet
@@ -448,7 +416,6 @@ class Flow:
         newPacket.total_delay = packet.total_delay
         return newPacket
 
-    # TODO: Gotta refactor this.
     def receiveAcknowledgement(self, packet, currentTime, tcp_type):
         """ This will call TCPReno to update the window size depending on
             the ACK ID...
@@ -456,7 +423,6 @@ class Flow:
         :param packet: packet that will be compared.
         :type packet: Packet
         """
-
 
         ##### IMPORTANT NOTE #####
         ### The way TCP-Fast is currently implemented, we
@@ -478,7 +444,6 @@ class Flow:
             # Change variable to show a packet was received in TCPFast Cycle!
             self.received_packet = True
             self.last_received_packet_start_time = packet.start_time
-            ##############################################################
 
             self.data_acknowledged = self.data_acknowledged + constants.DATA_SIZE
             self.acksAcknowledged[packet.index] = True
@@ -500,16 +465,13 @@ class Flow:
             if tcp_type == 'Reno':
                 self.TCPReno(True)
 
-            elif tcp_type == 'FAST': #still have to update window bounds
+            elif tcp_type == 'FAST': # still have to update window bounds
                 self.window_upper = floor(self.window_size) + self.window_lower - 1
 
                 if(self.window_upper > len(self.packets) - 1):
                     self.window_upper = len(self.packets) - 1
 
         elif self.resending == True:
-            # TODO: TODO:
-            # NOTE: I think there's something buggy here, since
-            # if we enter this loop as part of TCP-fast, something weird happens
 
             if self.acksAcknowledged[packet.index] == False:
                 self.received_packet = True
@@ -529,7 +491,6 @@ class Flow:
                 self.last_received_packet_start_time = packet.start_time
 
             if(self.error_counter == 3):
-                #self.threshIndex = self.packets_index
                 if tcp_type == 'Reno':
                     self.TCPReno(False)
 
@@ -633,10 +594,6 @@ class Flow:
 
 class Link:
 
-    ###############################################################
-    ## TODO: Write what members each Link has, and its functions ##
-    ###############################################################
-
     def __init__(self, linkID, rate, delay, buffer_size, device1, device2):
         """ Instantiates a Link
 
@@ -669,7 +626,7 @@ class Link:
         self.delay = delay
         self.device1 = device1
         self.device2 = device2
-        self.current_byte_size = 0 #BYTES
+        self.current_byte_size = 0 # in bytes
         self.linkBuffer = bufferQueue(buffer_size * constants.KB_TO_B)
 
         self.device1.attachLink(self)
@@ -690,7 +647,7 @@ class Link:
 
     def droppedPacket(self):
         if self.isDropped:
-            # revert the boolean back because we've already dropped a packet
+            # Revert the boolean back because we've already dropped a packet
             self.isDropped = False
             return 1
         return 0

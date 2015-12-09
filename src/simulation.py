@@ -57,8 +57,6 @@ class Event:
         :type other: Event
         """
 
-        # return cmp(self.time, other.time)
-
         if(isinstance(self.packet, RoutingPacket)):
             return cmp(self.time, other.time)
 
@@ -79,7 +77,6 @@ class Event:
 
 
 class Simulator:
-    # TODO
     def __init__(self, network, TCP_type, metric):
         """ This will initialize the simulation with a Priority Queue
         that sorts based on time.
@@ -96,9 +93,8 @@ class Simulator:
         """
         self.q = Queue.PriorityQueue()
         self.network = network
+
         self.tcp_type = TCP_type
-
-
 
         self.metrics = metric
         # these constants are just indices
@@ -219,9 +215,9 @@ class Simulator:
 
 
         elif event.type == "UPDATEWINDOW":
-            #if no new packets were receieved between now and last
-            #updatewindow, we have to make our RTT higher
-            #(before, it was left as the last rtt received, which was deceiving)
+            # If no new packets were receieved between now and last
+            # updatewindow, we have to make our RTT higher
+            # (before, it was left as the last rtt received, which was deceiving)
             if event.flow.received_packet == False:
                 result += "last_receieved_packet: " + str(event.flow.last_received_packet_start_time)
                 #figure out the appropriate value
@@ -231,11 +227,11 @@ class Simulator:
             event.flow.TCPFast(constants.alpha)
             result += "tcp fast happened here\n"
 
-            #reset the max RTT
+            # Reset the max RTT
 
             event.flow.actualRTT = event.flow.theoRTT
 
-            #reset the received packet
+            # Reset the received packet
             event.flow.received_packet = False
 
             # Add next updatewindow to queue
@@ -256,16 +252,17 @@ class Simulator:
             result += "Putting " + event.packet.data_type + str(event.packet.packetID) + " into link " + str(link.linkID) + \
                   " from Device " + str(device.deviceID) + " at time " + str(event.time) + str(event.flow) + "\n"
 
-
-            # is the buffer full? you can put a packet in
             result +=  "Link " + str(link.linkID) + " with buffer size " + str(link.linkBuffer.occupancy) + "\n"
+
+            # Can packet be put into linkBuffer?
             if not link.linkBuffer.bufferFullWith(event.packet):
                 device.sendToLink(link, event.packet)
 
                 # a packet hasn't been dropped
                 newEvent = Event(None, link, "SEND", event.time, event.flow)
                 self.insertEvent(newEvent)
-            else: # packet dropped!!
+
+            else: # Packet is dropped
                 link.isDropped = True
                 result += "Packet " + str(event.packet.packetID) + " dropped"\
                         " at time " + str(event.time) + " by " + str(link) + "\n"
@@ -276,20 +273,12 @@ class Simulator:
             assert(isinstance(event.handler, Link))
             link = event.handler
 
-
-            # If you can send the packet, we check what buffer is currently in action.
-            # If dev1->dev2, then we pop from device 1.
-            # Else, we pop from device 2.
-            # If we can't pop from the
-            # link's buffer, then we call another send event 1 ms later.
-
             # If there is an empty buffer...
             if len(link.linkBuffer.packets) != 0:
                 packet = link.sendPacket()
-                # it's possible that there's a mismatch between
-                # a sending event and the appropriate type of packet.
-                # so check the packet's ID to see if originally
-                # had a flow
+
+                # It's possible that there's a mismatch between a sending event and the appropriate
+                # type of packet, so check the packet's ID to see if originally had a flow
 
                 if(packet != None):
                     packetflowID = packet.recallFlowID()
@@ -305,19 +294,6 @@ class Simulator:
                     newEvent = Event(packet, otherDev, "RECEIVE",
                                      event.time + propagationTime + link.delay, event.flow)
                     self.insertEvent(newEvent)
-
-
-
-             #   else:
-
-             #       result += "LINK " + str(link.linkID) + " FULL: Packet " + link.linkBuffer.peek().data_type + link.linkBuffer.peek().packetID + \
-             #             " Window Size " + str(event.flow.window_size) + " from " + link.linkBuffer.peek().currDev.deviceID + " with destination " + str(link.linkBuffer.peek().dest.deviceID) + " at time " + str(event.time)
-             #       newEvent = Event(None, link, "SEND",
-             #               event.time + constants.QUEUE_DELAY, event.flow)
-             #       self.insertEvent(newEvent)
-             # else:
-             #   result += "LINK " + str(link.linkID) + " BUFFER EMPTY:" + \
-             #             " Window Size " + str(event.flow.window_size) '''
 
         elif event.type == "RECEIVE":
 
@@ -384,10 +360,6 @@ class Simulator:
                     #  ^ This will update the packet index that it will be
                     #    sending from. Thus, constantly be monitoring
 
-                    # IF SO,
-                    ####################################### ????
-                    ##### Push in new GENERATEPACKS... #### ???? is this done?
-                    ####################################### ????
 
                     # If the packet was dropped, we will do SELECTIVE RESEND (Fast retransmit)
                     # and only resend the dropped packet. Otherwise, we send packets based on the
@@ -474,8 +446,7 @@ class Simulator:
             newPacket = event.flow.packets[event.flow.window_lower]
 
             result += "Resending: " + str(newPacket.data_type) + str(newPacket.packetID) + " at time " + str(event.time)
-            # Resetting this packet to the original attributes;
-            # They may have been changed on its trip before
+            # Resetting this packet to the original attributes; they may have been changed on its trip before
             # it was dropped.
             newPacket.start_time = event.time
             newPacket.total_delay = 0
@@ -496,11 +467,10 @@ class Simulator:
                     event.time, event.flow)
             self.insertEvent(newEvent)
 
-        # This is the last resort option to detect dropped packets.
-        # If an acknowledgment hasn't been received for a long time
-        # then we will resend that packet only.
-        # This event will be put into the queue every time a data
-        # packet is selected to be sent.
+
+        # This is the last resort option to detect dropped packets. If an acknowledgment hasn't been
+        # received for a long time then we will resend that packet only. This event will be put into
+        # the queue every time a data packet is selected to be sent.
         elif event.type == "TIMEOUT":
             packetIdx = event.handler
             result += "TIMEOUT FOR: " + str(packetIdx) + "\n"
@@ -508,8 +478,7 @@ class Simulator:
             isAcked = event.flow.checkIfAcked(packetIdx)
 
             if isAcked == False:
-                # A packet is dropped. We do the appropriate TCP window size
-                # update.
+                # A packet is dropped. We do the appropriate TCP window size update.
 
                 if self.tcp_type == 'Reno':
                     event.flow.TCPReno(False)
@@ -537,7 +506,8 @@ class Simulator:
 
                 newEvent = Event(newPacket, (link, host), "PUT", event.time , event.flow)
                 self.insertEvent(newEvent)
-        # log all data, every time an event is done being processed.
+        
+        # Log all data, every time an event is done being processed.
         if self.metrics:
             self.logData(event.time)
         return result
