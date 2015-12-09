@@ -24,14 +24,14 @@ Usage
 
 To run the program:
 ```bash
-python src/runSimulation.py -j [json_file] [-m [--more --less --avg] [-l [links]] [-f [flows]]] [-v]
+python src/runSimulation.py -j [json_file] [--Reno | --FAST] [-m [--more --less --avg] [-l [links]] [-f [flows]]] [-v]
 ```
 
 To display graphs of link rate, flow rate, link buffer occupancy, etc, use -m, followed by the necessary subarguments. 
 
 Example:
 ```bash
-python src/runSimulation.py -j src/test0.json -m --avg -l L1 -f F1
+python src/runSimulation.py -j --FAST src/test1.json -m --avg -l L1 L2 -f F1
 ```
 
 Help:
