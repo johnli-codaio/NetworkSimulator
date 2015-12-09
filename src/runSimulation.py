@@ -77,11 +77,13 @@ def main():
     args = parser.parse_args()
     # all subargs must be present if --m is invoked
     if not args.metrics and (args.log is not None or args.links is not None or args.flows is not None):
-        print "--m argument is required."
+        parser.print_usage()
+        print "Error: -m argument is required."
         return
     # all subargs must be present if --m is invoked
     elif args.metrics and (args.log is None or args.links is None or args.flows is None):
-        print "All of --m's subargments required."
+        parser.print_usage()
+        print "Error: All of --m's subargments required."
         return
 
 

@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import constants
 import numpy as np
+import os
+
 
 class Metrics:
     def __init__(self, log, flows, links):
@@ -26,6 +28,9 @@ class Metrics:
         :param links: the links that are to be tracked (if any)
         :type links: list<str>
         """
+
+        if(not os.path.isdir("metrics")):
+            os.mkdir("metrics")
 
         self.log = log
         self.links = links
@@ -53,18 +58,18 @@ class Metrics:
                 [0, constants.LOG_TIME_INTERVAL, 0, 0],
                 [0, constants.LOG_TIME_INTERVAL, 0, 0]
             ]
-            self.totalData[str(link)] = [open(str(link) + '_linkRate.log', 'w'),
-                    open(str(link) + '_bufferOccupancy.log', 'w'),
-                    open(str(link) + '_packetLoss.log', 'w')]
+            self.totalData[str(link)] = [open('metrics/' + str(link) + '_linkRate.log', 'w'),
+                    open('metrics/' + str(link) + '_bufferOccupancy.log', 'w'),
+                    open('metrics/' + str(link) + '_packetLoss.log', 'w')]
         for flow in flows:
             self.logData[str(flow)] = [
                 [0, constants.LOG_TIME_INTERVAL, 0, 0],
                 [0, constants.LOG_TIME_INTERVAL, 0, 0],
                 [0, constants.LOG_TIME_INTERVAL, 0, 0]
             ]
-            self.totalData[str(flow)] = [open(str(flow) + '_flowRate.log', 'w'),
-                    open(str(flow) + '_windowSize.log', 'w'),
-                    open(str(flow) + '_packetDelay.log', 'w')]
+            self.totalData[str(flow)] = [open('metrics/' + str(flow) + '_flowRate.log', 'w'),
+                    open('metrics/' + str(flow) + '_windowSize.log', 'w'),
+                    open('metrics/' + str(flow) + '_packetDelay.log', 'w')]
 
     def done(self):
         """ Closes the log files, Then reads them and graphs the data.
