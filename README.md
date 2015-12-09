@@ -1,37 +1,41 @@
-This is for the class CS143.
+CS 143 Network Simulator 
+===========================
 
-Workers:
+Authors
+----------------
 
-John Li
+* John Li
 
-Jonathan Joo
+* Jonathan Joo
 
-Matthew Jin
+* Matthew Jin
 
-Albert Ge
+* Albert Ge
 
-Objective
---------------------------------------------------
-The purpose of this project is to make a network simulation with hosts, routers, links, packets, and flows. The simulation should finish with all packet/flows accounted for.
+Prerequisites
+-------------------
 
-All meeting notes should be found in the file "CS143 Notes".
-Project Tutorial notes found in file "Project Tutorial.txt".
-Schedule found in file "Schedule.txt".
+* Python
 
+* matplotlib
 
-Branches
----------------------------------------------------
-The branches divide up the focus. Here is what each branch should
-focus on developing:
+Usage
+----------------
 
-hosts : Develop Hosts and Devices
-routers: Develop Routers and Devices
-links : Develop Links
-flows : Develop Flows
-packets : Develop Packets
-simulation : Develop all simulation related things (bellman ford, running, etc.)
+To run the program:
+```bash
+python src/runSimulation.py -j [json_file] [-m [--more --less --avg] [-l [links]] [-f [flows]]] [-v]
+```
 
-master : Everything should merge into master.
+To display graphs of link rate, flow rate, link buffer occupancy, etc, use -m, followed by the necessary subarguments. 
 
-Also, be sure to regularly merge master into your branch to keep your branch up
-to date with the other commits from other branches.
+Example:
+```bash
+python src/runSimulation.py -j src/test0.json -m --avg -l L1 -f F1
+```
+
+Help:
+```bash
+python src/runSimulation.py -h
+```
+

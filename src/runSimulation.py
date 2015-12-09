@@ -16,17 +16,17 @@ def main():
 
 
     parser.add_argument('--json', '-j', action = 'store', dest = 'json_file_name',
-                        help = 'Store JSON file name', required = True)
+                        help = 'Use network stored in json file', required = True)
 
     #option for tcp reno or tcp fast
     tcp_type = parser.add_mutually_exclusive_group(required = True)
     tcp_type.add_argument('--Reno', dest = 'tcp_type',
             action = 'store_const', const = 'Reno',
-            help = 'Uses the TCP-Reno congestion control algorithm')
+            help = 'Use the TCP-Reno congestion control algorithm')
 
     tcp_type.add_argument("--FAST", dest = 'tcp_type',
             action = 'store_const', const = 'FAST',
-            help = 'Uses the TCP-FAST congestion control algorithm')
+            help = 'Use the TCP-FAST congestion control algorithm')
 
     # options for graphing metrics
     metrics = parser.add_argument_group()
@@ -39,32 +39,32 @@ def main():
     metricType.add_argument('--more', dest = 'log',
             action = 'store_const', const = 'more',
             help = 'Prints a timetrace from collecting\
-            all data. See constants.py for more info.\
-            Requires the --m argument.')
+            all data.\
+            Requires the -m argument.')
 
     metricType.add_argument('--less', dest = 'log',
             action = 'store_const', const = 'less',
             help = 'Prints a timetrace from collecting\
-            a single datum per discrete time interval. See constants.py for more info.\
-            Subargument for the --m argument.')
+            a single datum per discrete time interval. \
+            Subargument for the -m argument.')
 
     metricType.add_argument('--avg', dest = 'log',
             action = 'store_const', const = 'avg',
             help = 'Prints an approximate (average) timetrace\
-            by collecting data over a discrete time interval. See constants.py\
-            for more info. Subargument for the --m argument.')
+            by collecting data over a discrete time interval. \
+            Subargument for the -m argument.')
 
     metrics.add_argument('-l', '--links', nargs='+', type = str,
             action = 'store', dest = 'links', metavar = 'LinkID',
             help = 'Specify which\
             links are to be logged. LinkID must given in the form\
-            \'L1\', \'L2\', etc\'. Subargument for the --m argument.')
+            \'L1\', \'L2\', etc. Subargument for the -m argument.')
 
     metrics.add_argument('-f', '--flows', nargs='+', type = str,
             action = 'store', dest = 'flows', metavar = 'FlowID',
             help = 'Specify which\
             flows are to be logged. FlowID must given in the form\
-            \'F1\', \'F2\', etc.\'. Subargument for the --m argument.')
+            \'F1\', \'F2\', etc. Subargument for the -m argument.')
 
 
     # TODO: not finished
