@@ -81,6 +81,24 @@ class Metrics:
         self.run()
 
     def logMetric(self, time, value, type, ID):
+        """The main function that records and writes to file the data generated
+        from the simulation. This function is called by the Simulator class, and is
+        passed in the value of a particular metric at a given time.
+
+        :param time: The time at which this metric is recorded
+        :type time: float
+
+        :param value: The value of the metric at this time
+        :type value: float
+
+        :param type: A fixed constant that denotes which type of metric is 
+        to be recorded
+        :type type: int
+
+        :param ID: the linkID, or flowID, for which this particular metric is logged.
+        :type ID: str
+        """
+
         if str(ID) not in self.links and str(ID) not in self.flows:
             return
         metricType = self.logData[str(ID)]
@@ -139,6 +157,20 @@ class Metrics:
             + str(value) + "\n")
 
     def linkRate(self, fig, ID, file, ax):
+        """Reads in the data from files for link rate, and then plots it.
+        :param fig: the figure
+        :type fig: pyplot.figure
+
+        :param ID: the linkID whose data is to be plotted.
+        :type ID: str
+
+        :param file: the name of the file to read from
+        :type file: str
+
+        :param ax: The figure's subplot.
+        :type ax: pyplot.figure.subplot
+        """
+
         try:
             time, linkRate = np.loadtxt(file, delimiter=' ',
                     usecols = (0, 1), unpack = True)
@@ -151,6 +183,19 @@ class Metrics:
         ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
     def bufferOccupancy(self, fig, ID, file, ax):
+        """Reads in the data from files for buffer occupancy, and then plots it.
+        :param fig: the figure
+        :type fig: pyplot.figure
+
+        :param ID: the linkID whose data is to be plotted.
+        :type ID: str
+
+        :param file: the name of the file to read from
+        :type file: str
+
+        :param ax: The figure's subplot.
+        :type ax: pyplot.figure.subplot
+        """
         try:
             time, buffer = np.loadtxt(file, delimiter=' ',
                     usecols = (0, 1), unpack = True)
@@ -163,6 +208,19 @@ class Metrics:
         ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
     def packetLoss(self, fig, ID, file, ax):
+        """Reads in the data from files for packet loss, and then plots it.
+        :param fig: the figure
+        :type fig: pyplot.figure
+
+        :param ID: the linkID whose data is to be plotted.
+        :type ID: str
+
+        :param file: the name of the file to read from
+        :type file: str
+
+        :param ax: The figure's subplot.
+        :type ax: pyplot.figure.subplot
+        """
         try:
             time, packetLoss = np.loadtxt(file, delimiter=' ',
                     usecols = (0, 1), unpack = True)
@@ -176,6 +234,19 @@ class Metrics:
         ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
     def flowRate(self, fig, ID, file, ax):
+        """Reads in the data from files for flow rate, and then plots it.
+        :param fig: the figure
+        :type fig: pyplot.figure
+
+        :param ID: the linkID whose data is to be plotted.
+        :type ID: str
+
+        :param file: the name of the file to read from
+        :type file: str
+
+        :param ax: The figure's subplot.
+        :type ax: pyplot.figure.subplot
+        """
         try:
             time, flowRate = np.loadtxt(file, delimiter=' ',
                     usecols = (0, 1), unpack = True)
@@ -189,6 +260,19 @@ class Metrics:
         ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
     def windowSize(self, fig, ID, file, ax):
+        """Reads in the data from files for window size, and then plots it.
+        :param fig: the figure
+        :type fig: pyplot.figure
+
+        :param ID: the linkID whose data is to be plotted.
+        :type ID: str
+
+        :param file: the name of the file to read from
+        :type file: str
+
+        :param ax: The figure's subplot.
+        :type ax: pyplot.figure.subplot
+        """
         try:
             time, windowSize = np.loadtxt(file, delimiter=' ',
                     usecols = (0, 1), unpack = True)
@@ -203,6 +287,19 @@ class Metrics:
 
 
     def packetDelay(self, fig, ID, file, ax):
+        """Reads in the data from files for packet delay, and then plots it.
+        :param fig: the figure
+        :type fig: pyplot.figure
+
+        :param ID: the linkID whose data is to be plotted.
+        :type ID: str
+
+        :param file: the name of the file to read from
+        :type file: str
+
+        :param ax: The figure's subplot.
+        :type ax: pyplot.figure.subplot
+        """
         try:
             time, packetDelay = np.loadtxt(file, delimiter=' ',
                     usecols = (0, 1), unpack = True)
@@ -221,6 +318,10 @@ class Metrics:
         ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
     def run(self):
+        """Reads in the data for each metric and then plots it in graph form.
+        For each different type of metric, this function will call
+        the associated function (linkRate(), bufferOccupancy(), etc)
+        so that metrics for different links/flows can be overlayed."""
         # Starting the metric logging.
         fig = plt.figure(figsize=(10, 6))
         fig2 = plt.figure(figsize=(10, 6))

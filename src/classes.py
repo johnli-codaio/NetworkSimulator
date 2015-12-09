@@ -1,5 +1,5 @@
-#TODO: Add some stuff to the classes...
 import constants
+import sys
 from math import *
 
 class bufferQueue:
@@ -78,6 +78,8 @@ class Network:
         self.flows = flows
 
     def allFlowsComplete(self):
+        """ Checks to see if all flows have finished sending
+        their required data amount. """
         for flowID in self.flows:
             flow = self.flows[flowID]
             if(not flow.flowComplete()):
@@ -142,6 +144,11 @@ class Device(object):
 class Router(Device):
 
     def __init__(self, deviceID):
+        """Instantiates a Router.
+
+        :param deviceID: Unique ID of device
+        :type deviceID: str
+        """
         super(Router, self).__init__(deviceID)
 
         # rout_table is a dictionary:
@@ -174,6 +181,9 @@ class Router(Device):
         self.rout_table[self] = (0, None)
 
     def initializeRerout(self):
+        """Calculates a new routing for the network
+        and updates the routing table accordingly.
+        """
         for device in self.rout_table:
             if device == self:
                 self.rout_table[device] = (0, None)
@@ -186,7 +196,7 @@ class Router(Device):
             self.rout_table[otherDev] = (link.calcExpectedLatency(), link)
 
     def handleRoutingPacket(self, packet):
-        '''Updates routing table if appropriate. Returns if router should send table to neighbors.'''
+        """Updates routing table if appropriate. Returns if router should send table to neighbors."""
 
         updated = False
 
@@ -212,11 +222,11 @@ class Router(Device):
         return temp or updated
 
     def floodNeighbors(self, dynamic = False):
-        '''Returns array of tuples (packet, link) to send
+        """Returns array of tuples (packet, link) to send
 
         :param dynamic: True if using dynamic routing, false otherwise
         :type dynamic: bool
-        '''
+        """
 
         # Send current table to all neighbors
         res = []
@@ -257,11 +267,7 @@ class Host(Device):
 
     def receive(self, packet):
         """ Host receives packet.
-
-        Will receive a packet and do two things:
-            1) If the packet is an ACK, the host will just print that it got it.
-            2) If it's data, then the packet has arrived at destination.
-            3) Return the packet ????
+        Will receive a packet and correspondingly decrease the rate of its link.
 
         :param packet: packet that will be received
         :type packet: Packet
@@ -320,8 +326,11 @@ class Flow:
         self.flow_start = flow_start * constants.s_to_ms
         self.theoRTT = theoRTT
         self.actualRTT = 0
-        self.minRTT = 9999999999;
 
+        # every new minRTT will always be less than the initialized
+        self.minRTT = sys.maxint;
+
+        # initial window size
         self.window_size = 1
 
         #keeps track of the first time a packet is acknowledged
@@ -349,6 +358,7 @@ class Flow:
         # Keeps track so that we can more accurately measure the RTT of non-returned packets
         self.last_received_packet_start_time = 0
 
+        # last received packet's RTT. Used for logging packet delay.
         self.packet_delay = 0
 
     def __str__(self):
@@ -385,6 +395,10 @@ class Flow:
     def checkIfAcked(self, packetId):
         """ We will check if a particular packet has been acked.
             this is for the timeOut portion.
+            
+            :param packetId: the packet ID
+            :type packetId: str
+
         """
         return self.acksAcknowledged[packetId] == True
 
@@ -406,7 +420,9 @@ class Flow:
 
     def generateAckPacket(self, packet):
         """ This will produce an acknowledgment packet with same ID, heading the reverse
-        direction
+        direction of the data packet.
+        :param packet: The data packet for which to generate an ACK packet.
+        :type packet: Packet
         """
         start_time = packet.start_time
         total_delay = packet.total_delay
@@ -424,10 +440,8 @@ class Flow:
         :type packet: Packet
         """
 
-        ##### IMPORTANT NOTE #####
-        ### The way TCP-Fast is currently implemented, we
-        # use the highest rtt in the 20-ms period as the RTT, not the
-        # last rtt.
+        # The way TCP-Fast is currently implemented, we
+        # use the highest rtt in the 20-ms period as the RTT
         if currentTime - packet.start_time > self.actualRTT:
             self.actualRTT = currentTime - packet.start_time
             if self.actualRTT < self.minRTT:
@@ -586,9 +600,14 @@ class Flow:
             self.window_upper = len(self.packets) - 1
 
     def getWindowSize(self):
+        """ Returns the current window size.
+        """
         return self.window_size
 
     def timeOut(self):
+        """ A time out event. This resets the window size to 1,
+        and slow threshold back to its initial value.
+        """
         self.window_size = 1
         self.slowThresh = 1000000
 
@@ -646,6 +665,8 @@ class Link:
         return s
 
     def droppedPacket(self):
+        """ Returns if a packet has been dropped. Used for logging packet loss.
+        """
         if self.isDropped:
             # Revert the boolean back because we've already dropped a packet
             self.isDropped = False
@@ -653,6 +674,9 @@ class Link:
         return 0
 
     def calcExpectedLatency(self):
+        """ Calculates the expected latency/delay of the link. Takes into account the
+        current buffer occupancy.
+        """
         return self.delay + (self.linkBuffer.currentSize() * constants.QUEUE_DELAY)
 
 
@@ -740,6 +764,34 @@ class Link:
 
 class Packet(object):
     def __init__(self, src, dest, data_type, data_size, packetID, curr_loc):
+        """ Instatiates a Packet.
+
+        :param packetID: ID of the packet.
+        :type packetID: string
+
+        :param index: The packet (in #) that was sent by flow.
+        :type index: int
+
+        :param src: Source (device) of packet
+        :type src: Device
+
+        :param dest: Destination (device) of packet
+        :type dest: Device
+
+        :param data_size: data size (in bytes)
+        :type data_size: int
+
+        :param data_type: type of packet: ACK, DATA, or ROUT
+        :type data_type: str
+
+        :param curr_loc: Link where the packet is.
+        :type curr_loc: Link
+
+        :param time: time when the packet is created.
+        We refer to 'creation time' as when the packet is selected
+        from a list of initialized packets, i.e., the result of selectDataPacket().
+        :type time: float
+        """
         self.src = src
         self.dest = dest
         self.data_type = data_type # ROUT, ACK, DATA
@@ -770,33 +822,8 @@ class DataPacket(Packet):
     # Differentiated from routing packets
 
     def __init__(self, index, src, dest, data_type, data_size, packetID, curr_loc, flow):
-        """ Instatiates a Packet.
-
-        :param packetID: ID of the packet.
-        :type packetID: string
-
-        :param index: The packet (in #) that was sent by flow.
-        :type index: int
-
-        :param src: Source (device) of packet
-        :type src: Device
-
-        :param dest: Destination (device) of packet
-        :type dest: Device
-
-        :param data_size: data size (in bytes)
-        :type data_size: int
-
-        :param data_type: type of packet, either ACK, DATA
-        :type data_type: str
-
-        :param curr_loc: Link where the packet is.
-        :type curr_loc: Link
-
-        :param time: time when the packet is created.
-        We refer to 'creation time' as when the packet is selected
-        from a list of initialized packets, i.e., the result of selectDataPacket().
-        :type time: float
+        """ Instatiates a data Packet, which is either type ACK or DATA.
+        This calls the superclass Packet initialization, using the given parameters.
         """
         super(DataPacket, self).__init__(src, dest, data_type, data_size, packetID, curr_loc)
         self.index = index
@@ -805,6 +832,12 @@ class DataPacket(Packet):
 class RoutingPacket(Packet):
 
     def __init__(self, src, dest, link, data_size, table, packetID, curr_loc, latency = None):
+        """ Instantiates a Routing packet. This calls the superclass Packet initialization,
+        using the given parameters.
+
+        :param latency: the latency of a routing packet. By default, this is not iniitialized.
+        :tyep latency: float
+        """
         super(RoutingPacket, self).__init__(src, dest, "ROUT", constants.ROUTING_SIZE, packetID, curr_loc)
         if(latency):
             self.latency = latency
