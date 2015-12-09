@@ -228,7 +228,7 @@ class Simulator:
                 event.flow.actualRTT = event.time - event.flow.last_received_packet_start_time
 
 
-            event.flow.TCPFast(20)
+            event.flow.TCPFast(constants.alpha)
             result += "tcp fast happened here\n"
 
             #reset the max RTT
@@ -240,7 +240,7 @@ class Simulator:
 
             # Add next updatewindow to queue
             if not event.flow.flowComplete():
-                newEvent2 = Event(None, None, "UPDATEWINDOW", event.time + 20, event.flow)
+                newEvent2 = Event(None, None, "UPDATEWINDOW", event.time + constants.UPDATE_WINDOW_TIME, event.flow)
                 self.insertEvent(newEvent2)
 
         elif event.type == "PUT":

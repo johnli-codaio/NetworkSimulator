@@ -1,6 +1,12 @@
 
-# Trying not to use magic numbers
+# Queue delay for sending a packet.
 QUEUE_DELAY = 1
+
+# Alpha constant used for TCP-FAST congestion control.
+alpha = 20
+
+# constant that tells when to update the window size
+UPDATE_WINDOW_TIME = 20
 
 # Instead of logging every event, just log once in a discrete time interval.
 # Currently set to 100ms.
