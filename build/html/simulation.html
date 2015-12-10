@@ -1,0 +1,164 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>simulation.py Classes &mdash; NetworkSimulator 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="NetworkSimulator 1.0 documentation" href="index.html" />
+    <link rel="prev" title="classes.py Classes" href="classes.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-simulation">
+<span id="simulation-py-classes"></span><h1>simulation.py Classes<a class="headerlink" href="#module-simulation" title="Permalink to this headline">¶</a></h1>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+<div class="section" id="event-class">
+<h2>Event Class<a class="headerlink" href="#event-class" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="simulation.Event">
+<em class="property">class </em><code class="descclassname">simulation.</code><code class="descname">Event</code><span class="sig-paren">(</span><em>packet</em>, <em>EventHandler</em>, <em>EventType</em>, <em>EventTime</em>, <em>flow</em><span class="sig-paren">)</span><a class="headerlink" href="#simulation.Event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Events are enqueued into the Simulator priority queue by their time. Events
+have a type (PUT, SEND, RECEIVE, GENERATEACK, GENERATEPACK) describing what is
+done to the packet. Each type of event has an associated network handler
+(Link, Device, Flow, respectively).</p>
+</dd></dl>
+
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="simluator-class">
+<h2>Simluator Class<a class="headerlink" href="#simluator-class" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="simulation.Simulator">
+<em class="property">class </em><code class="descclassname">simulation.</code><code class="descname">Simulator</code><span class="sig-paren">(</span><em>network</em>, <em>TCP_type</em>, <em>metric</em><span class="sig-paren">)</span><a class="headerlink" href="#simulation.Simulator" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="simulation.Simulator.done">
+<code class="descname">done</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#simulation.Simulator.done" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when the simulation is finished. If metrics
+were recorded, this closes
+the files that log data for the useful metrics (e.g. link rate),
+so the file ends with EOF.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="simulation.Simulator.insertEvent">
+<code class="descname">insertEvent</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#simulation.Simulator.insertEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>This will insert an event into the Priority Queue.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>event</strong> (<a class="reference internal" href="#simulation.Event" title="simulation.Event"><em>Event</em></a>) &#8211; This is the event we&#8217;re adding into the queue.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="simulation.Simulator.processEvent">
+<code class="descname">processEvent</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#simulation.Simulator.processEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pops and processes event from queue.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">simulation.py Classes</a><ul>
+<li><a class="reference internal" href="#event-class">Event Class</a></li>
+<li><a class="reference internal" href="#simluator-class">Simluator Class</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="classes.html" title="previous chapter">classes.py Classes</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/simulation.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Albert Ge, Matthew Jin, Jonathan Joo, John Li.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+      |
+      <a href="_sources/simulation.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

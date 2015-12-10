@@ -1,0 +1,565 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>classes.py Classes &mdash; NetworkSimulator 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="NetworkSimulator 1.0 documentation" href="index.html" />
+    <link rel="next" title="simulation.py Classes" href="simulation.html" />
+    <link rel="prev" title="Welcome to NetworkSimulator’s documentation!" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-classes">
+<span id="classes-py-classes"></span><h1>classes.py Classes<a class="headerlink" href="#module-classes" title="Permalink to this headline">¶</a></h1>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+<div class="section" id="bufferqueue-class">
+<h2>bufferQueue Class<a class="headerlink" href="#bufferqueue-class" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="classes.bufferQueue">
+<em class="property">class </em><code class="descclassname">classes.</code><code class="descname">bufferQueue</code><span class="sig-paren">(</span><em>size</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.bufferQueue" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="classes.bufferQueue.bufferFullWith">
+<code class="descname">bufferFullWith</code><span class="sig-paren">(</span><em>packet</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.bufferQueue.bufferFullWith" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if packet cannot be added to the buffer queue, False otherwise.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.bufferQueue.currentSize">
+<code class="descname">currentSize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.bufferQueue.currentSize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the current size of the buffer in terms of bytes</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.bufferQueue.empty">
+<code class="descname">empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.bufferQueue.empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks to see if the size of the buffer is 0.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.bufferQueue.get">
+<code class="descname">get</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.bufferQueue.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pops a packet from the buffer, first in first out.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.bufferQueue.peek">
+<code class="descname">peek</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.bufferQueue.peek" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the next &#8220;poppable&#8221; element, without actually popping it.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.bufferQueue.put">
+<code class="descname">put</code><span class="sig-paren">(</span><em>packet</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.bufferQueue.put" title="Permalink to this definition">¶</a></dt>
+<dd><p>Puts a packet into the buffer, first in first out.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>packet</strong> (<a class="reference internal" href="#classes.Packet" title="classes.Packet"><em>Packet</em></a>) &#8211; The packet to put into the buffer</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="network-class">
+<h2>Network Class<a class="headerlink" href="#network-class" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="classes.Network">
+<em class="property">class </em><code class="descclassname">classes.</code><code class="descname">Network</code><span class="sig-paren">(</span><em>devices</em>, <em>links</em>, <em>flows</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Network" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="classes.Network.allFlowsComplete">
+<code class="descname">allFlowsComplete</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Network.allFlowsComplete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks to see if all flows have finished sending
+their required data amount.</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="device-class">
+<h2>Device Class<a class="headerlink" href="#device-class" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="classes.Device">
+<em class="property">class </em><code class="descclassname">classes.</code><code class="descname">Device</code><span class="sig-paren">(</span><em>deviceID</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Device" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="classes.Device.attachLink">
+<code class="descname">attachLink</code><span class="sig-paren">(</span><em>link</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Device.attachLink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attach single link to Device.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>link</strong> (<a class="reference internal" href="#classes.Link" title="classes.Link"><em>Link</em></a>) &#8211; link to attach</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Device.sendToLink">
+<code class="descname">sendToLink</code><span class="sig-paren">(</span><em>link</em>, <em>packet</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Device.sendToLink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attach packet to the appropriate link buffer.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>link</strong> (<a class="reference internal" href="#classes.Link" title="classes.Link"><em>Link</em></a>) &#8211; link that packet will be going to.</li>
+<li><strong>packet</strong> (<a class="reference internal" href="#classes.Packet" title="classes.Packet"><em>Packet</em></a>) &#8211; packet that the device received.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="router-class">
+<h2>Router Class<a class="headerlink" href="#router-class" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="classes.Router">
+<em class="property">class </em><code class="descclassname">classes.</code><code class="descname">Router</code><span class="sig-paren">(</span><em>deviceID</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Router" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="classes.Router.floodNeighbors">
+<code class="descname">floodNeighbors</code><span class="sig-paren">(</span><em>dynamic=False</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Router.floodNeighbors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns array of tuples (packet, link) to send</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dynamic</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; True if using dynamic routing, false otherwise</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Router.handleRoutingPacket">
+<code class="descname">handleRoutingPacket</code><span class="sig-paren">(</span><em>packet</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Router.handleRoutingPacket" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates routing table if appropriate. Returns if router should send table to neighbors.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Router.initializeNeighborsTable">
+<code class="descname">initializeNeighborsTable</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Router.initializeNeighborsTable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes table to include neighbors.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Router.initializeRerout">
+<code class="descname">initializeRerout</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Router.initializeRerout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates a new routing for the network
+and updates the routing table accordingly.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Router.transferTo">
+<code class="descname">transferTo</code><span class="sig-paren">(</span><em>packet</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Router.transferTo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the link that the packet will be forwarded to.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>packet</strong> (<a class="reference internal" href="#classes.Packet" title="classes.Packet"><em>Packet</em></a>) &#8211; packet that will be transferred</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="host-class">
+<h2>Host Class<a class="headerlink" href="#host-class" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="classes.Host">
+<em class="property">class </em><code class="descclassname">classes.</code><code class="descname">Host</code><span class="sig-paren">(</span><em>deviceID</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Host" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="classes.Host.getLink">
+<code class="descname">getLink</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Host.getLink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Will return the link attached to the host.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Host.receive">
+<code class="descname">receive</code><span class="sig-paren">(</span><em>packet</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Host.receive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Host receives packet.
+Will receive a packet and correspondingly decrease the rate of its link.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>packet</strong> (<a class="reference internal" href="#classes.Packet" title="classes.Packet"><em>Packet</em></a>) &#8211; packet that will be received</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="flow-class">
+<h2>Flow Class<a class="headerlink" href="#flow-class" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="classes.Flow">
+<em class="property">class </em><code class="descclassname">classes.</code><code class="descname">Flow</code><span class="sig-paren">(</span><em>flowID</em>, <em>src</em>, <em>dest</em>, <em>data_amt</em>, <em>flow_start</em>, <em>theoRTT</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Flow" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="classes.Flow.TCPFast">
+<code class="descname">TCPFast</code><span class="sig-paren">(</span><em>alpha</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Flow.TCPFast" title="Permalink to this definition">¶</a></dt>
+<dd><p>The actualRTT is calculated by subtracting event.time
+by the start time of the packet. The theoretical RTT of the
+packet is denoted in the &#8220;packet.total_delay&#8221; attribute.</p>
+<p>:param alpha : A constant we add to window.
+:type alpha : int</p>
+<p>:param timeout : A constant we use to indicate if we bypass, 0 for no bypass, 1 for bypass
+:type timeout : int</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Flow.TCPReno">
+<code class="descname">TCPReno</code><span class="sig-paren">(</span><em>boolean</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Flow.TCPReno" title="Permalink to this definition">¶</a></dt>
+<dd><p>The boolean that will determine if window size
+increases or decreases.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Flow.checkIfAcked">
+<code class="descname">checkIfAcked</code><span class="sig-paren">(</span><em>packetId</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Flow.checkIfAcked" title="Permalink to this definition">¶</a></dt>
+<dd><p>We will check if a particular packet has been acked.
+this is for the timeOut portion.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>packetId</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; the packet ID</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Flow.flowComplete">
+<code class="descname">flowComplete</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Flow.flowComplete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if flow is done sending, False otherwise</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Flow.generateAckPacket">
+<code class="descname">generateAckPacket</code><span class="sig-paren">(</span><em>packet</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Flow.generateAckPacket" title="Permalink to this definition">¶</a></dt>
+<dd><p>This will produce an acknowledgment packet with same ID, heading the reverse
+direction of the data packet.
+:param packet: The data packet for which to generate an ACK packet.
+:type packet: Packet</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Flow.getWindowSize">
+<code class="descname">getWindowSize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Flow.getWindowSize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the current window size.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Flow.initializePackets">
+<code class="descname">initializePackets</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Flow.initializePackets" title="Permalink to this definition">¶</a></dt>
+<dd><p>We will create all the packets and put them into
+an array.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Flow.receiveAcknowledgement">
+<code class="descname">receiveAcknowledgement</code><span class="sig-paren">(</span><em>packet</em>, <em>currentTime</em>, <em>tcp_type</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Flow.receiveAcknowledgement" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>This will call TCPReno to update the window size depending on</dt>
+<dd>the ACK ID...</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>packet</strong> (<a class="reference internal" href="#classes.Packet" title="classes.Packet"><em>Packet</em></a>) &#8211; packet that will be compared.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Flow.selectDataPacket">
+<code class="descname">selectDataPacket</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Flow.selectDataPacket" title="Permalink to this definition">¶</a></dt>
+<dd><p>When we call SELECTPACK events, we
+just send in the next packet that can be sent in the
+array. (This is tracked by packets_index).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Flow.timeOut">
+<code class="descname">timeOut</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Flow.timeOut" title="Permalink to this definition">¶</a></dt>
+<dd><p>A time out event. This resets the window size to 1,
+and slow threshold back to its initial value.</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="link-class">
+<h2>Link Class<a class="headerlink" href="#link-class" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="classes.Link">
+<em class="property">class </em><code class="descclassname">classes.</code><code class="descname">Link</code><span class="sig-paren">(</span><em>linkID</em>, <em>rate</em>, <em>delay</em>, <em>buffer_size</em>, <em>device1</em>, <em>device2</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Link" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="classes.Link.calcExpectedLatency">
+<code class="descname">calcExpectedLatency</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Link.calcExpectedLatency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the expected latency/delay of the link. Takes into account the
+current buffer occupancy.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Link.currentRateMbps">
+<code class="descname">currentRateMbps</code><span class="sig-paren">(</span><em>packet</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Link.currentRateMbps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the link rate, in Mbps, if a packet were added.
+Used for logging. If the packet argument
+isn&#8217;t specified, then it just returns the current rate.
+:param packet: Packet to be sent using this link
+:type packet: Packet</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Link.decrRate">
+<code class="descname">decrRate</code><span class="sig-paren">(</span><em>packet</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Link.decrRate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decrease current rate by packet size.</p>
+<p>:param packet : uses the size of the passed in packet.
+:type packet : Packet</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Link.droppedPacket">
+<code class="descname">droppedPacket</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Link.droppedPacket" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns if a packet has been dropped. Used for logging packet loss.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Link.incrRate">
+<code class="descname">incrRate</code><span class="sig-paren">(</span><em>packet</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Link.incrRate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increase current rate by packet size.</p>
+<p>:param packet : uses the size of the passed in packet.
+:type packet : Packet</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Link.otherDevice">
+<code class="descname">otherDevice</code><span class="sig-paren">(</span><em>device</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Link.otherDevice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the other device</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>device</strong> (<a class="reference internal" href="#classes.Device" title="classes.Device"><em>Device</em></a>) &#8211; One of the devices connected to the link</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Link.putIntoBuffer">
+<code class="descname">putIntoBuffer</code><span class="sig-paren">(</span><em>packet</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Link.putIntoBuffer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Puts packet into buffer.</p>
+<p>:param packet : Packet to be put into the buffer.
+:type packet : Packet</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Link.rateFullWith">
+<code class="descname">rateFullWith</code><span class="sig-paren">(</span><em>packet</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Link.rateFullWith" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if packet cannot be sent, False otherwise.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>packet</strong> (<a class="reference internal" href="#classes.Packet" title="classes.Packet"><em>Packet</em></a>) &#8211; packet potentially to be sent out</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.Link.sendPacket">
+<code class="descname">sendPacket</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Link.sendPacket" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends next packet in buffer queue corresponding to device along link.
+Returns packet if success, else None.
+Should only fail when there the link is at its maximum capacity.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>device</strong> (<a class="reference internal" href="#classes.Device" title="classes.Device"><em>Device</em></a>) &#8211; device packet should be sent to</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="packet-class">
+<h2>Packet Class<a class="headerlink" href="#packet-class" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="classes.Packet">
+<em class="property">class </em><code class="descclassname">classes.</code><code class="descname">Packet</code><span class="sig-paren">(</span><em>src</em>, <em>dest</em>, <em>data_type</em>, <em>data_size</em>, <em>packetID</em>, <em>curr_loc</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Packet" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="classes.Packet.updateLoc">
+<code class="descname">updateLoc</code><span class="sig-paren">(</span><em>newLoc</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Packet.updateLoc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the location of the packet.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>newLoc</strong> (<em>Device, Link</em>) &#8211; New location of the packet.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">classes.py Classes</a><ul>
+<li><a class="reference internal" href="#bufferqueue-class">bufferQueue Class</a></li>
+<li><a class="reference internal" href="#network-class">Network Class</a></li>
+<li><a class="reference internal" href="#device-class">Device Class</a></li>
+<li><a class="reference internal" href="#router-class">Router Class</a></li>
+<li><a class="reference internal" href="#host-class">Host Class</a></li>
+<li><a class="reference internal" href="#flow-class">Flow Class</a></li>
+<li><a class="reference internal" href="#link-class">Link Class</a></li>
+<li><a class="reference internal" href="#packet-class">Packet Class</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to NetworkSimulator&#8217;s documentation!</a></li>
+      <li>Next: <a href="simulation.html" title="next chapter">simulation.py Classes</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/classes.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Albert Ge, Matthew Jin, Jonathan Joo, John Li.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+      |
+      <a href="_sources/classes.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
