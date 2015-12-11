@@ -3,6 +3,7 @@ import sys
 from math import *
 
 class bufferQueue:
+    """A queue class used to keep track of buffers used in links"""
     def __init__(self, size):
         """ Initializes a buffer queue for the link
 
@@ -59,6 +60,7 @@ class bufferQueue:
 
 
 class Network:
+    """Keeps track of the devices, links, and flows that make up the entire network for our simulation."""
 
     def __init__(self, devices, links, flows):
         """ Takes in a list of devices, links, and flows, to make up the
@@ -88,6 +90,7 @@ class Network:
 
 
 class Device(object):
+    """A superclass which both hosts and routers use. Contains information about links related to the host/router."""
 
     def __init__(self, deviceID):
         """Instantiates the Device.
@@ -142,6 +145,7 @@ class Device(object):
         return s
 
 class Router(Device):
+    """A Device which has more specific functions that deal with routing tables, links, and packets."""
 
     def __init__(self, deviceID):
         """Instantiates a Router.
@@ -259,6 +263,7 @@ class Router(Device):
         return nextLink
 
 class Host(Device):
+    """A Device which contains a link and deals with packet receiving/sending."""
 
     def getLink(self):
         """ Will return the link attached to the host.
@@ -286,6 +291,7 @@ class Host(Device):
         # if packet is ROUTING, do nothing
 
 class Flow:
+    """A more complicated class which deals with congestion control (including TCP Reno and TCP Fast), generating/receiving and handling packets, and more."""
 
     def __init__(self, flowID, src, dest, data_amt, flow_start, theoRTT):
         """ Instantiates a Flow
@@ -612,6 +618,7 @@ class Flow:
         self.slowThresh = 1000000
 
 class Link:
+    """A class which contains a buffer, and deals with sending packets between two locations and moderating rates."""
 
     def __init__(self, linkID, rate, delay, buffer_size, device1, device2):
         """ Instantiates a Link
@@ -763,6 +770,8 @@ class Link:
 
 
 class Packet(object):
+    """Contains information about the data being sent from one point to another."""
+    
     def __init__(self, src, dest, data_type, data_size, packetID, curr_loc):
         """ Instatiates a Packet.
 

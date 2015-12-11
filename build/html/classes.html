@@ -50,7 +50,8 @@
 <dl class="class">
 <dt id="classes.bufferQueue">
 <em class="property">class </em><code class="descclassname">classes.</code><code class="descname">bufferQueue</code><span class="sig-paren">(</span><em>size</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.bufferQueue" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<dd><p>A queue class used to keep track of buffers used in links</p>
+<dl class="method">
 <dt id="classes.bufferQueue.bufferFullWith">
 <code class="descname">bufferFullWith</code><span class="sig-paren">(</span><em>packet</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.bufferQueue.bufferFullWith" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns True if packet cannot be added to the buffer queue, False otherwise.</p>
@@ -106,7 +107,8 @@
 <dl class="class">
 <dt id="classes.Network">
 <em class="property">class </em><code class="descclassname">classes.</code><code class="descname">Network</code><span class="sig-paren">(</span><em>devices</em>, <em>links</em>, <em>flows</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Network" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<dd><p>Keeps track of the devices, links, and flows that make up the entire network for our simulation.</p>
+<dl class="method">
 <dt id="classes.Network.allFlowsComplete">
 <code class="descname">allFlowsComplete</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Network.allFlowsComplete" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks to see if all flows have finished sending
@@ -125,7 +127,8 @@ their required data amount.</p>
 <dl class="class">
 <dt id="classes.Device">
 <em class="property">class </em><code class="descclassname">classes.</code><code class="descname">Device</code><span class="sig-paren">(</span><em>deviceID</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Device" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<dd><p>A superclass which both hosts and routers use. Contains information about links related to the host/router.</p>
+<dl class="method">
 <dt id="classes.Device.attachLink">
 <code class="descname">attachLink</code><span class="sig-paren">(</span><em>link</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Device.attachLink" title="Permalink to this definition">¶</a></dt>
 <dd><p>Attach single link to Device.</p>
@@ -169,7 +172,8 @@ their required data amount.</p>
 <dl class="class">
 <dt id="classes.Router">
 <em class="property">class </em><code class="descclassname">classes.</code><code class="descname">Router</code><span class="sig-paren">(</span><em>deviceID</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Router" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<dd><p>A Device which has more specific functions that deal with routing tables, links, and packets.</p>
+<dl class="method">
 <dt id="classes.Router.floodNeighbors">
 <code class="descname">floodNeighbors</code><span class="sig-paren">(</span><em>dynamic=False</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Router.floodNeighbors" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns array of tuples (packet, link) to send</p>
@@ -228,7 +232,8 @@ and updates the routing table accordingly.</p>
 <dl class="class">
 <dt id="classes.Host">
 <em class="property">class </em><code class="descclassname">classes.</code><code class="descname">Host</code><span class="sig-paren">(</span><em>deviceID</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Host" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<dd><p>A Device which contains a link and deals with packet receiving/sending.</p>
+<dl class="method">
 <dt id="classes.Host.getLink">
 <code class="descname">getLink</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Host.getLink" title="Permalink to this definition">¶</a></dt>
 <dd><p>Will return the link attached to the host.</p>
@@ -261,7 +266,8 @@ Will receive a packet and correspondingly decrease the rate of its link.</p>
 <dl class="class">
 <dt id="classes.Flow">
 <em class="property">class </em><code class="descclassname">classes.</code><code class="descname">Flow</code><span class="sig-paren">(</span><em>flowID</em>, <em>src</em>, <em>dest</em>, <em>data_amt</em>, <em>flow_start</em>, <em>theoRTT</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Flow" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<dd><p>A more complicated class which deals with congestion control (including TCP Reno and TCP Fast), generating/receiving and handling packets, and more.</p>
+<dl class="method">
 <dt id="classes.Flow.TCPFast">
 <code class="descname">TCPFast</code><span class="sig-paren">(</span><em>alpha</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Flow.TCPFast" title="Permalink to this definition">¶</a></dt>
 <dd><p>The actualRTT is calculated by subtracting event.time
@@ -367,7 +373,8 @@ and slow threshold back to its initial value.</p>
 <dl class="class">
 <dt id="classes.Link">
 <em class="property">class </em><code class="descclassname">classes.</code><code class="descname">Link</code><span class="sig-paren">(</span><em>linkID</em>, <em>rate</em>, <em>delay</em>, <em>buffer_size</em>, <em>device1</em>, <em>device2</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Link" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<dd><p>A class which contains a buffer, and deals with sending packets between two locations and moderating rates.</p>
+<dl class="method">
 <dt id="classes.Link.calcExpectedLatency">
 <code class="descname">calcExpectedLatency</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Link.calcExpectedLatency" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates the expected latency/delay of the link. Takes into account the
@@ -470,7 +477,8 @@ Should only fail when there the link is at its maximum capacity.</p>
 <dl class="class">
 <dt id="classes.Packet">
 <em class="property">class </em><code class="descclassname">classes.</code><code class="descname">Packet</code><span class="sig-paren">(</span><em>src</em>, <em>dest</em>, <em>data_type</em>, <em>data_size</em>, <em>packetID</em>, <em>curr_loc</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Packet" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<dd><p>Contains information about the data being sent from one point to another.</p>
+<dl class="method">
 <dt id="classes.Packet.updateLoc">
 <code class="descname">updateLoc</code><span class="sig-paren">(</span><em>newLoc</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Packet.updateLoc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Updates the location of the packet.</p>
