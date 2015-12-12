@@ -74,3 +74,21 @@ Packet Class
 |
 
 
+DataPacket Class
+++++++++++++++++
+.. autoclass:: DataPacket
+    :members:
+
+|
+|
+
+
+RoutingPacket Class
++++++++++++++++++++
+.. autoclass:: RoutingPacket
+    :members:
+
+|
+|
+
+

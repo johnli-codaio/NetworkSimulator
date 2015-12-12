@@ -771,7 +771,7 @@ class Link:
 
 class Packet(object):
     """Contains information about the data being sent from one point to another."""
-    
+
     def __init__(self, src, dest, data_type, data_size, packetID, curr_loc):
         """ Instatiates a Packet.
 
@@ -827,8 +827,7 @@ class Packet(object):
 
 
 class DataPacket(Packet):
-    # Captures both acknowledgement packets and actual data packets
-    # Differentiated from routing packets
+    """ Captures both acknowledgement packets and actual data packets, differentiated from routing packets."""
 
     def __init__(self, index, src, dest, data_type, data_size, packetID, curr_loc, flow):
         """ Instatiates a data Packet, which is either type ACK or DATA.
@@ -839,6 +838,7 @@ class DataPacket(Packet):
         self.flow = flow
 
 class RoutingPacket(Packet):
+    """ Packets that store information about routing."""
 
     def __init__(self, src, dest, link, data_size, table, packetID, curr_loc, latency = None):
         """ Instantiates a Routing packet. This calls the superclass Packet initialization,

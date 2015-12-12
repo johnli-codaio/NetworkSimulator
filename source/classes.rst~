@@ -1,5 +1,5 @@
 classes.py Classes
-================
+==================
 
 .. automodule:: classes
 
@@ -68,6 +68,24 @@ Link Class
 Packet Class
 ++++++++++++
 .. autoclass:: Packet
+    :members:
+
+|
+|
+
+
+DataPacket Class
+++++++++++++++++
+.. autoclass:: DataPacket
+    :members:
+
+|
+|
+
+
+RoutingPacket Class
+++++++++++++
+.. autoclass:: RoutingPacket
     :members:
 
 |

@@ -107,7 +107,8 @@
 <dl class="class">
 <dt id="classes.Network">
 <em class="property">class </em><code class="descclassname">classes.</code><code class="descname">Network</code><span class="sig-paren">(</span><em>devices</em>, <em>links</em>, <em>flows</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.Network" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<dd><p>Keeps track of the devices, links, and flows that make up the entire network for our simulation.</p>
+<dl class="method">
 <dt id="classes.Network.allFlowsComplete">
 <code class="descname">allFlowsComplete</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#classes.Network.allFlowsComplete" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks to see if all flows have finished sending
@@ -498,6 +499,32 @@ Should only fail when there the link is at its maximum capacity.</p>
 <div class="line"><br /></div>
 </div>
 </div>
+<div class="section" id="datapacket-class">
+<h2>DataPacket Class<a class="headerlink" href="#datapacket-class" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="classes.DataPacket">
+<em class="property">class </em><code class="descclassname">classes.</code><code class="descname">DataPacket</code><span class="sig-paren">(</span><em>index</em>, <em>src</em>, <em>dest</em>, <em>data_type</em>, <em>data_size</em>, <em>packetID</em>, <em>curr_loc</em>, <em>flow</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.DataPacket" title="Permalink to this definition">¶</a></dt>
+<dd><p>Captures both acknowledgement packets and actual data packets, differentiated from routing packets.</p>
+</dd></dl>
+
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="routingpacket-class">
+<h2>RoutingPacket Class<a class="headerlink" href="#routingpacket-class" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="classes.RoutingPacket">
+<em class="property">class </em><code class="descclassname">classes.</code><code class="descname">RoutingPacket</code><span class="sig-paren">(</span><em>src</em>, <em>dest</em>, <em>link</em>, <em>data_size</em>, <em>table</em>, <em>packetID</em>, <em>curr_loc</em>, <em>latency=None</em><span class="sig-paren">)</span><a class="headerlink" href="#classes.RoutingPacket" title="Permalink to this definition">¶</a></dt>
+<dd><p>Packets that store information about routing.</p>
+</dd></dl>
+
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
 </div>
 
 
@@ -517,6 +544,8 @@ Should only fail when there the link is at its maximum capacity.</p>
 <li><a class="reference internal" href="#flow-class">Flow Class</a></li>
 <li><a class="reference internal" href="#link-class">Link Class</a></li>
 <li><a class="reference internal" href="#packet-class">Packet Class</a></li>
+<li><a class="reference internal" href="#datapacket-class">DataPacket Class</a></li>
+<li><a class="reference internal" href="#routingpacket-class">RoutingPacket Class</a></li>
 </ul>
 </li>
 </ul>
